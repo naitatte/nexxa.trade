@@ -1,4 +1,10 @@
 import { RegisterForm } from "@/components/features/auth/register/register-form"
+import { generateNoIndexMetadata } from "@/lib/metadata"
+
+export const metadata = generateNoIndexMetadata({
+  title: "Register",
+  description: "Create your NexxaTrade account to start receiving premium trading signals.",
+})
 
 export default function Page() {
   return (

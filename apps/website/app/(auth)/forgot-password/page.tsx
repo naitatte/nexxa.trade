@@ -1,4 +1,10 @@
 import { ForgotPasswordForm } from "@/components/features/auth/password/forgot-password-form"
+import { generateNoIndexMetadata } from "@/lib/metadata"
+
+export const metadata = generateNoIndexMetadata({
+  title: "Forgot password",
+  description: "Reset your NexxaTrade account password.",
+})
 
 export default function Page() {
   return (

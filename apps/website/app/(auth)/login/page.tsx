@@ -1,4 +1,10 @@
 import { LoginForm } from "@/components/features/auth/login/login-form"
+import { generateNoIndexMetadata } from "@/lib/metadata"
+
+export const metadata = generateNoIndexMetadata({
+  title: "Login",
+  description: "Sign in to your NexxaTrade account.",
+})
 
 export default function Page() {
   return (

@@ -52,7 +52,11 @@ export function registerAuthRoutes(app: FastifyInstance) {
       try {
         const response = await auth.handler(new Request(url.toString(), init));
         reply.status(response.status);
-        response.headers.forEach((value, key) => reply.header(key, value));
+        
+        response.headers.forEach((value, key) => {
+          reply.header(key, value);
+        });
+        
         reply.send(response.body ? await response.text() : null);
       } catch (error) {
         request.log.error({ error }, "Authentication handler failed");

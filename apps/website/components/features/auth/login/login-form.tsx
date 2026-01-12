@@ -63,11 +63,11 @@ export function LoginForm({
       onMutate: () => {
         setLoading("Signing in...")
       },
-      onSuccess: () => {
+      onSuccess: async () => {
         setIdle()
         toast.success("Successfully signed in!")
-        router.push("/")
-        router.refresh()
+        await new Promise((resolve) => setTimeout(resolve, 500))
+        window.location.href = "/dashboard"
       },
       onError: (error) => {
         setIdle()
