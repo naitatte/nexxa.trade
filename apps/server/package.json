@@ -1,0 +1,28 @@
+{
+  "name": "server",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "PORT=4000 tsx watch src/server.ts",
+    "start": "PORT=4000 tsx src/server.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@fastify/cors": "^11.2.0",
+    "@fastify/multipart": "^9.3.0",
+    "@fastify/swagger": "^9.6.1",
+    "@fastify/swagger-ui": "^5.1.0",
+    "@nexxatrade/db": "workspace:*",
+    "better-auth": "^1.4.10",
+    "bullmq": "^5.66.4",
+    "dotenv": "^16.6.1",
+    "fastify": "^5.6.2",
+    "ioredis": "^5.9.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.28",
+    "drizzle-kit": "^0.31.8",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}

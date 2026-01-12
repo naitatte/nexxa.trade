@@ -1,0 +1,23 @@
+{
+  "name": "@nexxatrade/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema.ts"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.45.1",
+    "postgres": "^3.4.8"
+  },
+  "devDependencies": {
+    "dotenv": "^16.6.1",
+    "drizzle-kit": "^0.31.8",
+    "typescript": "^5.9.3"
+  },
+  "scripts": {
+    "drizzle-kit": "drizzle-kit",
+    "studio": "drizzle-kit studio --port 4984"
+  }
+}

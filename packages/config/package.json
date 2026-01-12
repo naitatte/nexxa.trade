@@ -1,0 +1,14 @@
+{
+  "name": "@nexxatrade/config",
+  "version": "0.1.0",
+  "private": true,
+  "files": [
+    "tsconfig.base.json",
+    "tsconfig.next.json",
+    "eslint.cjs",
+    "eslint.next.mjs",
+    "next.config.ts",
+    "postcss.config.mjs",
+    "prettier.cjs"
+  ]
+}

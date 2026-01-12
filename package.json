@@ -1,0 +1,27 @@
+{
+  "name": "nexxatrade",
+  "private": true,
+  "scripts": {
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "dev": "pnpm --parallel --filter './apps/*' dev",
+    "dev:web": "pnpm --filter website dev",
+    "dev:server": "pnpm --filter server dev",
+    "build": "pnpm --filter './apps/*' build",
+    "build:web": "pnpm --filter website build",
+    "build:server": "pnpm --filter server build",
+    "start": "pnpm --parallel --filter './apps/*' start",
+    "start:web": "pnpm --filter website start",
+    "start:server": "pnpm --filter server start",
+    "lint": "pnpm --filter './apps/*' lint",
+    "lint:web": "pnpm --filter website lint",
+    "typecheck": "pnpm --filter './apps/*' typecheck",
+    "typecheck:server": "pnpm --filter server typecheck",
+    "db:generate": "pnpm --filter @nexxatrade/db drizzle-kit generate",
+    "db:migrate": "pnpm --filter @nexxatrade/db drizzle-kit migrate",
+    "db:studio": "pnpm --filter @nexxatrade/db studio",
+    "api:generate": "pnpm --filter website api:generate",
+    "clean": "pnpm --recursive exec rm -rf node_modules dist .next",
+    "install:all": "pnpm install"
+  }
+}
