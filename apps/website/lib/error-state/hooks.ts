@@ -1,10 +1,13 @@
+"use client"
+
 import { useState, useCallback } from "react";
+import { toast } from "sonner";
 import type { ErrorState, ErrorHandlerOptions, ErrorWithMetadata } from "./types";
 
 export function useErrorState(options: ErrorHandlerOptions = {}) {
   const [errorState, setErrorState] = useState<ErrorState | null>(null);
 
-  const setError = useCallback((error: Error | string, message?: string, code?: string | number) => {
+  const setError = useCallback((error: Error | string, message?: string, code?: string | number, showToastOverride?: boolean) => {
     const errorObj: ErrorState = {
       error,
       message,
@@ -13,6 +16,17 @@ export function useErrorState(options: ErrorHandlerOptions = {}) {
     };
 
     setErrorState(errorObj);
+
+    const shouldShowToast = showToastOverride !== undefined ? showToastOverride : (options.showToast !== false);
+    
+    if (shouldShowToast) {
+      const errorMessage = message || (error instanceof Error ? error.message : error) || "An error occurred";
+      
+      toast.error(errorMessage, {
+        description: code ? `Error code: ${code}` : undefined,
+        duration: 5000,
+      });
+    }
 
     if (options.logError !== false) {
       const errorToLog = error instanceof Error ? error : new Error(error);

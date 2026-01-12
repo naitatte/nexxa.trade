@@ -10,5 +10,8 @@
     "next.config.ts",
     "postcss.config.mjs",
     "prettier.cjs"
-  ]
+  ],
+  "devDependencies": {
+    "next": "^16.1.1"
+  }
 }

@@ -13,9 +13,14 @@ export const customInstance = async <T>(
   config: RequestConfig,
   options?: RequestInit,
 ): Promise<T> => {
-  const url = config.url?.startsWith("http")
-    ? config.url
-    : `${API_BASE_URL}${config.url || ""}`;
+  let urlPath = config.url || "";
+  if (urlPath && !urlPath.startsWith("http") && !urlPath.startsWith("/api/auth")) {
+    urlPath = urlPath.startsWith("/") ? `/api/auth${urlPath}` : `/api/auth/${urlPath}`;
+  }
+  
+  const url = urlPath.startsWith("http")
+    ? urlPath
+    : `${API_BASE_URL}${urlPath}`;
 
   const urlWithParams = new URL(url);
   if (config.params) {

@@ -9,6 +9,7 @@ export interface ErrorHandlerOptions {
   onError?: (error: Error | string) => void;
   fallbackMessage?: string;
   logError?: boolean;
+  showToast?: boolean;
 }
 
 export type ErrorSeverity = "low" | "medium" | "high" | "critical";
