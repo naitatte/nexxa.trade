@@ -13,6 +13,7 @@
     "@fastify/swagger": "^9.6.1",
     "@fastify/swagger-ui": "^5.1.0",
     "@nexxatrade/db": "workspace:*",
+    "@nexxatrade/mail": "workspace:*",
     "better-auth": "^1.4.10",
     "bullmq": "^5.66.4",
     "dotenv": "^16.6.1",

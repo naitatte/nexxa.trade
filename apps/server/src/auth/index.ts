@@ -3,6 +3,14 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { openAPI } from "better-auth/plugins";
 import { env } from "../config/env";
 import { db } from "../config/db";
+import { createMailerFromEnv, createBetterAuthEmailHandlers } from "@nexxatrade/mail";
+
+const mailer = createMailerFromEnv(env.SMTP_USER);
+const emailHandlers = createBetterAuthEmailHandlers({
+  mailer,
+  appName: "NexxaTrade",
+  defaultFrom: env.SMTP_USER,
+});
 
 export const auth = betterAuth({
   appName: "NexxaTrade",
@@ -15,6 +23,12 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,
+    sendResetPassword: emailHandlers.sendResetPassword,
+  },
+  emailVerification: {
+    sendVerificationEmail: emailHandlers.sendVerificationEmail,
+    sendOnSignUp: true,
+    autoSignInAfterVerification: true,
   },
   session: {
     expiresIn: 60 * 60 * 24 * 7,
