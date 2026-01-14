@@ -356,9 +356,7 @@ export function useGetSession<TData = Awaited<ReturnType<typeof getSession>>, TE
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
+  return { ...query, queryKey: queryOptions.queryKey };
 }
 
 
@@ -666,9 +664,7 @@ export function useGetVerifyEmail<TData = Awaited<ReturnType<typeof getVerifyEma
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
+  return { ...query, queryKey: queryOptions.queryKey };
 }
 
 
@@ -1099,9 +1095,7 @@ export function useResetPasswordCallback<TData = Awaited<ReturnType<typeof reset
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
+  return { ...query, queryKey: queryOptions.queryKey };
 }
 
 
@@ -1164,9 +1158,7 @@ export function useListUserSessions<TData = Awaited<ReturnType<typeof listUserSe
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
+  return { ...query, queryKey: queryOptions.queryKey };
 }
 
 
@@ -1473,9 +1465,7 @@ export function useListUserAccounts<TData = Awaited<ReturnType<typeof listUserAc
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
+  return { ...query, queryKey: queryOptions.queryKey };
 }
 
 
@@ -1539,9 +1529,7 @@ export function useGetDeleteUserCallback<TData = Awaited<ReturnType<typeof getDe
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
+  return { ...query, queryKey: queryOptions.queryKey };
 }
 
 
@@ -1787,9 +1775,7 @@ export function useGetAccountInfo<TData = Awaited<ReturnType<typeof getAccountIn
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
+  return { ...query, queryKey: queryOptions.queryKey };
 }
 
 
@@ -1852,9 +1838,7 @@ export function useGetOk<TData = Awaited<ReturnType<typeof getOk>>, TError = Get
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
+  return { ...query, queryKey: queryOptions.queryKey };
 }
 
 
@@ -1917,9 +1901,7 @@ export function useGetError<TData = Awaited<ReturnType<typeof getError>>, TError
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
+  return { ...query, queryKey: queryOptions.queryKey };
 }
 
 

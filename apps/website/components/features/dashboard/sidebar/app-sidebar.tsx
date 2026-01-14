@@ -1,22 +1,17 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import {
-  BookOpen,
-  Bot,
   Command,
-  Frame,
-  LifeBuoy,
-  Map,
-  PieChart,
-  Send,
-  Settings2,
-  SquareTerminal,
+  LayoutDashboard,
+  Radio,
+  Network,
+  Wallet,
+  Crown,
 } from "lucide-react"
-
+import { useUserPermissions } from "@/hooks/use-user-permissions"
 import { NavMain } from "@/components/features/dashboard/sidebar/nav-main"
-import { NavProjects } from "@/components/features/dashboard/sidebar/nav-projects"
-import { NavSecondary } from "@/components/features/dashboard/sidebar/nav-secondary"
 import { NavUser } from "@/components/features/dashboard/sidebar/nav-user"
 import {
   Sidebar,
@@ -26,159 +21,282 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarGroup,
+  SidebarGroupContent,
 } from "@/components/ui/sidebar"
+import type { LucideIcon } from "lucide-react"
 
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  navMain: [
-    {
-      title: "Playground",
+const iconMap: Record<string, LucideIcon> = {
+  dashboard: LayoutDashboard,
+  signals: Radio,
+  network: Network,
+  withdrawals: Wallet,
+  membership: Crown,
+}
+
+type NavGroup = {
+  label: string
+  items: Array<{
+    title: string
+    url: string
+    icon: LucideIcon
+    isActive?: boolean
+    isDisabled?: boolean
+    items?: Array<{ title: string; url: string }>
+  }>
+}
+
+type DashboardItem = {
+  title: string
+  url: string
+  icon: LucideIcon
+  isActive?: boolean
+  isDisabled?: boolean
+}
+
+type UserPermissions = NonNullable<ReturnType<typeof useUserPermissions>>
+type MenuConfig = UserPermissions["menuConfig"]
+type UserRole = UserPermissions["role"]
+
+function buildDashboardItem(
+  menuConfig: MenuConfig
+): DashboardItem | null {
+  const dashboard = menuConfig.dashboard
+  if (!dashboard) return null
+
+  return {
+    title: dashboard.title,
+    url: dashboard.url,
+    icon: iconMap.dashboard,
+    isActive: dashboard.isActive,
+    isDisabled: dashboard.isDisabled,
+  }
+}
+
+function buildNavGroups(
+  menuConfig: MenuConfig,
+  role: UserRole
+): NavGroup[] {
+  const groups: NavGroup[] = []
+  
+  const tradingItems: NavGroup["items"] = []
+  const businessItems: NavGroup["items"] = []
+  const adminItems: NavGroup["items"] = []
+
+  const addItem = (
+    key: keyof typeof menuConfig,
+    iconKey: string,
+    targetArray: NavGroup["items"]
+  ) => {
+    const item = menuConfig[key]
+    if (!item || key === "settings" || key === "dashboard" || key === "membership") return
+
+    const icon = iconMap[iconKey] || LayoutDashboard
+
+    targetArray.push({
+      title: item.title,
+      url: item.items?.length ? "#" : item.url,
+      icon,
+      isActive: item.isActive,
+      isDisabled: item.isDisabled,
+      items: item.items?.map((subItem) => ({
+        title: subItem.title,
+        url: subItem.url,
+      })),
+    })
+  }
+
+  if (role === "admin") {
+    tradingItems.push({
+      title: "Signals",
+      url: "/signals",
+      icon: iconMap.signals,
+    })
+    businessItems.push({
+      title: "Network",
       url: "#",
-      icon: SquareTerminal,
-      isActive: true,
+      icon: iconMap.network,
       items: [
         {
-          title: "History",
-          url: "#",
+          title: "Network chart",
+          url: "/network/chart",
         },
         {
-          title: "Starred",
-          url: "#",
-        },
-        {
-          title: "Settings",
-          url: "#",
+          title: "Network data",
+          url: "/network/data",
         },
       ],
-    },
-    {
-      title: "Models",
-      url: "#",
-      icon: Bot,
-      items: [
-        {
-          title: "Genesis",
-          url: "#",
-        },
-        {
-          title: "Explorer",
-          url: "#",
-        },
-        {
-          title: "Quantum",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Documentation",
-      url: "#",
-      icon: BookOpen,
-      items: [
-        {
-          title: "Introduction",
-          url: "#",
-        },
-        {
-          title: "Get Started",
-          url: "#",
-        },
-        {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings2,
-      items: [
-        {
-          title: "General",
-          url: "#",
-        },
-        {
-          title: "Team",
-          url: "#",
-        },
-        {
-          title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Limits",
-          url: "#",
-        },
-      ],
-    },
-  ],
-  navSecondary: [
-    {
-      title: "Support",
-      url: "#",
-      icon: LifeBuoy,
-    },
-    {
-      title: "Feedback",
-      url: "#",
-      icon: Send,
-    },
-  ],
-  projects: [
-    {
-      name: "Design Engineering",
-      url: "#",
-      icon: Frame,
-    },
-    {
-      name: "Sales & Marketing",
-      url: "#",
-      icon: PieChart,
-    },
-    {
-      name: "Travel",
-      url: "#",
-      icon: Map,
-    },
-  ],
+    })
+    businessItems.push({
+      title: "Withdrawals",
+      url: "/withdrawals",
+      icon: iconMap.withdrawals,
+    })
+    adminItems.push({
+      title: "Signals manager",
+      url: "/signals",
+      icon: iconMap.signals,
+    })
+    if (menuConfig.network) {
+      adminItems.push({
+        title: menuConfig.network.title,
+        url: menuConfig.network.url,
+        icon: iconMap.network,
+        isActive: menuConfig.network.isActive,
+        isDisabled: menuConfig.network.isDisabled,
+      })
+    }
+    if (menuConfig.withdrawals) {
+      adminItems.push({
+        title: menuConfig.withdrawals.title,
+        url: menuConfig.withdrawals.url,
+        icon: iconMap.withdrawals,
+        isActive: menuConfig.withdrawals.isActive,
+        isDisabled: menuConfig.withdrawals.isDisabled,
+      })
+    }
+  } else {
+    addItem("signals", "signals", tradingItems)
+    if (role === "networker" || role === "subscriber") {
+      if (menuConfig.network) {
+        addItem("network", "network", businessItems)
+      }
+      if (menuConfig.withdrawals) {
+        addItem("withdrawals", "withdrawals", businessItems)
+      }
+    }
+  }
+
+  if (tradingItems.length > 0) {
+    groups.push({
+      label: "Trading",
+      items: tradingItems,
+    })
+  }
+
+  if (businessItems.length > 0) {
+    groups.push({
+      label: "Business",
+      items: businessItems,
+    })
+  }
+
+  if (adminItems.length > 0) {
+    groups.push({
+      label: "Administration",
+      items: adminItems,
+    })
+  }
+
+  return groups
+}
+
+function buildMembershipItem(
+  menuConfig: MenuConfig
+): DashboardItem | null {
+  const membership = menuConfig.membership
+  if (!membership) return null
+
+  return {
+    title: membership.title,
+    url: membership.url,
+    icon: iconMap.membership,
+    isActive: membership.isActive,
+    isDisabled: membership.isDisabled,
+  }
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const permissions = useUserPermissions()
+
+  if (!permissions) {
+    return (
+      <Sidebar variant="inset" {...props}>
+        <SidebarHeader>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton size="lg" disabled>
+                <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+                  <Command className="size-4" />
+                </div>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-medium">Loading...</span>
+                </div>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarHeader>
+        <SidebarContent />
+        <SidebarFooter>
+          <NavUser />
+        </SidebarFooter>
+      </Sidebar>
+    )
+  }
+
+  const navGroups = buildNavGroups(permissions.menuConfig, permissions.role)
+  const dashboardItem = buildDashboardItem(permissions.menuConfig)
+  const membershipItem = buildMembershipItem(permissions.menuConfig)
+
   return (
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <a href="#">
+              <Link href="/dashboard">
                 <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
                   <Command className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">Acme Inc</span>
-                  <span className="truncate text-xs">Enterprise</span>
+                  <span className="truncate font-medium">NexxaTrade</span>
+                  <span className="truncate text-xs">Trading Platform</span>
                 </div>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        {dashboardItem && (
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild tooltip={dashboardItem.title}>
+                    <Link href={dashboardItem.url}>
+                      <dashboardItem.icon />
+                      <span>{dashboardItem.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+        <NavMain groups={navGroups} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        {membershipItem && (
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    asChild 
+                    tooltip={membershipItem.title}
+                  >
+                    <Link href={membershipItem.url}>
+                      <membershipItem.icon />
+                      <span>{membershipItem.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+        <NavUser />
       </SidebarFooter>
     </Sidebar>
   )

@@ -1,47 +1,44 @@
-import Fastify from "fastify";
-import cors from "@fastify/cors";
-import multipart from "@fastify/multipart";
-import swagger from "@fastify/swagger";
-import swaggerUi from "@fastify/swagger-ui";
-import { registerAuthRoutes } from "./auth/routes";
-import { registerHealthRoutes } from "./routes/health";
+import Fastify, { type FastifyServerOptions } from "fastify";
 import { env } from "./config/env";
+import { registerPlugins } from "./plugins";
+import { registerMiddlewares } from "./middleware";
+import { registerRoutes } from "./routes";
 
-export function buildApp() {
-  const app = Fastify({ logger: true });
+export async function buildApp() {
+  const loggerConfig: Exclude<FastifyServerOptions["logger"], boolean | undefined> = {
+    level: env.NODE_ENV === "production" ? "info" : "debug",
+  };
 
-  app.register(cors, { origin: true, credentials: true });
-  app.register(multipart);
-
-  // Swagger configuration for OpenAPI spec generation
-  app.register(swagger, {
-    openapi: {
-      openapi: "3.0.0",
-      info: {
-        title: "NexxaTrade API",
-        description: "API documentation for NexxaTrade",
-        version: "1.0.0",
+  if (env.NODE_ENV === "development") {
+    loggerConfig.transport = {
+      target: "pino-pretty",
+      options: {
+        translateTime: "HH:MM:ss Z",
+        ignore: "pid,hostname",
       },
-      servers: [
-        {
-          url: env.BETTER_AUTH_URL,
-          description: "Development server",
-        },
-      ],
-    },
+    };
+  }
+
+  const app = Fastify({
+    logger: loggerConfig,
+    requestIdHeader: "x-request-id",
+    requestIdLogLabel: "reqId",
+    disableRequestLogging: false,
   });
 
-  app.register(swaggerUi, {
-    routePrefix: "/docs",
-    uiConfig: {
-      docExpansion: "list",
-      deepLinking: false,
-      url: "/api/auth/api-docs/openapi.json",
-    },
+  await registerPlugins(app);
+
+  registerMiddlewares(app);
+
+  registerRoutes(app);
+
+  app.addHook("onReady", async () => {
+    app.log.info("Server is ready");
   });
 
-  registerHealthRoutes(app);
-  registerAuthRoutes(app);
+  app.addHook("onClose", async () => {
+    app.log.info("Server is closing");
+  });
 
   return app;
 }

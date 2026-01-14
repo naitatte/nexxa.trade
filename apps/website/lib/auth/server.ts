@@ -17,6 +17,7 @@ export type Session = {
     email: string;
     emailVerified: boolean;
     image?: string;
+    role: "admin" | "guest" | "subscriber" | "networker";
     createdAt: Date;
     updatedAt: Date;
   };
@@ -49,7 +50,7 @@ export async function getSession(options: { headers: Headers }): Promise<Session
     }
     
     return data as Session;
-  } catch (error) {
+  } catch {
     return null;
   }
 }

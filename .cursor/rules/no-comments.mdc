@@ -1,0 +1,8 @@
+---
+name: no-comments
+description: Prohibits all comments in code files
+---
+
+# Overview
+
+No comments are allowed in the codebase. This rule prohibits the addition of any comments in code files, including inline comments, block comments, and documentation comments. Code should be self-explanatory and readable without the need for explanatory comments.

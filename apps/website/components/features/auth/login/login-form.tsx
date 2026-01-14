@@ -4,7 +4,6 @@ import Link from "next/link"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -37,13 +36,12 @@ const loginSchema = z.object({
   rememberMe: z.boolean().default(false),
 })
 
-type LoginFormData = z.infer<typeof loginSchema>
+type LoginFormData = z.input<typeof loginSchema>
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  const router = useRouter()
   const { setError: setErrorState } = useErrorState({ showToast: false })
   const { state: loadingState, setLoading, setIdle } = useLoadingState()
 
@@ -85,11 +83,12 @@ export function LoginForm({
   })
 
   const onSubmit = async (data: LoginFormData) => {
+    const rememberMe = data.rememberMe ?? false
     signInMutation.mutate({
       data: {
         email: data.email,
         password: data.password,
-        rememberMe: data.rememberMe ? "true" : undefined,
+        rememberMe: rememberMe ? "true" : undefined,
       },
     })
   }

@@ -1,0 +1,8 @@
+---
+name: no-md-files
+description: Prohibits creation of Markdown files in the codebase
+---
+
+# Overview
+
+No Markdown (.md) files are allowed in this codebase. This rule prohibits the creation of README files, documentation files, and any other Markdown-formatted files.

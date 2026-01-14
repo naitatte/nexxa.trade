@@ -19,6 +19,7 @@
     "typecheck:server": "pnpm --filter server typecheck",
     "db:generate": "pnpm --filter @nexxatrade/db drizzle-kit generate",
     "db:migrate": "pnpm --filter @nexxatrade/db drizzle-kit migrate",
+    "db:push": "pnpm --filter @nexxatrade/db drizzle-kit push",
     "db:studio": "pnpm --filter @nexxatrade/db studio",
     "api:generate": "pnpm --filter website api:generate",
     "clean": "pnpm --recursive exec rm -rf node_modules dist .next",

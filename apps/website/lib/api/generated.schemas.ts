@@ -500,7 +500,6 @@ export type ChangeEmailBody = {
 export type ChangeEmail200Message = typeof ChangeEmail200Message[keyof typeof ChangeEmail200Message] | null;
 
 
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ChangeEmail200Message = {
   Email_updated: 'Email updated',
   Verification_email_sent: 'Verification email sent',
@@ -665,7 +664,6 @@ export type DeleteUserBody = {
 export type DeleteUser200Message = typeof DeleteUser200Message[keyof typeof DeleteUser200Message];
 
 
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const DeleteUser200Message = {
   User_deleted: 'User deleted',
   Verification_email_sent: 'Verification email sent',
@@ -1038,7 +1036,6 @@ callbackURL?: string | null;
 export type GetDeleteUserCallback200Message = typeof GetDeleteUserCallback200Message[keyof typeof GetDeleteUserCallback200Message];
 
 
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const GetDeleteUserCallback200Message = {
   User_deleted: 'User deleted',
 } as const;
@@ -1296,4 +1293,3 @@ export type GetError429 = {
 export type GetError500 = {
   message?: string;
 };
-

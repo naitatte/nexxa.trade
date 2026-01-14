@@ -1,9 +1,10 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { openAPI } from "better-auth/plugins";
-import { env } from "../config/env";
-import { db } from "../config/db";
+import { admin, openAPI } from "better-auth/plugins";
+import { env } from "../../config/env";
+import { db } from "../../config/db";
 import { createMailerFromEnv, createBetterAuthEmailHandlers } from "@nexxatrade/mail";
+import { ac, roles, type UserRole } from "./roles";
 
 const mailer = createMailerFromEnv(env.SMTP_USER);
 const emailHandlers = createBetterAuthEmailHandlers({
@@ -35,7 +36,21 @@ export const auth = betterAuth({
     updateAge: 60 * 60 * 24,
     freshAge: 60 * 10,
   },
+  user: {
+    additionalFields: {
+      role: {
+        type: ["admin", "guest", "subscriber", "networker"] as UserRole[],
+        required: false,
+        defaultValue: "guest",
+        input: false,
+      },
+    },
+  },
   plugins: [
+    admin({
+      ac,
+      roles,
+    }),
     openAPI({
       path: "/api-docs",
     }),
