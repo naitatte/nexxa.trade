@@ -1,6 +1,14 @@
 import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
-import { sql } from "drizzle-orm";
+import {
+  and,
+  eq,
+  inArray,
+  isNotNull,
+  lte,
+  lt,
+  sql,
+} from "drizzle-orm";
 import * as schema from "./schema";
 
 export function createDb(connectionString: string) {
@@ -8,4 +16,4 @@ export function createDb(connectionString: string) {
   return drizzle(client, { schema });
 }
 
-export { schema, sql };
+export { schema, sql, and, eq, inArray, isNotNull, lte, lt };

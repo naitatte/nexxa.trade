@@ -7,6 +7,7 @@ import {
   type UserWithRole 
 } from "@/lib/auth/user-permissions";
 import { useMemo } from "react";
+import { useGetApiMembershipUsersUserId } from "@/lib/api/membership/membership";
 
 function extractUserRole(user: AuthUser | null | undefined): UserRole {
   if (!user?.role) {
@@ -44,6 +45,10 @@ function extractExpirationDate(user: AuthUser | null | undefined): Date | null {
 
 export function useUserPermissions(): UserPermissions | null {
   const { data: session, isPending } = useSession();
+  const userId = session?.user?.id;
+  const { data: membershipData } = useGetApiMembershipUsersUserId(userId || "", {
+    query: { enabled: !!userId }
+  });
 
   return useMemo(() => {
     if (isPending) {
@@ -56,14 +61,22 @@ export function useUserPermissions(): UserPermissions | null {
 
     const user = session.user;
     const role = extractUserRole(user);
-    const expirationDate = extractExpirationDate(user);
+    
+    let expirationDate = extractExpirationDate(user);
+    if (!expirationDate && membershipData?.expiresAt) {
+      expirationDate = new Date(membershipData.expiresAt);
+    }
 
     return getUserPermissions(role, expirationDate);
-  }, [session, isPending]);
+  }, [session, isPending, membershipData]);
 }
 
 export function useUser(): UserWithRole | null {
   const { data: session, isPending } = useSession();
+  const userId = session?.user?.id;
+  const { data: membershipData } = useGetApiMembershipUsersUserId(userId || "", {
+    query: { enabled: !!userId }
+  });
 
   return useMemo(() => {
     if (isPending || !session?.user) {
@@ -72,14 +85,19 @@ export function useUser(): UserWithRole | null {
 
     const user = session.user;
     
+    let expirationDate = extractExpirationDate(user);
+    if (!expirationDate && membershipData?.expiresAt) {
+      expirationDate = new Date(membershipData.expiresAt);
+    }
+    
     return {
       id: user.id || "",
       name: user.name || "",
       email: user.email || "",
       role: extractUserRole(user),
-      expirationDate: extractExpirationDate(user),
+      expirationDate,
     };
-  }, [session, isPending]);
+  }, [session, isPending, membershipData]);
 }
 
 export function useHasRole(requiredRole: UserRole | UserRole[]): boolean {

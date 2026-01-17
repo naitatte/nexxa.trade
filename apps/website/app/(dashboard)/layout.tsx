@@ -6,6 +6,7 @@ import {
 import { auth } from "@/lib/auth/server"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
+import { PageTransition } from "@/components/features/dashboard/transitions/page-transition"
 
 export default async function DashboardLayout({
   children,
@@ -32,7 +33,9 @@ export default async function DashboardLayout({
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        {children}
+        <PageTransition>
+          {children}
+        </PageTransition>
       </SidebarInset>
     </SidebarProvider>
   )

@@ -6,4 +6,6 @@ export type AuthUser = NonNullable<AuthSession>["user"] & {
   role?: UserRole | string;
   expirationDate?: string | Date;
   membershipExpiresAt?: string | Date;
+  membershipStatus?: string;
+  membershipTier?: string;
 };

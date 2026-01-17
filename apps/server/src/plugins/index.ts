@@ -4,6 +4,7 @@ import multipart from "@fastify/multipart";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import { env } from "../config/env";
+import { openApiSchemas, openApiTags } from "../utils/openapi-schemas";
 
 export async function registerPlugins(app: FastifyInstance) {
   await app.register(cors, {
@@ -24,6 +25,7 @@ export async function registerPlugins(app: FastifyInstance) {
         description: "API documentation for NexxaTrade",
         version: "1.0.0",
       },
+      tags: openApiTags,
       servers: [
         {
           url: env.BETTER_AUTH_URL,
@@ -41,6 +43,10 @@ export async function registerPlugins(app: FastifyInstance) {
       },
     },
   });
+
+  for (const [schemaId, schema] of Object.entries(openApiSchemas)) {
+    app.addSchema({ $id: schemaId, ...schema });
+  }
 
   await app.register(swaggerUi, {
     routePrefix: "/docs",

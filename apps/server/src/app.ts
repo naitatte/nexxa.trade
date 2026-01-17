@@ -1,8 +1,18 @@
 import Fastify, { type FastifyServerOptions } from "fastify";
+import type { OpenAPIV3 } from "openapi-types";
 import { env } from "./config/env";
 import { registerPlugins } from "./plugins";
 import { registerMiddlewares } from "./middleware";
 import { registerRoutes } from "./routes";
+import { auth } from "./features/auth/auth";
+import {
+  normalizeBetterAuthSchema,
+  mergePaths,
+  mergeTags,
+  mergeComponents,
+  mergeSecurity,
+  adaptSchemasToDb,
+} from "./utils/openapi-merge";
 
 export async function buildApp() {
   const loggerConfig: Exclude<FastifyServerOptions["logger"], boolean | undefined> = {
@@ -33,6 +43,42 @@ export async function buildApp() {
   registerRoutes(app);
 
   app.addHook("onReady", async () => {
+    if (typeof app.swagger === "function") {
+      try {
+        const api = auth.api as typeof auth.api & {
+          generateOpenAPISchema: () => Promise<OpenAPIV3.Document>;
+        };
+
+        if (api.generateOpenAPISchema) {
+          const betterAuthSchema = normalizeBetterAuthSchema(
+            await api.generateOpenAPISchema()
+          );
+
+          const document = app.swagger() as OpenAPIV3.Document;
+
+          document.tags = mergeTags(document.tags, betterAuthSchema.tags);
+          document.paths = mergePaths(document.paths, betterAuthSchema.paths);
+          document.components = mergeComponents(
+            document.components,
+            betterAuthSchema.components
+          );
+          document.security = mergeSecurity(
+            document.security,
+            betterAuthSchema.security
+          );
+
+          adaptSchemasToDb(document);
+
+          app.log.info("Better Auth OpenAPI schema integrated successfully");
+        }
+      } catch (error) {
+        app.log.warn(
+          { err: error },
+          "Failed to integrate Better Auth OpenAPI schema"
+        );
+      }
+    }
+
     app.log.info("Server is ready");
   });
 

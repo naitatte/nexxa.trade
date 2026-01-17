@@ -6,6 +6,21 @@ import { sql } from "@nexxatrade/db";
 export function registerHealthRoutes(app: FastifyInstance) {
   app.get(
     "/health",
+    {
+      schema: {
+        tags: ["System"],
+        summary: "Liveness probe",
+        response: {
+          200: {
+            type: "object",
+            properties: {
+              ok: { type: "boolean" },
+              timestamp: { type: "string", format: "date-time" },
+            },
+          },
+        },
+      },
+    },
     asyncHandler(async () => ({
       ok: true,
       timestamp: new Date().toISOString(),
@@ -14,6 +29,23 @@ export function registerHealthRoutes(app: FastifyInstance) {
 
   app.get(
     "/health/ready",
+    {
+      schema: {
+        tags: ["System"],
+        summary: "Readiness probe",
+        response: {
+          200: {
+            type: "object",
+            properties: {
+              ok: { type: "boolean" },
+              timestamp: { type: "string", format: "date-time" },
+              database: { type: "string" },
+              error: { type: "string" },
+            },
+          },
+        },
+      },
+    },
     asyncHandler(async () => {
       try {
         await db.execute(sql`SELECT 1`);

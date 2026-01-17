@@ -65,7 +65,7 @@ export function getUserPermissions(
       isDisabled: status === "inactive",
     },
     membership: {
-      title: "Upgrade",
+      title: status === "active" ? "My subscription" : "Upgrade",
       url: "/membership",
     },
     settings: {

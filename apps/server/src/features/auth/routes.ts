@@ -6,6 +6,18 @@ import { InternalServerError } from "../../types/errors";
 export function registerAuthRoutes(app: FastifyInstance) {
   app.get(
     "/api/auth/api-docs/openapi.json",
+    {
+      schema: {
+        tags: ["System"],
+        summary: "Better Auth OpenAPI schema",
+        response: {
+          200: {
+            type: "object",
+            additionalProperties: true,
+          },
+        },
+      },
+    },
     asyncHandler(async (request, reply) => {
       const schema = await auth.api.generateOpenAPISchema();
       if (!schema) {
@@ -18,6 +30,9 @@ export function registerAuthRoutes(app: FastifyInstance) {
   app.route({
     method: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     url: "/api/auth/*",
+    schema: {
+      hide: true,
+    },
     handler: asyncHandler(async (request, reply) => {
       const protocol =
         request.headers["x-forwarded-proto"] ||

@@ -44,6 +44,22 @@ export const auth = betterAuth({
         defaultValue: "guest",
         input: false,
       },
+      membershipStatus: {
+        type: "string",
+        required: false,
+        defaultValue: "inactive",
+        input: false,
+      },
+      membershipTier: {
+        type: "string",
+        required: false,
+        input: false,
+      },
+      membershipExpiresAt: {
+        type: "string",
+        required: false,
+        input: false,
+      },
     },
   },
   plugins: [

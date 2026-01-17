@@ -1,0 +1,68 @@
+---
+name: file-organization
+description: Establishes rules for proper file and component organization in folders
+---
+
+# Overview
+
+All files and components must be organized following a clear and consistent folder structure. Components should be grouped by functional category in dedicated folders.
+
+## Organization Rules
+
+### Component Structure
+
+1. **Basic UI components**: Must be in `components/ui/` and be generic, reusable components.
+
+2. **Feature components**: Must be in `components/features/{feature-name}/` where `{feature-name}` is the functionality name (e.g., `dashboard`, `auth`).
+
+3. **Categorization within Features**: When a feature has multiple related components that form a functional category, they should be organized in subfolders:
+   - Example: `components/features/dashboard/breadcrumb/` for breadcrumb components
+   - Example: `components/features/dashboard/sidebar/` for sidebar components
+   - Example: `components/features/dashboard/navigation/` for navigation components
+
+4. **File names**: 
+   - Use kebab-case for file names (e.g., `dashboard-breadcrumb.tsx`)
+   - Names must be descriptive and reflect the component's functionality
+   - Avoid generic names like `component.tsx` or `index.tsx` when there are multiple components in the same folder
+
+5. **Component names**:
+   - Use PascalCase for exported component names
+   - The component name must match its purpose and context (e.g., `DashboardBreadcrumb` instead of `SidebarBreadcrumb` if it's dashboard-specific)
+
+### When to create a new folder
+
+- When there are 2 or more related components that form a functional category
+- When a component has sub-components or related files (hooks, utils, types)
+- When the functionality is complex enough to justify its own folder
+
+### When NOT to create a new folder
+
+- When there's only one file in the folder and no more are expected to be added
+
+## Correct Examples
+
+```
+components/
+  features/
+    dashboard/
+      breadcrumb/
+        dashboard-breadcrumb.tsx
+      sidebar/
+        app-sidebar.tsx
+        nav-main.tsx
+        nav-user.tsx
+      navigation/
+        top-nav.tsx
+        mobile-nav.tsx
+```
+
+## Incorrect Examples
+
+```
+components/
+  features/
+    dashboard/
+      sidebar-breadcrumb.tsx  ❌ Should be in breadcrumb/
+      dashboard-breadcrumb.tsx  ❌ Should be in breadcrumb/
+      component.tsx  ❌ Generic name
+```

@@ -3,7 +3,7 @@
 import { VerifyEmailForm } from "@/components/features/auth/verification/verify-email-form"
 import { useSearchParams } from "next/navigation"
 import { Suspense, useEffect } from "react"
-import { getGetVerifyEmailQueryKey, useGetVerifyEmail } from "@/lib/api/default/default"
+import { getGetApiAuthVerifyEmailQueryKey, useGetApiAuthVerifyEmail } from "@/lib/api/default/default"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 
@@ -13,11 +13,11 @@ function VerifyEmailPageContent() {
   const email = searchParams.get("email") || undefined
   const token = searchParams.get("token")
 
-  const { isSuccess, isError } = useGetVerifyEmail(
+  const { isSuccess, isError } = useGetApiAuthVerifyEmail(
     { token: token || "" },
     {
       query: {
-        queryKey: getGetVerifyEmailQueryKey({ token: token || "" }),
+        queryKey: getGetApiAuthVerifyEmailQueryKey({ token: token || "" }),
         enabled: !!token,
         retry: false,
       },
