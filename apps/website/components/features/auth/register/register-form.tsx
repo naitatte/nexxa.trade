@@ -26,8 +26,7 @@ import { Input } from "@/components/ui/input"
 import { useErrorState } from "@/lib/error-state/hooks"
 import { useLoadingState } from "@/lib/loading-state/hooks"
 import { LoadingSpinner } from "@/lib/loading-state/components"
-import { useSignUpWithEmailAndPassword } from "@/lib/api/default/default"
-import { toast } from "sonner"
+import { useSignUpWithEmailAndPassword } from "@/lib/api/auth/auth"
 import { translateErrorFromResponse, extractErrorCode } from "@/lib/error-translations"
 
 const registerSchema = z.object({
@@ -48,7 +47,7 @@ export function RegisterForm({
 }: React.ComponentProps<"div">) {
   const router = useRouter()
   const { setError: setErrorState } = useErrorState({ showToast: false })
-  const { state: loadingState, setLoading, setIdle } = useLoadingState()
+  const { state: loadingState, setLoading, setIdle, setSuccess } = useLoadingState()
 
   const {
     register,
@@ -65,17 +64,13 @@ export function RegisterForm({
       },
       onSuccess: (_, variables) => {
         setIdle()
-        toast.success("Account created successfully!")
+        setSuccess("Account created successfully!")
         router.push(`/verify-email?email=${encodeURIComponent(variables.data.email)}`)
       },
       onError: (error) => {
         setIdle()
         const translation = translateErrorFromResponse(error, "Failed to create account")
         const errorCode = extractErrorCode(error)
-        
-        toast.error(translation.message, {
-          description: translation.description,
-        })
         
         const errorObj = error instanceof Error ? error : new Error(String(error))
         setErrorState(errorObj, translation.message, errorCode || undefined, false)

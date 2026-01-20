@@ -11,33 +11,81 @@ All files and components must be organized following a clear and consistent fold
 
 ### Component Structure
 
-1. **Basic UI components**: Must be in `components/ui/` and be generic, reusable components.
+1. **Basic UI components**: Must be in `components/ui/` and be generic, reusable components (e.g., `button.tsx`, `input.tsx`, `card.tsx`).
 
-2. **Feature components**: Must be in `components/features/{feature-name}/` where `{feature-name}` is the functionality name (e.g., `dashboard`, `auth`).
+2. **Feature components**: Must be in `components/features/{feature-name}/` where `{feature-name}` is the functionality name (e.g., `dashboard`, `auth`, `membership`, `settings`).
 
-3. **Categorization within Features**: When a feature has multiple related components that form a functional category, they should be organized in subfolders:
-   - Example: `components/features/dashboard/breadcrumb/` for breadcrumb components
-   - Example: `components/features/dashboard/sidebar/` for sidebar components
-   - Example: `components/features/dashboard/navigation/` for navigation components
+3. **Categorization within Features**: When a feature has multiple related components that form a functional category, they should be organized in subfolders. Subfolders can:
+   - Use descriptive names for functional categories (e.g., `breadcrumb/`, `sidebar/`, `password/`)
+   - Use the same name as the feature when grouping core feature components (e.g., `membership/membership/`, `settings/settings/`)
 
 4. **File names**: 
-   - Use kebab-case for file names (e.g., `dashboard-breadcrumb.tsx`)
+   - Use kebab-case for file names (e.g., `dashboard-breadcrumb.tsx`, `login-form.tsx`, `membership-info.tsx`)
    - Names must be descriptive and reflect the component's functionality
    - Avoid generic names like `component.tsx` or `index.tsx` when there are multiple components in the same folder
 
 5. **Component names**:
    - Use PascalCase for exported component names
-   - The component name must match its purpose and context (e.g., `DashboardBreadcrumb` instead of `SidebarBreadcrumb` if it's dashboard-specific)
+   - The component name must match its purpose and context (e.g., `DashboardBreadcrumb`, `LoginForm`, `MembershipInfo`)
 
 ### When to create a new folder
 
 - When there are 2 or more related components that form a functional category
 - When a component has sub-components or related files (hooks, utils, types)
 - When the functionality is complex enough to justify its own folder
+- When grouping core feature components under a subfolder with the feature name
 
 ### When NOT to create a new folder
 
 - When there's only one file in the folder and no more are expected to be added
+
+## Current Project Structure
+
+```
+components/
+  ui/
+    button.tsx
+    input.tsx
+    card.tsx
+    ...
+  features/
+    dashboard/
+      breadcrumb/
+        dashboard-breadcrumb.tsx
+      sidebar/
+        app-sidebar.tsx
+        nav-main.tsx
+        nav-projects.tsx
+        nav-secondary.tsx
+        nav-user.tsx
+      transitions/
+        page-transition.tsx
+    membership/
+      membership/
+        membership-alert.tsx
+        membership-info.tsx
+        subscription-status-badge.tsx
+      plans/
+        plan-card.tsx
+        plan-selector.tsx
+        upgrade-prompt.tsx
+    auth/
+      login/
+        login-form.tsx
+      password/
+        forgot-password-form.tsx
+        reset-password-form.tsx
+      permissions/
+        role-guard.tsx
+        with-permissions.tsx
+      register/
+        register-form.tsx
+      verification/
+        verify-email-form.tsx
+    settings/
+      settings/
+        settings-page.tsx
+```
 
 ## Correct Examples
 
@@ -51,9 +99,18 @@ components/
         app-sidebar.tsx
         nav-main.tsx
         nav-user.tsx
-      navigation/
-        top-nav.tsx
-        mobile-nav.tsx
+    membership/
+      membership/
+        membership-info.tsx
+        membership-alert.tsx
+      plans/
+        plan-selector.tsx
+        plan-card.tsx
+    auth/
+      login/
+        login-form.tsx
+      password/
+        reset-password-form.tsx
 ```
 
 ## Incorrect Examples
@@ -65,4 +122,6 @@ components/
       sidebar-breadcrumb.tsx  ❌ Should be in breadcrumb/
       dashboard-breadcrumb.tsx  ❌ Should be in breadcrumb/
       component.tsx  ❌ Generic name
+    membership/
+      membership-info.tsx  ❌ Should be in membership/ subfolder if there are multiple membership components
 ```

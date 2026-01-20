@@ -25,7 +25,7 @@ import { Input } from "@/components/ui/input"
 import { useErrorState } from "@/lib/error-state/hooks"
 import { useLoadingState } from "@/lib/loading-state/hooks"
 import { LoadingSpinner } from "@/lib/loading-state/components"
-import { useRequestPasswordReset } from "@/lib/api/default/default"
+import { useRequestPasswordReset } from "@/lib/api/auth/auth"
 import { toast } from "sonner"
 import { translateErrorFromResponse, extractErrorCode } from "@/lib/error-translations"
 

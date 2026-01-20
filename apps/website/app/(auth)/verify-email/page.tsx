@@ -3,7 +3,7 @@
 import { VerifyEmailForm } from "@/components/features/auth/verification/verify-email-form"
 import { useSearchParams } from "next/navigation"
 import { Suspense, useEffect } from "react"
-import { getGetApiAuthVerifyEmailQueryKey, useGetApiAuthVerifyEmail } from "@/lib/api/default/default"
+import { getGetApiAuthVerifyEmailQueryKey, useGetApiAuthVerifyEmail } from "@/lib/api/auth/auth"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 

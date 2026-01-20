@@ -3,8 +3,6 @@
 import {
   ChevronsUpDown,
   LogOut,
-  CheckCircle2,
-  XCircle,
   Settings2,
 } from "lucide-react"
 import Link from "next/link"
@@ -14,10 +12,7 @@ import { toast } from "sonner"
 import { useLoadingState } from "@/lib/loading-state/hooks"
 import { LoadingSpinner } from "@/lib/loading-state/components"
 import { useSession } from "@/lib/auth/hooks"
-import type { AuthUser } from "@/lib/auth/types"
-import { useUserPermissions, useUser } from "@/hooks/use-user-permissions"
-import { useGetApiMembershipUsersUserId } from "@/lib/api/membership/membership"
-import { format } from "date-fns"
+import { useSettingsStore } from "@/lib/stores/settings/settings-store"
 
 import {
   Avatar,
@@ -44,17 +39,12 @@ export function NavUser() {
   const router = useRouter()
   const { state: loadingState, setLoading, setIdle } = useLoadingState()
   const { data: sessionData, isPending } = useSession()
-  const permissions = useUserPermissions()
-  const userData = useUser()
-  const userId = sessionData?.user?.id
-  const { data: membershipData } = useGetApiMembershipUsersUserId(userId || "", {
-    query: { enabled: !!userId }
-  })
+  const settingsUser = useSettingsStore((state) => state.user)
   
-  const user = sessionData?.user
-  const userName = user?.name || ""
-  const userEmail = user?.email || ""
-  const userAvatar = user?.image || ""
+  const sessionUser = sessionData?.user
+  const userName = settingsUser?.name || sessionUser?.name || ""
+  const userEmail = settingsUser?.email || sessionUser?.email || ""
+  const userAvatar = settingsUser?.image || sessionUser?.image || undefined
 
   const handleSignOut = async () => {
     setLoading("Signing out...")
@@ -94,7 +84,7 @@ export function NavUser() {
     )
   }
 
-  if (!sessionData || !user || !userName || !userEmail) {
+  if (!sessionData || !sessionUser || !userName || !userEmail) {
     return null
   }
 
@@ -104,30 +94,6 @@ export function NavUser() {
     .join("")
     .toUpperCase()
     .slice(0, 2) || "U"
-
-  const sessionUser = user as AuthUser
-  const membershipStatus = membershipData?.status || sessionUser.membershipStatus || permissions?.status || "inactive"
-  const isActive = membershipStatus === "active"
-  const status = isActive ? "Active" : "Inactive"
-  
-  const rawTier = membershipData?.tier || sessionUser.membershipTier
-  const tierName = rawTier 
-    ? rawTier.split('_').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
-    : userData?.role && userData.role !== 'guest'
-      ? userData.role.charAt(0).toUpperCase() + userData.role.slice(1)
-      : "No Membership"
-
-  const statusIcon = isActive ? (
-    <CheckCircle2 className="size-3 text-green-500" />
-  ) : (
-    <XCircle className="size-3 text-red-500" />
-  )
-
-  const expirationDate = membershipData?.expiresAt
-    ? format(new Date(membershipData.expiresAt), "dd/MM/yyyy")
-    : userData?.expirationDate
-    ? format(new Date(userData.expirationDate), "dd/MM/yyyy")
-    : "N/A"
 
   return (
     <SidebarMenu>
@@ -167,26 +133,6 @@ export function NavUser() {
                 </div>
               </div>
             </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <div className="px-2 py-2 space-y-1.5">
-              <div className="flex items-center justify-between gap-3 text-xs">
-                <span className="text-muted-foreground">Membership:</span>
-                <span className="font-medium text-foreground">{tierName}</span>
-              </div>
-              <div className="flex items-center justify-between gap-3 text-xs">
-                <span className="text-muted-foreground">Status:</span>
-                <div className="flex items-center gap-1.5">
-                  <span className={`font-medium ${isActive ? "text-green-600" : "text-red-600"}`}>
-                    {status}
-                  </span>
-                  {statusIcon}
-                </div>
-              </div>
-              <div className="flex items-center justify-between gap-3 text-xs">
-                <span className="text-muted-foreground">Expires:</span>
-                <span className="font-medium text-foreground">{expirationDate}</span>
-              </div>
-            </div>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link href="/settings" className="cursor-pointer">

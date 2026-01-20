@@ -8,7 +8,6 @@
 export type Def0 = typeof Def0[keyof typeof Def0];
 
 
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const Def0 = {
   admin: 'admin',
   guest: 'guest',
@@ -19,7 +18,6 @@ export const Def0 = {
 export type Def1 = typeof Def1[keyof typeof Def1];
 
 
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const Def1 = {
   trial_weekly: 'trial_weekly',
   annual: 'annual',
@@ -29,7 +27,6 @@ export const Def1 = {
 export type Def2 = typeof Def2[keyof typeof Def2];
 
 
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const Def2 = {
   active: 'active',
   inactive: 'inactive',
@@ -39,7 +36,6 @@ export const Def2 = {
 export type Def3 = typeof Def3[keyof typeof Def3];
 
 
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const Def3 = {
   pending: 'pending',
   confirmed: 'confirmed',
@@ -225,7 +221,6 @@ export interface Def19 {
 export type UserRole = typeof UserRole[keyof typeof UserRole];
 
 
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UserRole = {
   admin: 'admin',
   guest: 'guest',
@@ -245,6 +240,7 @@ export interface User {
   readonly banned?: boolean;
   readonly banReason?: string;
   readonly banExpires?: string;
+  readonly twoFactorEnabled?: boolean;
   readonly membershipStatus?: string;
   readonly membershipTier?: string;
   readonly membershipExpiresAt?: string;
@@ -287,6 +283,13 @@ export interface Verification {
   updatedAt: string;
 }
 
+export interface TwoFactor {
+  id?: string;
+  secret: string;
+  backupCodes: string;
+  userId: string;
+}
+
 export type GetHealth200 = {
   ok?: boolean;
   timestamp?: string;
@@ -299,7 +302,81 @@ export type GetHealthReady200 = {
   error?: string;
 };
 
+export type PostApiAuthChangeEmailOtpBody = {
+  newEmail: string;
+};
+
+export type PostApiAuthChangeEmailOtp200 = {
+  message?: string;
+};
+
+export type PostApiAuthTwoFactorDisableBody = {
+  /** User password */
+  password: string;
+};
+
+export type PostApiAuthTwoFactorDisable200 = {
+  status?: boolean;
+};
+
+export type PostApiAuthTwoFactorDisable400 = {
+  message: string;
+};
+
+export type PostApiAuthTwoFactorDisable401 = {
+  message: string;
+};
+
+export type PostApiAuthTwoFactorDisable403 = {
+  message?: string;
+};
+
+export type PostApiAuthTwoFactorDisable404 = {
+  message?: string;
+};
+
+export type PostApiAuthTwoFactorDisable429 = {
+  message?: string;
+};
+
+export type PostApiAuthTwoFactorDisable500 = {
+  message?: string;
+};
+
+export type PostApiAuthVerifyChangeEmailOtpBody = {
+  newEmail: string;
+  otpCode: string;
+};
+
+export type PostApiAuthVerifyChangeEmailOtp200 = {
+  message?: string;
+};
+
 export type GetApiAuthApiDocsOpenapiJson200 = { [key: string]: unknown };
+
+export type ListUserSessions400 = {
+  message: string;
+};
+
+export type ListUserSessions401 = {
+  message: string;
+};
+
+export type ListUserSessions403 = {
+  message?: string;
+};
+
+export type ListUserSessions404 = {
+  message?: string;
+};
+
+export type ListUserSessions429 = {
+  message?: string;
+};
+
+export type ListUserSessions500 = {
+  message?: string;
+};
 
 /**
  * @nullable
@@ -723,7 +800,6 @@ export type ChangeEmailBody = {
 export type ChangeEmail200Message = typeof ChangeEmail200Message[keyof typeof ChangeEmail200Message] | null;
 
 
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ChangeEmail200Message = {
   Email_updated: 'Email updated',
   Verification_email_sent: 'Verification email sent',
@@ -886,7 +962,6 @@ export type DeleteUserBody = {
 export type DeleteUser200Message = typeof DeleteUser200Message[keyof typeof DeleteUser200Message];
 
 
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const DeleteUser200Message = {
   User_deleted: 'User deleted',
   Verification_email_sent: 'Verification email sent',
@@ -994,30 +1069,6 @@ export type ResetPasswordCallback429 = {
 };
 
 export type ResetPasswordCallback500 = {
-  message?: string;
-};
-
-export type ListUserSessionsAuth400 = {
-  message: string;
-};
-
-export type ListUserSessionsAuth401 = {
-  message: string;
-};
-
-export type ListUserSessionsAuth403 = {
-  message?: string;
-};
-
-export type ListUserSessionsAuth404 = {
-  message?: string;
-};
-
-export type ListUserSessionsAuth429 = {
-  message?: string;
-};
-
-export type ListUserSessionsAuth500 = {
   message?: string;
 };
 
@@ -1246,7 +1297,6 @@ callbackURL?: string | null;
 export type GetApiAuthDeleteUserCallback200Message = typeof GetApiAuthDeleteUserCallback200Message[keyof typeof GetApiAuthDeleteUserCallback200Message];
 
 
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const GetApiAuthDeleteUserCallback200Message = {
   User_deleted: 'User deleted',
 } as const;
@@ -1607,38 +1657,38 @@ export type CreateUser500 = {
   message?: string;
 };
 
-export type UpdateAdminUserBody = {
+export type UpdateUserPostApiAuthAdminUpdateUserBody = {
   /** The user id */
   userId: string;
   /** The user data to update */
   data: string;
 };
 
-export type UpdateAdminUser200 = {
+export type UpdateUserPostApiAuthAdminUpdateUser200 = {
   user?: User;
 };
 
-export type UpdateAdminUser400 = {
+export type UpdateUserPostApiAuthAdminUpdateUser400 = {
   message: string;
 };
 
-export type UpdateAdminUser401 = {
+export type UpdateUserPostApiAuthAdminUpdateUser401 = {
   message: string;
 };
 
-export type UpdateAdminUser403 = {
+export type UpdateUserPostApiAuthAdminUpdateUser403 = {
   message?: string;
 };
 
-export type UpdateAdminUser404 = {
+export type UpdateUserPostApiAuthAdminUpdateUser404 = {
   message?: string;
 };
 
-export type UpdateAdminUser429 = {
+export type UpdateUserPostApiAuthAdminUpdateUser429 = {
   message?: string;
 };
 
-export type UpdateAdminUser500 = {
+export type UpdateUserPostApiAuthAdminUpdateUser500 = {
   message?: string;
 };
 
@@ -1722,36 +1772,36 @@ export type ListUsers500 = {
   message?: string;
 };
 
-export type ListUserSessionsBody = {
+export type ListUserSessionsPostApiAuthAdminListUserSessionsBody = {
   /** The user id */
   userId: string;
 };
 
-export type ListUserSessions200 = {
+export type ListUserSessionsPostApiAuthAdminListUserSessions200 = {
   sessions?: Session[];
 };
 
-export type ListUserSessions400 = {
+export type ListUserSessionsPostApiAuthAdminListUserSessions400 = {
   message: string;
 };
 
-export type ListUserSessions401 = {
+export type ListUserSessionsPostApiAuthAdminListUserSessions401 = {
   message: string;
 };
 
-export type ListUserSessions403 = {
+export type ListUserSessionsPostApiAuthAdminListUserSessions403 = {
   message?: string;
 };
 
-export type ListUserSessions404 = {
+export type ListUserSessionsPostApiAuthAdminListUserSessions404 = {
   message?: string;
 };
 
-export type ListUserSessions429 = {
+export type ListUserSessionsPostApiAuthAdminListUserSessions429 = {
   message?: string;
 };
 
-export type ListUserSessions500 = {
+export type ListUserSessionsPostApiAuthAdminListUserSessions500 = {
   message?: string;
 };
 
@@ -2070,5 +2120,345 @@ export type PostApiAuthAdminHasPermission429 = {
 };
 
 export type PostApiAuthAdminHasPermission500 = {
+  message?: string;
+};
+
+export type PostApiAuthTwoFactorGetTotpUriBody = {
+  /** User password */
+  password: string;
+};
+
+export type PostApiAuthTwoFactorGetTotpUri200 = {
+  totpURI?: string;
+};
+
+export type PostApiAuthTwoFactorGetTotpUri400 = {
+  message: string;
+};
+
+export type PostApiAuthTwoFactorGetTotpUri401 = {
+  message: string;
+};
+
+export type PostApiAuthTwoFactorGetTotpUri403 = {
+  message?: string;
+};
+
+export type PostApiAuthTwoFactorGetTotpUri404 = {
+  message?: string;
+};
+
+export type PostApiAuthTwoFactorGetTotpUri429 = {
+  message?: string;
+};
+
+export type PostApiAuthTwoFactorGetTotpUri500 = {
+  message?: string;
+};
+
+export type PostApiAuthTwoFactorVerifyTotpBody = {
+  /** The otp code to verify. Eg: "012345" */
+  code: string;
+  /**
+   * If true, the device will be trusted for 30 days. It'll be refreshed on every sign in request within this time. Eg: true
+   * @nullable
+   */
+  trustDevice?: boolean | null;
+};
+
+export type PostApiAuthTwoFactorVerifyTotp200 = {
+  status?: boolean;
+};
+
+export type PostApiAuthTwoFactorVerifyTotp400 = {
+  message: string;
+};
+
+export type PostApiAuthTwoFactorVerifyTotp401 = {
+  message: string;
+};
+
+export type PostApiAuthTwoFactorVerifyTotp403 = {
+  message?: string;
+};
+
+export type PostApiAuthTwoFactorVerifyTotp404 = {
+  message?: string;
+};
+
+export type PostApiAuthTwoFactorVerifyTotp429 = {
+  message?: string;
+};
+
+export type PostApiAuthTwoFactorVerifyTotp500 = {
+  message?: string;
+};
+
+export type PostApiAuthTwoFactorSendOtp200 = {
+  status?: boolean;
+};
+
+export type PostApiAuthTwoFactorSendOtp400 = {
+  message: string;
+};
+
+export type PostApiAuthTwoFactorSendOtp401 = {
+  message: string;
+};
+
+export type PostApiAuthTwoFactorSendOtp403 = {
+  message?: string;
+};
+
+export type PostApiAuthTwoFactorSendOtp404 = {
+  message?: string;
+};
+
+export type PostApiAuthTwoFactorSendOtp429 = {
+  message?: string;
+};
+
+export type PostApiAuthTwoFactorSendOtp500 = {
+  message?: string;
+};
+
+export type PostApiAuthTwoFactorVerifyOtpBody = {
+  /** The otp code to verify. Eg: "012345" */
+  code: string;
+  /** @nullable */
+  trustDevice?: boolean | null;
+};
+
+/**
+ * The authenticated user object
+ */
+export type PostApiAuthTwoFactorVerifyOtp200User = {
+  /** Unique identifier of the user */
+  id: string;
+  /**
+   * User's email address
+   * @nullable
+   */
+  email?: string | null;
+  /**
+   * Whether the email is verified
+   * @nullable
+   */
+  emailVerified?: boolean | null;
+  /**
+   * User's name
+   * @nullable
+   */
+  name?: string | null;
+  /**
+   * User's profile image URL
+   * @nullable
+   */
+  image?: string | null;
+  /** Timestamp when the user was created */
+  createdAt: string;
+  /** Timestamp when the user was last updated */
+  updatedAt: string;
+};
+
+export type PostApiAuthTwoFactorVerifyOtp200 = {
+  /** Session token for the authenticated session */
+  token: string;
+  /** The authenticated user object */
+  user: PostApiAuthTwoFactorVerifyOtp200User;
+};
+
+export type PostApiAuthTwoFactorVerifyOtp400 = {
+  message: string;
+};
+
+export type PostApiAuthTwoFactorVerifyOtp401 = {
+  message: string;
+};
+
+export type PostApiAuthTwoFactorVerifyOtp403 = {
+  message?: string;
+};
+
+export type PostApiAuthTwoFactorVerifyOtp404 = {
+  message?: string;
+};
+
+export type PostApiAuthTwoFactorVerifyOtp429 = {
+  message?: string;
+};
+
+export type PostApiAuthTwoFactorVerifyOtp500 = {
+  message?: string;
+};
+
+export type PostApiAuthTwoFactorVerifyBackupCodeBody = {
+  /** A backup code to verify. Eg: "123456" */
+  code: string;
+  /**
+   * If true, the session cookie will not be set.
+   * @nullable
+   */
+  disableSession?: boolean | null;
+  /**
+   * If true, the device will be trusted for 30 days. It'll be refreshed on every sign in request within this time. Eg: true
+   * @nullable
+   */
+  trustDevice?: boolean | null;
+};
+
+/**
+ * The authenticated user object with two-factor details
+ */
+export type PostApiAuthTwoFactorVerifyBackupCode200User = {
+  /** Unique identifier of the user */
+  id: string;
+  /**
+   * User's email address
+   * @nullable
+   */
+  email?: string | null;
+  /**
+   * Whether the email is verified
+   * @nullable
+   */
+  emailVerified?: boolean | null;
+  /**
+   * User's name
+   * @nullable
+   */
+  name?: string | null;
+  /**
+   * User's profile image URL
+   * @nullable
+   */
+  image?: string | null;
+  /** Whether two-factor authentication is enabled for the user */
+  twoFactorEnabled: boolean;
+  /** Timestamp when the user was created */
+  createdAt: string;
+  /** Timestamp when the user was last updated */
+  updatedAt: string;
+};
+
+/**
+ * The current session object, included unless disableSession is true
+ */
+export type PostApiAuthTwoFactorVerifyBackupCode200Session = {
+  /** Session token */
+  token: string;
+  /** ID of the user associated with the session */
+  userId: string;
+  /** Timestamp when the session was created */
+  createdAt: string;
+  /** Timestamp when the session expires */
+  expiresAt: string;
+};
+
+export type PostApiAuthTwoFactorVerifyBackupCode200 = {
+  /** The authenticated user object with two-factor details */
+  user: PostApiAuthTwoFactorVerifyBackupCode200User;
+  /** The current session object, included unless disableSession is true */
+  session: PostApiAuthTwoFactorVerifyBackupCode200Session;
+};
+
+export type PostApiAuthTwoFactorVerifyBackupCode400 = {
+  message: string;
+};
+
+export type PostApiAuthTwoFactorVerifyBackupCode401 = {
+  message: string;
+};
+
+export type PostApiAuthTwoFactorVerifyBackupCode403 = {
+  message?: string;
+};
+
+export type PostApiAuthTwoFactorVerifyBackupCode404 = {
+  message?: string;
+};
+
+export type PostApiAuthTwoFactorVerifyBackupCode429 = {
+  message?: string;
+};
+
+export type PostApiAuthTwoFactorVerifyBackupCode500 = {
+  message?: string;
+};
+
+export type PostApiAuthTwoFactorGenerateBackupCodesBody = {
+  /** The users password. */
+  password: string;
+};
+
+export type PostApiAuthTwoFactorGenerateBackupCodes200 = {
+  /** Indicates if the backup codes were generated successfully */
+  status: boolean;
+  /** Array of generated backup codes in plain text */
+  backupCodes: string[];
+};
+
+export type PostApiAuthTwoFactorGenerateBackupCodes400 = {
+  message: string;
+};
+
+export type PostApiAuthTwoFactorGenerateBackupCodes401 = {
+  message: string;
+};
+
+export type PostApiAuthTwoFactorGenerateBackupCodes403 = {
+  message?: string;
+};
+
+export type PostApiAuthTwoFactorGenerateBackupCodes404 = {
+  message?: string;
+};
+
+export type PostApiAuthTwoFactorGenerateBackupCodes429 = {
+  message?: string;
+};
+
+export type PostApiAuthTwoFactorGenerateBackupCodes500 = {
+  message?: string;
+};
+
+export type PostApiAuthTwoFactorEnableBody = {
+  /** User password */
+  password: string;
+  /**
+   * Custom issuer for the TOTP URI
+   * @nullable
+   */
+  issuer?: string | null;
+};
+
+export type PostApiAuthTwoFactorEnable200 = {
+  /** TOTP URI */
+  totpURI?: string;
+  /** Backup codes */
+  backupCodes?: string[];
+};
+
+export type PostApiAuthTwoFactorEnable400 = {
+  message: string;
+};
+
+export type PostApiAuthTwoFactorEnable401 = {
+  message: string;
+};
+
+export type PostApiAuthTwoFactorEnable403 = {
+  message?: string;
+};
+
+export type PostApiAuthTwoFactorEnable404 = {
+  message?: string;
+};
+
+export type PostApiAuthTwoFactorEnable429 = {
+  message?: string;
+};
+
+export type PostApiAuthTwoFactorEnable500 = {
   message?: string;
 };

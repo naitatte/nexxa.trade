@@ -3,25 +3,48 @@ import type { OpenAPIV3 } from "openapi-types";
 type OpenApiDocument = OpenAPIV3.Document;
 type PathItemObject = OpenAPIV3.PathItemObject;
 type TagObject = OpenAPIV3.TagObject;
+type ParameterObject = OpenAPIV3.ParameterObject;
+type ReferenceObject = OpenAPIV3.ReferenceObject;
+
+function ensureValidParameters(
+  parameters: unknown[] | undefined
+): (ParameterObject | ReferenceObject)[] | undefined {
+  if (!parameters) return undefined;
+  return parameters
+    .filter((param): param is ParameterObject | ReferenceObject => {
+      if (!param || typeof param !== "object") return false;
+      if ("$ref" in param) return true;
+      return "name" in param && typeof (param as ParameterObject).name === "string";
+    })
+    .map((param) => {
+      if ("$ref" in param) return param as ReferenceObject;
+      const paramObj = param as ParameterObject;
+      return {
+        ...paramObj,
+        name: paramObj.name!,
+      } as ParameterObject;
+    });
+}
 
 export function normalizeBetterAuthSchema(
-  schema: OpenApiDocument,
+  schema: OpenApiDocument | Record<string, unknown>,
   basePath: string = "/api/auth"
 ): OpenApiDocument {
-  normalizeOpenApiSchemas(schema);
+  const schemaDoc = schema as OpenApiDocument;
+  normalizeOpenApiSchemas(schemaDoc);
 
   const normalized: OpenApiDocument = {
-    ...schema,
+    ...schemaDoc,
     paths: {},
-    tags: schema.tags?.map((tag: TagObject) => ({
+    tags: schemaDoc.tags?.map((tag: TagObject) => ({
       ...tag,
       name: tag.name || "Auth",
       description: tag.description || "Better Auth endpoints",
     })),
   };
 
-  if (schema.paths) {
-    for (const [path, pathItem] of Object.entries(schema.paths)) {
+  if (schemaDoc.paths) {
+    for (const [path, pathItem] of Object.entries(schemaDoc.paths)) {
       if (pathItem && typeof pathItem === "object" && !("$ref" in pathItem)) {
         const normalizedPath = path.startsWith("/")
           ? `${basePath}${path}`
@@ -29,16 +52,40 @@ export function normalizeBetterAuthSchema(
 
         const pathItemObj = pathItem as PathItemObject;
         normalizeAuthTags(pathItemObj, path);
-        normalized.paths![normalizedPath] = {
+        
+        const normalizedPathItem: PathItemObject = {
           ...pathItemObj,
           summary: pathItemObj.summary || getPathSummary(path),
           description: pathItemObj.description || getPathDescription(path),
         };
+        
+        if (normalizedPathItem.parameters) {
+          normalizedPathItem.parameters = ensureValidParameters(normalizedPathItem.parameters);
+        }
+        
+        const operations = [
+          normalizedPathItem.get,
+          normalizedPathItem.post,
+          normalizedPathItem.put,
+          normalizedPathItem.delete,
+          normalizedPathItem.patch,
+          normalizedPathItem.options,
+          normalizedPathItem.head,
+          normalizedPathItem.trace,
+        ];
+        
+        for (const operation of operations) {
+          if (operation && operation.parameters) {
+            operation.parameters = ensureValidParameters(operation.parameters);
+          }
+        }
+        
+        normalized.paths![normalizedPath] = normalizedPathItem;
       }
     }
   }
 
-  return normalized;
+  return normalized as OpenApiDocument;
 }
 
 function normalizeAuthTags(pathItem: PathItemObject, path: string): void {
@@ -328,8 +375,14 @@ function normalizeOpenApiSchemas(document: OpenApiDocument): void {
 
 function normalizePathItemSchemas(pathItem: PathItemObject): void {
   if (pathItem.parameters) {
-    for (const parameter of pathItem.parameters) {
-      normalizeParameter(parameter);
+    const validParams = ensureValidParameters(pathItem.parameters);
+    if (validParams) {
+      pathItem.parameters = validParams;
+      for (const parameter of pathItem.parameters) {
+        normalizeParameter(parameter);
+      }
+    } else {
+      delete pathItem.parameters;
     }
   }
 
@@ -354,8 +407,14 @@ function normalizeOperationSchemas(
   operation: OpenAPIV3.OperationObject
 ): void {
   if (operation.parameters) {
-    for (const parameter of operation.parameters) {
-      normalizeParameter(parameter);
+    const validParams = ensureValidParameters(operation.parameters);
+    if (validParams) {
+      operation.parameters = validParams;
+      for (const parameter of operation.parameters) {
+        normalizeParameter(parameter);
+      }
+    } else {
+      delete operation.parameters;
     }
   }
 

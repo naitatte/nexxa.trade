@@ -39,15 +39,16 @@ export function generatePageMetadata(
     ? buildAbsoluteUrl(image)
     : `${siteConfig.url}${siteConfig.ogImage}`;
 
-  const formattedTitle = title.endsWith(" | Nexxa") ? title : `${title} | Nexxa`;
-  const imageAltText = imageAlt || formattedTitle;
+  const cleanTitle = title.replace(/\s*\|\s*Nexxa\s*$/, "");
+  const fullTitle = `${cleanTitle} | Nexxa`;
+  const imageAltText = imageAlt || fullTitle;
 
   const openGraphConfig: Metadata["openGraph"] = {
     type,
     locale: siteConfig.locale,
     url: pageUrl,
     siteName: siteConfig.name,
-    title: formattedTitle,
+    title: fullTitle,
     description: description || siteConfig.description,
     images: [
       {
@@ -67,7 +68,7 @@ export function generatePageMetadata(
   };
 
   const metadata: Metadata = {
-    title: formattedTitle,
+    title: cleanTitle,
     description: description || siteConfig.description,
     ...(keywords && { keywords }),
     ...(url && {
@@ -78,7 +79,7 @@ export function generatePageMetadata(
     openGraph: openGraphConfig,
     twitter: {
       card: "summary_large_image",
-      title: formattedTitle,
+      title: fullTitle,
       description: description || siteConfig.description,
       creator: siteConfig.twitterHandle,
       images: [ogImage],

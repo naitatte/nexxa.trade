@@ -117,7 +117,7 @@ export function useGetHealth<TData = Awaited<ReturnType<typeof getHealth>>, TErr
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-  return { ...query, queryKey: queryOptions.queryKey }
+  return { ...query, queryKey: queryOptions.queryKey };
 }
 
 
@@ -207,7 +207,7 @@ export function useGetHealthReady<TData = Awaited<ReturnType<typeof getHealthRea
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-  return { ...query, queryKey: queryOptions.queryKey }
+  return { ...query, queryKey: queryOptions.queryKey };
 }
 
 
@@ -297,7 +297,7 @@ export function useGetApiAuthApiDocsOpenapiJson<TData = Awaited<ReturnType<typeo
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-  return { ...query, queryKey: queryOptions.queryKey }
+  return { ...query, queryKey: queryOptions.queryKey };
 }
 
 

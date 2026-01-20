@@ -26,8 +26,7 @@ import { Input } from "@/components/ui/input"
 import { useErrorState } from "@/lib/error-state/hooks"
 import { useLoadingState } from "@/lib/loading-state/hooks"
 import { LoadingSpinner } from "@/lib/loading-state/components"
-import { useResetPassword } from "@/lib/api/default/default"
-import { toast } from "sonner"
+import { useResetPassword } from "@/lib/api/auth/auth"
 import { translateErrorFromResponse, extractErrorCode } from "@/lib/error-translations"
 
 const resetPasswordSchema = z.object({
@@ -48,7 +47,7 @@ export function ResetPasswordForm({
   const searchParams = useSearchParams()
   const token = searchParams.get("token")
   const { setError: setErrorState } = useErrorState({ showToast: false })
-  const { state: loadingState, setLoading, setIdle } = useLoadingState()
+  const { state: loadingState, setLoading, setIdle, setSuccess, setError } = useLoadingState()
 
   const {
     register,
@@ -65,17 +64,13 @@ export function ResetPasswordForm({
       },
       onSuccess: () => {
         setIdle()
-        toast.success("Password reset successfully!")
+        setSuccess("Password reset successfully!")
         router.push("/login")
       },
       onError: (error) => {
         setIdle()
         const translation = translateErrorFromResponse(error, "Failed to reset password")
         const errorCode = extractErrorCode(error)
-        
-        toast.error(translation.message, {
-          description: translation.description,
-        })
         
         const errorObj = error instanceof Error ? error : new Error(String(error))
         setErrorState(errorObj, translation.message, errorCode || undefined, false)
@@ -86,17 +81,17 @@ export function ResetPasswordForm({
   useEffect(() => {
     const error = searchParams.get("error")
     if (error === "INVALID_TOKEN") {
-      toast.error("Invalid or expired reset token")
+      setError("Invalid or expired reset token", "RESET_TOKEN_INVALID")
       router.push("/forgot-password")
     } else if (!token && !error) {
-      toast.error("Invalid or missing reset token")
+      setError("Invalid or missing reset token", "RESET_TOKEN_INVALID")
       router.push("/forgot-password")
     }
-  }, [token, searchParams, router])
+  }, [token, searchParams, router, setError])
 
   const onSubmit = async (data: ResetPasswordFormData) => {
     if (!token) {
-      toast.error("Invalid or missing reset token")
+      setError("Invalid or missing reset token", "RESET_TOKEN_INVALID")
       return
     }
 

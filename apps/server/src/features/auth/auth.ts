@@ -1,8 +1,9 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { admin, openAPI } from "better-auth/plugins";
+import { admin, openAPI, twoFactor } from "better-auth/plugins";
 import { env } from "../../config/env";
 import { db } from "../../config/db";
+import { schema } from "@nexxatrade/db";
 import { createMailerFromEnv, createBetterAuthEmailHandlers } from "@nexxatrade/mail";
 import { ac, roles, type UserRole } from "./roles";
 
@@ -19,6 +20,7 @@ export const auth = betterAuth({
   secret: env.BETTER_AUTH_SECRET,
   database: drizzleAdapter(db, {
     provider: "pg",
+    schema,
   }),
   trustedOrigins: env.BETTER_AUTH_TRUSTED_ORIGINS,
   emailAndPassword: {
@@ -37,6 +39,9 @@ export const auth = betterAuth({
     freshAge: 60 * 10,
   },
   user: {
+    changeEmail: {
+      enabled: true,
+    },
     additionalFields: {
       role: {
         type: ["admin", "guest", "subscriber", "networker"] as UserRole[],
@@ -69,6 +74,9 @@ export const auth = betterAuth({
     }),
     openAPI({
       path: "/api-docs",
+    }),
+    twoFactor({
+      issuer: "NexxaTrade",
     }),
   ],
 });

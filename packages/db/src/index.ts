@@ -5,6 +5,7 @@ import {
   eq,
   inArray,
   isNotNull,
+  gt,
   lte,
   lt,
   sql,
@@ -16,4 +17,4 @@ export function createDb(connectionString: string) {
   return drizzle(client, { schema });
 }
 
-export { schema, sql, and, eq, inArray, isNotNull, lte, lt };
+export { schema, sql, and, eq, inArray, isNotNull, gt, lte, lt };

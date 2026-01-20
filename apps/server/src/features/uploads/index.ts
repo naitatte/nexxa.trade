@@ -1,0 +1,1 @@
+export { registerUploadRoutes } from "./routes";

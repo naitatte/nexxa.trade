@@ -1,6 +1,7 @@
 import type { Mailer } from "./mailer";
 import { getVerificationEmailTemplate } from "./templates/verification";
 import { getResetPasswordEmailTemplate } from "./templates/reset-password";
+import { getChangeEmailOTPTemplate } from "./templates/change-email-otp";
 
 export interface BetterAuthEmailOptions {
   mailer: Mailer;
@@ -57,8 +58,34 @@ export function createBetterAuthEmailHandlers(options: BetterAuthEmailOptions) {
     });
   };
 
+  const sendChangeEmailOTP = async ({
+    user,
+    newEmail,
+    otpCode,
+  }: {
+    user: { email: string; name?: string | null };
+    newEmail: string;
+    otpCode: string;
+  }) => {
+    const template = getChangeEmailOTPTemplate(
+      appName,
+      otpCode,
+      newEmail,
+      user.name ?? undefined
+    );
+
+    void mailer.sendMail({
+      from: defaultFrom,
+      to: newEmail,
+      subject: template.subject,
+      html: template.html,
+      text: template.text,
+    });
+  };
+
   return {
     sendVerificationEmail,
     sendResetPassword,
+    sendChangeEmailOTP,
   };
 }

@@ -1,9 +1,282 @@
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance, FastifyReply } from "fastify";
 import { auth } from "./auth";
 import { asyncHandler } from "../../utils/async-handler";
 import { InternalServerError } from "../../types/errors";
+import {
+  generateChangeEmailOTP,
+  verifyChangeEmailOTP,
+} from "./change-email-otp";
+import { createMailerFromEnv, createBetterAuthEmailHandlers } from "@nexxatrade/mail";
+import { env } from "../../config/env";
+import { db } from "../../config/db";
+import { schema, and, eq, gt } from "@nexxatrade/db";
+
+const OTP_RESEND_COOLDOWN_SECONDS = 60;
+
+const mailer = createMailerFromEnv(env.SMTP_USER);
+const emailHandlers = createBetterAuthEmailHandlers({
+  mailer,
+  appName: "NexxaTrade",
+  defaultFrom: env.SMTP_USER,
+});
+
+function applyAuthHeaders(reply: FastifyReply, headers?: Headers | null) {
+  if (!headers) return;
+  if (typeof headers.getSetCookie === "function") {
+    const cookies = headers.getSetCookie();
+    if (cookies.length) {
+      reply.header("set-cookie", cookies);
+    }
+  }
+  headers.forEach((value, key) => {
+    if (key.toLowerCase() === "set-cookie") return;
+    reply.header(key, value);
+  });
+}
 
 export function registerAuthRoutes(app: FastifyInstance) {
+  app.post(
+    "/api/auth/change-email-otp",
+    {
+      schema: {
+        tags: ["Auth"],
+        summary: "Send OTP code for email change",
+        body: {
+          type: "object",
+          required: ["newEmail"],
+          properties: {
+            newEmail: { type: "string", format: "email" },
+          },
+        },
+        response: {
+          200: {
+            type: "object",
+            properties: {
+              message: { type: "string" },
+            },
+          },
+        },
+      },
+    },
+    asyncHandler(async (request, reply) => {
+      const session = await auth.api.getSession({
+        headers: request.headers as Record<string, string>,
+      });
+
+      if (!session?.user) {
+        return reply.status(401).send({ error: "Unauthorized" });
+      }
+
+      const { newEmail } = request.body as { newEmail: string };
+
+      const identifier = `change-email:${session.user.id}:${newEmail}`;
+      const now = new Date();
+      const resendAfter = new Date(
+        Date.now() - OTP_RESEND_COOLDOWN_SECONDS * 1000
+      );
+      const recentOtp = await db
+        .select()
+        .from(schema.verification)
+        .where(
+          and(
+            eq(schema.verification.identifier, identifier),
+            gt(schema.verification.expiresAt, now),
+            gt(schema.verification.updatedAt, resendAfter)
+          )
+        )
+        .limit(1);
+
+      if (recentOtp.length > 0) {
+        return reply.status(429).send({
+          error: "Ya enviamos un codigo. Espera un momento antes de reintentar.",
+        });
+      }
+
+      const otpCode = await generateChangeEmailOTP(
+        session.user.id,
+        newEmail
+      );
+
+      try {
+        await emailHandlers.sendChangeEmailOTP({
+          user: {
+            email: session.user.email,
+            name: session.user.name,
+          },
+          newEmail,
+          otpCode,
+        });
+      } catch (error) {
+        request.log.error(
+          { err: error },
+          "Failed to send change email OTP"
+        );
+        return reply.status(502).send({
+          error: "No pudimos enviar el codigo. Intenta de nuevo mas tarde.",
+        });
+      }
+
+      reply.send({ message: "OTP code sent successfully" });
+    })
+  );
+
+  app.post(
+    "/api/auth/two-factor/disable",
+    {
+      schema: {
+        tags: ["Auth"],
+        summary: "Disable two-factor authentication (requires TOTP code)",
+        body: {
+          type: "object",
+          required: ["password", "code"],
+          properties: {
+            password: { type: "string" },
+            code: { type: "string" },
+          },
+        },
+        response: {
+          200: {
+            type: "object",
+            properties: {
+              message: { type: "string" },
+            },
+          },
+        },
+      },
+    },
+    asyncHandler(async (request, reply) => {
+      const session = await auth.api.getSession({
+        headers: request.headers as Record<string, string>,
+      });
+
+      if (!session?.user) {
+        return reply.status(401).send({ error: "Unauthorized" });
+      }
+
+      const { password, code } = request.body as {
+        password: string;
+        code: string;
+      };
+
+      if (!code || code.trim().length !== 6) {
+        return reply.status(400).send({ error: "Invalid code" });
+      }
+
+      try {
+        await auth.api.verifyTOTP({
+          headers: request.headers as Record<string, string>,
+          body: { code: code.trim() },
+        });
+      } catch (error: any) {
+        const status = error?.statusCode || error?.status || 400;
+        return reply.status(status).send({
+          error: error?.message || "Invalid code",
+        });
+      }
+
+      let disableResponse;
+      try {
+        disableResponse = await auth.api.disableTwoFactor({
+          headers: request.headers as Record<string, string>,
+          body: { password },
+          returnHeaders: true,
+        });
+      } catch (error: any) {
+        const status = error?.statusCode || error?.status || 400;
+        return reply.status(status).send({
+          error: error?.message || "Failed to disable two-factor authentication",
+        });
+      }
+
+      applyAuthHeaders(reply, disableResponse?.headers || null);
+
+      reply.send({ message: "Two-factor authentication disabled" });
+    })
+  );
+
+  app.post(
+    "/api/auth/verify-change-email-otp",
+    {
+      schema: {
+        tags: ["Auth"],
+        summary: "Verify OTP code and change email",
+        body: {
+          type: "object",
+          required: ["newEmail", "otpCode"],
+          properties: {
+            newEmail: { type: "string", format: "email" },
+            otpCode: { type: "string" },
+          },
+        },
+        response: {
+          200: {
+            type: "object",
+            properties: {
+              message: { type: "string" },
+            },
+          },
+        },
+      },
+    },
+    asyncHandler(async (request, reply) => {
+      const session = await auth.api.getSession({
+        headers: request.headers as Record<string, string>,
+      });
+
+      if (!session?.user) {
+        return reply.status(401).send({ error: "Unauthorized" });
+      }
+
+      const { newEmail, otpCode } = request.body as {
+        newEmail: string;
+        otpCode: string;
+      };
+
+      const isValid = await verifyChangeEmailOTP(
+        session.user.id,
+        newEmail,
+        otpCode
+      );
+
+      if (!isValid) {
+        return reply.status(400).send({
+          error: "Invalid or expired OTP code",
+        });
+      }
+
+      await db
+        .update(schema.user)
+        .set({
+          email: newEmail,
+          emailVerified: true,
+          updatedAt: new Date(),
+        })
+        .where(eq(schema.user.id, session.user.id));
+
+      const sessionUpdate = await auth.api.updateUser({
+        headers: request.headers as Record<string, string>,
+        body: { name: session.user.name },
+        returnHeaders: true,
+      });
+
+      if (sessionUpdate?.headers) {
+        const headers = sessionUpdate.headers;
+        if (typeof headers.getSetCookie === "function") {
+          const cookies = headers.getSetCookie();
+          if (cookies.length) {
+            reply.header("set-cookie", cookies);
+          }
+        }
+        headers.forEach((value: string, key: string) => {
+          if (key.toLowerCase() === "set-cookie") return;
+          reply.header(key, value);
+        });
+      }
+
+      reply.send({ message: "Email changed successfully" });
+    })
+  );
+
   app.get(
     "/api/auth/api-docs/openapi.json",
     {
@@ -25,6 +298,57 @@ export function registerAuthRoutes(app: FastifyInstance) {
       }
       reply.type("application/json").send(schema);
     })
+  );
+
+  app.get(
+    "/api/auth/list-sessions",
+    {
+      schema: {
+        tags: ["Auth"],
+        summary: "List all active sessions for the current user",
+        operationId: "getListSessions",
+        response: {
+          200: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                id: { type: "string" },
+                token: { type: "string" },
+                expiresAt: { type: "string", format: "date-time" },
+                createdAt: { type: "string", format: "date-time" },
+                updatedAt: { type: "string", format: "date-time" },
+                ipAddress: { type: "string" },
+                userAgent: { type: "string" },
+                userId: { type: "string" },
+              },
+            },
+          },
+        },
+      },
+    },
+    asyncHandler(async (request, reply) => {
+      const session = await auth.api.getSession({
+        headers: request.headers as Record<string, string>,
+      });
+
+      if (!session?.user) {
+        return reply.status(401).send({ error: "Unauthorized" });
+      }
+
+      const sessions = await db
+        .select()
+        .from(schema.session)
+        .where(
+          and(
+            eq(schema.session.userId, session.user.id),
+            gt(schema.session.expiresAt, new Date())
+          )
+        )
+        .orderBy(schema.session.updatedAt);
+
+      return reply.send(sessions);
+    }),
   );
 
   app.route({
@@ -76,7 +400,19 @@ export function registerAuthRoutes(app: FastifyInstance) {
       const response = await auth.handler(new Request(url.toString(), init));
       reply.status(response.status);
 
-      response.headers.forEach((value, key) => {
+      const getSetCookie = (response.headers as Headers & { getSetCookie?: () => string[] }).getSetCookie;
+      const setCookies = typeof getSetCookie === "function" ? getSetCookie.call(response.headers) : [];
+      if (setCookies.length > 0) {
+        reply.header("set-cookie", setCookies);
+      } else {
+        const setCookie = response.headers.get("set-cookie");
+        if (setCookie) {
+          reply.header("set-cookie", setCookie);
+        }
+      }
+
+      response.headers.forEach((value: string, key: string) => {
+        if (key.toLowerCase() === "set-cookie") return;
         reply.header(key, value);
       });
 

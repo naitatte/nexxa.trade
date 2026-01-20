@@ -4,7 +4,7 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar"
 import { auth } from "@/lib/auth/server"
-import { headers } from "next/headers"
+import { getRequestHeaders } from "@/lib/auth/request-headers"
 import { redirect } from "next/navigation"
 import { PageTransition } from "@/components/features/dashboard/transitions/page-transition"
 
@@ -13,16 +13,10 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const headersList = await headers()
-  
-  const requestHeaders = new Headers()
-  const cookieHeader = headersList.get("cookie")
-  if (cookieHeader) {
-    requestHeaders.set("cookie", cookieHeader)
-  }
+  const headersList = await getRequestHeaders()
   
   const session = await auth.api.getSession({
-    headers: requestHeaders,
+    headers: headersList as unknown as Headers,
   })
 
   if (!session) {

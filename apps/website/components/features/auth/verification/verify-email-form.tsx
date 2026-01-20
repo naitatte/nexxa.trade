@@ -14,8 +14,7 @@ import { FieldDescription } from "@/components/ui/field"
 import { useErrorState } from "@/lib/error-state/hooks"
 import { useLoadingState } from "@/lib/loading-state/hooks"
 import { LoadingSpinner } from "@/lib/loading-state/components"
-import { useSendVerificationEmail } from "@/lib/api/default/default"
-import { toast } from "sonner"
+import { useSendVerificationEmail } from "@/lib/api/auth/auth"
 import { translateErrorFromResponse, extractErrorCode } from "@/lib/error-translations"
 
 export function VerifyEmailForm({
@@ -24,7 +23,7 @@ export function VerifyEmailForm({
   ...props
 }: React.ComponentProps<"div"> & { email?: string }) {
   const { setError: setErrorState } = useErrorState({ showToast: false })
-  const { state: loadingState, setLoading, setIdle } = useLoadingState()
+  const { state: loadingState, setLoading, setIdle, setSuccess, setError } = useLoadingState()
 
   const sendVerificationEmailMutation = useSendVerificationEmail({
     mutation: {
@@ -33,16 +32,12 @@ export function VerifyEmailForm({
       },
       onSuccess: () => {
         setIdle()
-        toast.success("Verification email sent!")
+        setSuccess("Verification email sent!")
       },
       onError: (error) => {
         setIdle()
         const translation = translateErrorFromResponse(error, "Failed to send verification email")
         const errorCode = extractErrorCode(error)
-        
-        toast.error(translation.message, {
-          description: translation.description,
-        })
         
         const errorObj = error instanceof Error ? error : new Error(String(error))
         setErrorState(errorObj, translation.message, errorCode || undefined, false)
@@ -52,7 +47,7 @@ export function VerifyEmailForm({
 
   const handleResend = () => {
     if (!initialEmail) {
-      toast.error("Email address is required")
+      setError("Email address is required", "MISSING_REQUIRED_FIELD")
       return
     }
 

@@ -2,7 +2,6 @@
 
 import { AlertTriangle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Progress } from "@/components/ui/progress"
 import { useEffect, useState } from "react"
 
 type MembershipAlertProps = {
@@ -47,29 +46,13 @@ export function MembershipAlert({ inactiveAt, deletionDays = 7 }: MembershipAler
   return (
     <Alert variant="destructive" className="bg-destructive/5 border-destructive/20 text-destructive">
       <AlertTriangle className="size-5" />
-      <AlertTitle className="text-lg font-semibold text-destructive">
+      <AlertTitle className="text-base font-semibold text-destructive">
         Action required
       </AlertTitle>
-      <AlertDescription className="mt-2 space-y-4">
-        <p className="text-sm text-foreground/80">
-          Your account is inactive. You have <span className="font-semibold">{timeRemaining.days}d {timeRemaining.hours}h {timeRemaining.minutes}m</span> to renew before your account is permanently deleted.
+      <AlertDescription className="mt-1.5">
+        <p className="text-sm text-foreground/90">
+          Account inactive. Renew within <span className="font-semibold">{timeRemaining.days}d {timeRemaining.hours}h {timeRemaining.minutes}m</span> or it will be permanently deleted.
         </p>
-
-        <div className="space-y-1.5">
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>Time remaining</span>
-            <span className="font-mono font-medium">
-              {String(timeRemaining.days).padStart(2, "0")}:
-              {String(timeRemaining.hours).padStart(2, "0")}:
-              {String(timeRemaining.minutes).padStart(2, "0")}:
-              {String(timeRemaining.seconds).padStart(2, "0")}
-            </span>
-          </div>
-          <Progress
-            value={timeRemaining.percentage}
-            className="h-2 bg-destructive/10"
-          />
-        </div>
       </AlertDescription>
     </Alert>
   )

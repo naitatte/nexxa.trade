@@ -57,14 +57,14 @@ import type {
   ImpersonateUser429,
   ImpersonateUser500,
   ImpersonateUserBody,
-  ListUserSessions200,
-  ListUserSessions400,
-  ListUserSessions401,
-  ListUserSessions403,
-  ListUserSessions404,
-  ListUserSessions429,
-  ListUserSessions500,
-  ListUserSessionsBody,
+  ListUserSessionsPostApiAuthAdminListUserSessions200,
+  ListUserSessionsPostApiAuthAdminListUserSessions400,
+  ListUserSessionsPostApiAuthAdminListUserSessions401,
+  ListUserSessionsPostApiAuthAdminListUserSessions403,
+  ListUserSessionsPostApiAuthAdminListUserSessions404,
+  ListUserSessionsPostApiAuthAdminListUserSessions429,
+  ListUserSessionsPostApiAuthAdminListUserSessions500,
+  ListUserSessionsPostApiAuthAdminListUserSessionsBody,
   ListUsers200,
   ListUsers400,
   ListUsers401,
@@ -135,14 +135,14 @@ import type {
   UnbanUser429,
   UnbanUser500,
   UnbanUserBody,
-  UpdateAdminUser200,
-  UpdateAdminUser400,
-  UpdateAdminUser401,
-  UpdateAdminUser403,
-  UpdateAdminUser404,
-  UpdateAdminUser429,
-  UpdateAdminUser500,
-  UpdateAdminUserBody
+  UpdateUserPostApiAuthAdminUpdateUser200,
+  UpdateUserPostApiAuthAdminUpdateUser400,
+  UpdateUserPostApiAuthAdminUpdateUser401,
+  UpdateUserPostApiAuthAdminUpdateUser403,
+  UpdateUserPostApiAuthAdminUpdateUser404,
+  UpdateUserPostApiAuthAdminUpdateUser429,
+  UpdateUserPostApiAuthAdminUpdateUser500,
+  UpdateUserPostApiAuthAdminUpdateUserBody
 } from '../generated.schemas';
 
 import { customInstance } from '.././mutator';
@@ -156,12 +156,12 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
  * Update a user's details
  */
 export const updateUser = (
-    updateUserBody: UpdateAdminUserBody,
+    updateUserBody: UpdateUserPostApiAuthAdminUpdateUserBody,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
       
       
-      return customInstance<UpdateAdminUser200>(
+      return customInstance<UpdateUserPostApiAuthAdminUpdateUser200>(
       {url: `/api/auth/admin/update-user`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: updateUserBody, signal
@@ -171,9 +171,9 @@ export const updateUser = (
   
 
 
-export const getUpdateUserMutationOptions = <TError = UpdateAdminUser400 | UpdateAdminUser401 | UpdateAdminUser403 | UpdateAdminUser404 | UpdateAdminUser429 | UpdateAdminUser500,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateUser>>, TError,{data: UpdateAdminUserBody}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof updateUser>>, TError,{data: UpdateAdminUserBody}, TContext> => {
+export const getUpdateUserMutationOptions = <TError = UpdateUserPostApiAuthAdminUpdateUser400 | UpdateUserPostApiAuthAdminUpdateUser401 | UpdateUserPostApiAuthAdminUpdateUser403 | UpdateUserPostApiAuthAdminUpdateUser404 | UpdateUserPostApiAuthAdminUpdateUser429 | UpdateUserPostApiAuthAdminUpdateUser500,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateUser>>, TError,{data: UpdateUserPostApiAuthAdminUpdateUserBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateUser>>, TError,{data: UpdateUserPostApiAuthAdminUpdateUserBody}, TContext> => {
 
 const mutationKey = ['updateUser'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -185,7 +185,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateUser>>, {data: UpdateAdminUserBody}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateUser>>, {data: UpdateUserPostApiAuthAdminUpdateUserBody}> = (props) => {
           const {data} = props ?? {};
 
           return  updateUser(data,requestOptions)
@@ -197,15 +197,15 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type UpdateUserMutationResult = NonNullable<Awaited<ReturnType<typeof updateUser>>>
-    export type UpdateUserMutationBody = UpdateAdminUserBody
-    export type UpdateUserMutationError = UpdateAdminUser400 | UpdateAdminUser401 | UpdateAdminUser403 | UpdateAdminUser404 | UpdateAdminUser429 | UpdateAdminUser500
+    export type UpdateUserMutationBody = UpdateUserPostApiAuthAdminUpdateUserBody
+    export type UpdateUserMutationError = UpdateUserPostApiAuthAdminUpdateUser400 | UpdateUserPostApiAuthAdminUpdateUser401 | UpdateUserPostApiAuthAdminUpdateUser403 | UpdateUserPostApiAuthAdminUpdateUser404 | UpdateUserPostApiAuthAdminUpdateUser429 | UpdateUserPostApiAuthAdminUpdateUser500
 
-    export const useUpdateUser = <TError = UpdateAdminUser400 | UpdateAdminUser401 | UpdateAdminUser403 | UpdateAdminUser404 | UpdateAdminUser429 | UpdateAdminUser500,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateUser>>, TError,{data: UpdateAdminUserBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+    export const useUpdateUser = <TError = UpdateUserPostApiAuthAdminUpdateUser400 | UpdateUserPostApiAuthAdminUpdateUser401 | UpdateUserPostApiAuthAdminUpdateUser403 | UpdateUserPostApiAuthAdminUpdateUser404 | UpdateUserPostApiAuthAdminUpdateUser429 | UpdateUserPostApiAuthAdminUpdateUser500,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateUser>>, TError,{data: UpdateUserPostApiAuthAdminUpdateUserBody}, TContext>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updateUser>>,
         TError,
-        {data: UpdateAdminUserBody},
+        {data: UpdateUserPostApiAuthAdminUpdateUserBody},
         TContext
       > => {
 
@@ -217,12 +217,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  * List user sessions
  */
 export const listUserSessions = (
-    listUserSessionsBody: ListUserSessionsBody,
+    listUserSessionsBody: ListUserSessionsPostApiAuthAdminListUserSessionsBody,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
       
       
-      return customInstance<ListUserSessions200>(
+      return customInstance<ListUserSessionsPostApiAuthAdminListUserSessions200>(
       {url: `/api/auth/admin/list-user-sessions`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: listUserSessionsBody, signal
@@ -232,9 +232,9 @@ export const listUserSessions = (
   
 
 
-export const getListUserSessionsMutationOptions = <TError = ListUserSessions400 | ListUserSessions401 | ListUserSessions403 | ListUserSessions404 | ListUserSessions429 | ListUserSessions500,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof listUserSessions>>, TError,{data: ListUserSessionsBody}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof listUserSessions>>, TError,{data: ListUserSessionsBody}, TContext> => {
+export const getListUserSessionsMutationOptions = <TError = ListUserSessionsPostApiAuthAdminListUserSessions400 | ListUserSessionsPostApiAuthAdminListUserSessions401 | ListUserSessionsPostApiAuthAdminListUserSessions403 | ListUserSessionsPostApiAuthAdminListUserSessions404 | ListUserSessionsPostApiAuthAdminListUserSessions429 | ListUserSessionsPostApiAuthAdminListUserSessions500,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof listUserSessions>>, TError,{data: ListUserSessionsPostApiAuthAdminListUserSessionsBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof listUserSessions>>, TError,{data: ListUserSessionsPostApiAuthAdminListUserSessionsBody}, TContext> => {
 
 const mutationKey = ['listUserSessions'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -246,7 +246,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof listUserSessions>>, {data: ListUserSessionsBody}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof listUserSessions>>, {data: ListUserSessionsPostApiAuthAdminListUserSessionsBody}> = (props) => {
           const {data} = props ?? {};
 
           return  listUserSessions(data,requestOptions)
@@ -258,15 +258,15 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type ListUserSessionsMutationResult = NonNullable<Awaited<ReturnType<typeof listUserSessions>>>
-    export type ListUserSessionsMutationBody = ListUserSessionsBody
-    export type ListUserSessionsMutationError = ListUserSessions400 | ListUserSessions401 | ListUserSessions403 | ListUserSessions404 | ListUserSessions429 | ListUserSessions500
+    export type ListUserSessionsMutationBody = ListUserSessionsPostApiAuthAdminListUserSessionsBody
+    export type ListUserSessionsMutationError = ListUserSessionsPostApiAuthAdminListUserSessions400 | ListUserSessionsPostApiAuthAdminListUserSessions401 | ListUserSessionsPostApiAuthAdminListUserSessions403 | ListUserSessionsPostApiAuthAdminListUserSessions404 | ListUserSessionsPostApiAuthAdminListUserSessions429 | ListUserSessionsPostApiAuthAdminListUserSessions500
 
-    export const useListUserSessions = <TError = ListUserSessions400 | ListUserSessions401 | ListUserSessions403 | ListUserSessions404 | ListUserSessions429 | ListUserSessions500,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof listUserSessions>>, TError,{data: ListUserSessionsBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+    export const useListUserSessions = <TError = ListUserSessionsPostApiAuthAdminListUserSessions400 | ListUserSessionsPostApiAuthAdminListUserSessions401 | ListUserSessionsPostApiAuthAdminListUserSessions403 | ListUserSessionsPostApiAuthAdminListUserSessions404 | ListUserSessionsPostApiAuthAdminListUserSessions429 | ListUserSessionsPostApiAuthAdminListUserSessions500,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof listUserSessions>>, TError,{data: ListUserSessionsPostApiAuthAdminListUserSessionsBody}, TContext>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof listUserSessions>>,
         TError,
-        {data: ListUserSessionsBody},
+        {data: ListUserSessionsPostApiAuthAdminListUserSessionsBody},
         TContext
       > => {
 

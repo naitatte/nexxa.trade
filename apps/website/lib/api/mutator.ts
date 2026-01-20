@@ -1,4 +1,6 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
+import { getApiBaseUrl } from "./base-url";
+
+const API_BASE_URL = getApiBaseUrl();
 
 export type RequestConfig = {
   url?: string;
@@ -13,14 +15,8 @@ export const customInstance = async <T>(
   config: RequestConfig,
   options?: RequestInit,
 ): Promise<T> => {
-  let urlPath = config.url || "";
-  if (urlPath && !urlPath.startsWith("http") && !urlPath.startsWith("/api/auth")) {
-    urlPath = urlPath.startsWith("/") ? `/api/auth${urlPath}` : `/api/auth/${urlPath}`;
-  }
-  
-  const url = urlPath.startsWith("http")
-    ? urlPath
-    : `${API_BASE_URL}${urlPath}`;
+  const urlPath = config.url || "";
+  const url = urlPath.startsWith("http") ? urlPath : `${API_BASE_URL}${urlPath}`;
 
   const urlWithParams = new URL(url);
   if (config.params) {

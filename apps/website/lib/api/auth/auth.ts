@@ -108,6 +108,14 @@ import type {
   ListUserAccounts404,
   ListUserAccounts429,
   ListUserAccounts500,
+  ListUserSessions400,
+  ListUserSessions401,
+  ListUserSessions403,
+  ListUserSessions404,
+  ListUserSessions429,
+  ListUserSessions500,
+  PostApiAuthChangeEmailOtp200,
+  PostApiAuthChangeEmailOtpBody,
   PostApiAuthGetAccessToken200,
   PostApiAuthGetAccessToken401,
   PostApiAuthGetAccessToken403,
@@ -146,6 +154,69 @@ import type {
   PostApiAuthRevokeSessions429,
   PostApiAuthRevokeSessions500,
   PostApiAuthRevokeSessionsBody,
+  PostApiAuthTwoFactorDisable200,
+  PostApiAuthTwoFactorDisable400,
+  PostApiAuthTwoFactorDisable401,
+  PostApiAuthTwoFactorDisable403,
+  PostApiAuthTwoFactorDisable404,
+  PostApiAuthTwoFactorDisable429,
+  PostApiAuthTwoFactorDisable500,
+  PostApiAuthTwoFactorDisableBody,
+  PostApiAuthTwoFactorEnable200,
+  PostApiAuthTwoFactorEnable400,
+  PostApiAuthTwoFactorEnable401,
+  PostApiAuthTwoFactorEnable403,
+  PostApiAuthTwoFactorEnable404,
+  PostApiAuthTwoFactorEnable429,
+  PostApiAuthTwoFactorEnable500,
+  PostApiAuthTwoFactorEnableBody,
+  PostApiAuthTwoFactorGenerateBackupCodes200,
+  PostApiAuthTwoFactorGenerateBackupCodes400,
+  PostApiAuthTwoFactorGenerateBackupCodes401,
+  PostApiAuthTwoFactorGenerateBackupCodes403,
+  PostApiAuthTwoFactorGenerateBackupCodes404,
+  PostApiAuthTwoFactorGenerateBackupCodes429,
+  PostApiAuthTwoFactorGenerateBackupCodes500,
+  PostApiAuthTwoFactorGenerateBackupCodesBody,
+  PostApiAuthTwoFactorGetTotpUri200,
+  PostApiAuthTwoFactorGetTotpUri400,
+  PostApiAuthTwoFactorGetTotpUri401,
+  PostApiAuthTwoFactorGetTotpUri403,
+  PostApiAuthTwoFactorGetTotpUri404,
+  PostApiAuthTwoFactorGetTotpUri429,
+  PostApiAuthTwoFactorGetTotpUri500,
+  PostApiAuthTwoFactorGetTotpUriBody,
+  PostApiAuthTwoFactorSendOtp200,
+  PostApiAuthTwoFactorSendOtp400,
+  PostApiAuthTwoFactorSendOtp401,
+  PostApiAuthTwoFactorSendOtp403,
+  PostApiAuthTwoFactorSendOtp404,
+  PostApiAuthTwoFactorSendOtp429,
+  PostApiAuthTwoFactorSendOtp500,
+  PostApiAuthTwoFactorVerifyBackupCode200,
+  PostApiAuthTwoFactorVerifyBackupCode400,
+  PostApiAuthTwoFactorVerifyBackupCode401,
+  PostApiAuthTwoFactorVerifyBackupCode403,
+  PostApiAuthTwoFactorVerifyBackupCode404,
+  PostApiAuthTwoFactorVerifyBackupCode429,
+  PostApiAuthTwoFactorVerifyBackupCode500,
+  PostApiAuthTwoFactorVerifyBackupCodeBody,
+  PostApiAuthTwoFactorVerifyOtp200,
+  PostApiAuthTwoFactorVerifyOtp400,
+  PostApiAuthTwoFactorVerifyOtp401,
+  PostApiAuthTwoFactorVerifyOtp403,
+  PostApiAuthTwoFactorVerifyOtp404,
+  PostApiAuthTwoFactorVerifyOtp429,
+  PostApiAuthTwoFactorVerifyOtp500,
+  PostApiAuthTwoFactorVerifyOtpBody,
+  PostApiAuthTwoFactorVerifyTotp200,
+  PostApiAuthTwoFactorVerifyTotp400,
+  PostApiAuthTwoFactorVerifyTotp401,
+  PostApiAuthTwoFactorVerifyTotp403,
+  PostApiAuthTwoFactorVerifyTotp404,
+  PostApiAuthTwoFactorVerifyTotp429,
+  PostApiAuthTwoFactorVerifyTotp500,
+  PostApiAuthTwoFactorVerifyTotpBody,
   PostApiAuthUnlinkAccount200,
   PostApiAuthUnlinkAccount400,
   PostApiAuthUnlinkAccount401,
@@ -154,6 +225,8 @@ import type {
   PostApiAuthUnlinkAccount429,
   PostApiAuthUnlinkAccount500,
   PostApiAuthUnlinkAccountBody,
+  PostApiAuthVerifyChangeEmailOtp200,
+  PostApiAuthVerifyChangeEmailOtpBody,
   RequestPasswordReset200,
   RequestPasswordReset400,
   RequestPasswordReset401,
@@ -186,6 +259,7 @@ import type {
   SendVerificationEmail429,
   SendVerificationEmail500,
   SendVerificationEmailBody,
+  Session,
   SignInEmail200,
   SignInEmail400,
   SignInEmail401,
@@ -218,13 +292,297 @@ import type {
   SocialSignIn404,
   SocialSignIn429,
   SocialSignIn500,
-  SocialSignInBody
+  SocialSignInBody,
+  UpdateUser200,
+  UpdateUser400,
+  UpdateUser401,
+  UpdateUser403,
+  UpdateUser404,
+  UpdateUser429,
+  UpdateUser500,
+  UpdateUserBody
 } from '../generated.schemas';
 
 import { customInstance } from '.././mutator';
 
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
+
+
+/**
+ * @summary Send OTP code for email change
+ */
+export const postApiAuthChangeEmailOtp = (
+    postApiAuthChangeEmailOtpBody: PostApiAuthChangeEmailOtpBody,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<PostApiAuthChangeEmailOtp200>(
+      {url: `/api/auth/change-email-otp`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: postApiAuthChangeEmailOtpBody, signal
+    },
+      options);
+    }
+  
+
+
+export const getPostApiAuthChangeEmailOtpMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAuthChangeEmailOtp>>, TError,{data: PostApiAuthChangeEmailOtpBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiAuthChangeEmailOtp>>, TError,{data: PostApiAuthChangeEmailOtpBody}, TContext> => {
+
+const mutationKey = ['postApiAuthChangeEmailOtp'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiAuthChangeEmailOtp>>, {data: PostApiAuthChangeEmailOtpBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postApiAuthChangeEmailOtp(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiAuthChangeEmailOtpMutationResult = NonNullable<Awaited<ReturnType<typeof postApiAuthChangeEmailOtp>>>
+    export type PostApiAuthChangeEmailOtpMutationBody = PostApiAuthChangeEmailOtpBody
+    export type PostApiAuthChangeEmailOtpMutationError = unknown
+
+    /**
+ * @summary Send OTP code for email change
+ */
+export const usePostApiAuthChangeEmailOtp = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAuthChangeEmailOtp>>, TError,{data: PostApiAuthChangeEmailOtpBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiAuthChangeEmailOtp>>,
+        TError,
+        {data: PostApiAuthChangeEmailOtpBody},
+        TContext
+      > => {
+
+      const mutationOptions = getPostApiAuthChangeEmailOtpMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Use this endpoint to disable two factor authentication.
+ */
+export const postApiAuthTwoFactorDisable = (
+    postApiAuthTwoFactorDisableBody: PostApiAuthTwoFactorDisableBody,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<PostApiAuthTwoFactorDisable200>(
+      {url: `/api/auth/two-factor/disable`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: postApiAuthTwoFactorDisableBody, signal
+    },
+      options);
+    }
+  
+
+
+export const getPostApiAuthTwoFactorDisableMutationOptions = <TError = PostApiAuthTwoFactorDisable400 | PostApiAuthTwoFactorDisable401 | PostApiAuthTwoFactorDisable403 | PostApiAuthTwoFactorDisable404 | PostApiAuthTwoFactorDisable429 | PostApiAuthTwoFactorDisable500,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAuthTwoFactorDisable>>, TError,{data: PostApiAuthTwoFactorDisableBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiAuthTwoFactorDisable>>, TError,{data: PostApiAuthTwoFactorDisableBody}, TContext> => {
+
+const mutationKey = ['postApiAuthTwoFactorDisable'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiAuthTwoFactorDisable>>, {data: PostApiAuthTwoFactorDisableBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postApiAuthTwoFactorDisable(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiAuthTwoFactorDisableMutationResult = NonNullable<Awaited<ReturnType<typeof postApiAuthTwoFactorDisable>>>
+    export type PostApiAuthTwoFactorDisableMutationBody = PostApiAuthTwoFactorDisableBody
+    export type PostApiAuthTwoFactorDisableMutationError = PostApiAuthTwoFactorDisable400 | PostApiAuthTwoFactorDisable401 | PostApiAuthTwoFactorDisable403 | PostApiAuthTwoFactorDisable404 | PostApiAuthTwoFactorDisable429 | PostApiAuthTwoFactorDisable500
+
+    export const usePostApiAuthTwoFactorDisable = <TError = PostApiAuthTwoFactorDisable400 | PostApiAuthTwoFactorDisable401 | PostApiAuthTwoFactorDisable403 | PostApiAuthTwoFactorDisable404 | PostApiAuthTwoFactorDisable429 | PostApiAuthTwoFactorDisable500,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAuthTwoFactorDisable>>, TError,{data: PostApiAuthTwoFactorDisableBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiAuthTwoFactorDisable>>,
+        TError,
+        {data: PostApiAuthTwoFactorDisableBody},
+        TContext
+      > => {
+
+      const mutationOptions = getPostApiAuthTwoFactorDisableMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary Verify OTP code and change email
+ */
+export const postApiAuthVerifyChangeEmailOtp = (
+    postApiAuthVerifyChangeEmailOtpBody: PostApiAuthVerifyChangeEmailOtpBody,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<PostApiAuthVerifyChangeEmailOtp200>(
+      {url: `/api/auth/verify-change-email-otp`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: postApiAuthVerifyChangeEmailOtpBody, signal
+    },
+      options);
+    }
+  
+
+
+export const getPostApiAuthVerifyChangeEmailOtpMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAuthVerifyChangeEmailOtp>>, TError,{data: PostApiAuthVerifyChangeEmailOtpBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiAuthVerifyChangeEmailOtp>>, TError,{data: PostApiAuthVerifyChangeEmailOtpBody}, TContext> => {
+
+const mutationKey = ['postApiAuthVerifyChangeEmailOtp'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiAuthVerifyChangeEmailOtp>>, {data: PostApiAuthVerifyChangeEmailOtpBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postApiAuthVerifyChangeEmailOtp(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiAuthVerifyChangeEmailOtpMutationResult = NonNullable<Awaited<ReturnType<typeof postApiAuthVerifyChangeEmailOtp>>>
+    export type PostApiAuthVerifyChangeEmailOtpMutationBody = PostApiAuthVerifyChangeEmailOtpBody
+    export type PostApiAuthVerifyChangeEmailOtpMutationError = unknown
+
+    /**
+ * @summary Verify OTP code and change email
+ */
+export const usePostApiAuthVerifyChangeEmailOtp = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAuthVerifyChangeEmailOtp>>, TError,{data: PostApiAuthVerifyChangeEmailOtpBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiAuthVerifyChangeEmailOtp>>,
+        TError,
+        {data: PostApiAuthVerifyChangeEmailOtpBody},
+        TContext
+      > => {
+
+      const mutationOptions = getPostApiAuthVerifyChangeEmailOtpMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * List all active sessions for the user
+ */
+export const listUserSessions = (
+    
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<Session[]>(
+      {url: `/api/auth/list-sessions`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getListUserSessionsQueryKey = () => {
+    return [
+    `/api/auth/list-sessions`
+    ] as const;
+    }
+
+    
+export const getListUserSessionsQueryOptions = <TData = Awaited<ReturnType<typeof listUserSessions>>, TError = ListUserSessions400 | ListUserSessions401 | ListUserSessions403 | ListUserSessions404 | ListUserSessions429 | ListUserSessions500>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listUserSessions>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListUserSessionsQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listUserSessions>>> = ({ signal }) => listUserSessions(requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listUserSessions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListUserSessionsQueryResult = NonNullable<Awaited<ReturnType<typeof listUserSessions>>>
+export type ListUserSessionsQueryError = ListUserSessions400 | ListUserSessions401 | ListUserSessions403 | ListUserSessions404 | ListUserSessions429 | ListUserSessions500
+
+
+export function useListUserSessions<TData = Awaited<ReturnType<typeof listUserSessions>>, TError = ListUserSessions400 | ListUserSessions401 | ListUserSessions403 | ListUserSessions404 | ListUserSessions429 | ListUserSessions500>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listUserSessions>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listUserSessions>>,
+          TError,
+          Awaited<ReturnType<typeof listUserSessions>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListUserSessions<TData = Awaited<ReturnType<typeof listUserSessions>>, TError = ListUserSessions400 | ListUserSessions401 | ListUserSessions403 | ListUserSessions404 | ListUserSessions429 | ListUserSessions500>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listUserSessions>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listUserSessions>>,
+          TError,
+          Awaited<ReturnType<typeof listUserSessions>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListUserSessions<TData = Awaited<ReturnType<typeof listUserSessions>>, TError = ListUserSessions400 | ListUserSessions401 | ListUserSessions403 | ListUserSessions404 | ListUserSessions429 | ListUserSessions500>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listUserSessions>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useListUserSessions<TData = Awaited<ReturnType<typeof listUserSessions>>, TError = ListUserSessions400 | ListUserSessions401 | ListUserSessions403 | ListUserSessions404 | ListUserSessions429 | ListUserSessions500>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listUserSessions>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListUserSessionsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
 
 
 
@@ -370,7 +728,7 @@ export function useGetSession<TData = Awaited<ReturnType<typeof getSession>>, TE
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-  return { ...query, queryKey: queryOptions.queryKey }
+  return { ...query, queryKey: queryOptions.queryKey };
 }
 
 
@@ -702,7 +1060,7 @@ export function useGetApiAuthVerifyEmail<TData = Awaited<ReturnType<typeof getAp
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-  return { ...query, queryKey: queryOptions.queryKey }
+  return { ...query, queryKey: queryOptions.queryKey };
 }
 
 
@@ -885,6 +1243,67 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       > => {
 
       const mutationOptions = getChangePasswordMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Update the current user
+ */
+export const updateUser = (
+    updateUserBody: UpdateUserBody,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<UpdateUser200>(
+      {url: `/api/auth/update-user`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: updateUserBody, signal
+    },
+      options);
+    }
+  
+
+
+export const getUpdateUserMutationOptions = <TError = UpdateUser400 | UpdateUser401 | UpdateUser403 | UpdateUser404 | UpdateUser429 | UpdateUser500,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateUser>>, TError,{data: UpdateUserBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateUser>>, TError,{data: UpdateUserBody}, TContext> => {
+
+const mutationKey = ['updateUser'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateUser>>, {data: UpdateUserBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateUser(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateUserMutationResult = NonNullable<Awaited<ReturnType<typeof updateUser>>>
+    export type UpdateUserMutationBody = UpdateUserBody
+    export type UpdateUserMutationError = UpdateUser400 | UpdateUser401 | UpdateUser403 | UpdateUser404 | UpdateUser429 | UpdateUser500
+
+    export const useUpdateUser = <TError = UpdateUser400 | UpdateUser401 | UpdateUser403 | UpdateUser404 | UpdateUser429 | UpdateUser500,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateUser>>, TError,{data: UpdateUserBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateUser>>,
+        TError,
+        {data: UpdateUserBody},
+        TContext
+      > => {
+
+      const mutationOptions = getUpdateUserMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
@@ -1099,7 +1518,7 @@ export function useResetPasswordCallback<TData = Awaited<ReturnType<typeof reset
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-  return { ...query, queryKey: queryOptions.queryKey }
+  return { ...query, queryKey: queryOptions.queryKey };
 }
 
 
@@ -1430,7 +1849,7 @@ export function useListUserAccounts<TData = Awaited<ReturnType<typeof listUserAc
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-  return { ...query, queryKey: queryOptions.queryKey }
+  return { ...query, queryKey: queryOptions.queryKey };
 }
 
 
@@ -1518,7 +1937,7 @@ export function useGetApiAuthDeleteUserCallback<TData = Awaited<ReturnType<typeo
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-  return { ...query, queryKey: queryOptions.queryKey }
+  return { ...query, queryKey: queryOptions.queryKey };
 }
 
 
@@ -1788,7 +2207,7 @@ export function useGetApiAuthAccountInfo<TData = Awaited<ReturnType<typeof getAp
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-  return { ...query, queryKey: queryOptions.queryKey }
+  return { ...query, queryKey: queryOptions.queryKey };
 }
 
 
@@ -1875,7 +2294,7 @@ export function useGetApiAuthOk<TData = Awaited<ReturnType<typeof getApiAuthOk>>
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-  return { ...query, queryKey: queryOptions.queryKey }
+  return { ...query, queryKey: queryOptions.queryKey };
 }
 
 
@@ -1962,9 +2381,435 @@ export function useGetApiAuthError<TData = Awaited<ReturnType<typeof getApiAuthE
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-  return { ...query, queryKey: queryOptions.queryKey }
+  return { ...query, queryKey: queryOptions.queryKey };
 }
 
 
 
 
+/**
+ * Use this endpoint to get the TOTP URI
+ */
+export const postApiAuthTwoFactorGetTotpUri = (
+    postApiAuthTwoFactorGetTotpUriBody: PostApiAuthTwoFactorGetTotpUriBody,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<PostApiAuthTwoFactorGetTotpUri200>(
+      {url: `/api/auth/two-factor/get-totp-uri`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: postApiAuthTwoFactorGetTotpUriBody, signal
+    },
+      options);
+    }
+  
+
+
+export const getPostApiAuthTwoFactorGetTotpUriMutationOptions = <TError = PostApiAuthTwoFactorGetTotpUri400 | PostApiAuthTwoFactorGetTotpUri401 | PostApiAuthTwoFactorGetTotpUri403 | PostApiAuthTwoFactorGetTotpUri404 | PostApiAuthTwoFactorGetTotpUri429 | PostApiAuthTwoFactorGetTotpUri500,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAuthTwoFactorGetTotpUri>>, TError,{data: PostApiAuthTwoFactorGetTotpUriBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiAuthTwoFactorGetTotpUri>>, TError,{data: PostApiAuthTwoFactorGetTotpUriBody}, TContext> => {
+
+const mutationKey = ['postApiAuthTwoFactorGetTotpUri'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiAuthTwoFactorGetTotpUri>>, {data: PostApiAuthTwoFactorGetTotpUriBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postApiAuthTwoFactorGetTotpUri(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiAuthTwoFactorGetTotpUriMutationResult = NonNullable<Awaited<ReturnType<typeof postApiAuthTwoFactorGetTotpUri>>>
+    export type PostApiAuthTwoFactorGetTotpUriMutationBody = PostApiAuthTwoFactorGetTotpUriBody
+    export type PostApiAuthTwoFactorGetTotpUriMutationError = PostApiAuthTwoFactorGetTotpUri400 | PostApiAuthTwoFactorGetTotpUri401 | PostApiAuthTwoFactorGetTotpUri403 | PostApiAuthTwoFactorGetTotpUri404 | PostApiAuthTwoFactorGetTotpUri429 | PostApiAuthTwoFactorGetTotpUri500
+
+    export const usePostApiAuthTwoFactorGetTotpUri = <TError = PostApiAuthTwoFactorGetTotpUri400 | PostApiAuthTwoFactorGetTotpUri401 | PostApiAuthTwoFactorGetTotpUri403 | PostApiAuthTwoFactorGetTotpUri404 | PostApiAuthTwoFactorGetTotpUri429 | PostApiAuthTwoFactorGetTotpUri500,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAuthTwoFactorGetTotpUri>>, TError,{data: PostApiAuthTwoFactorGetTotpUriBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiAuthTwoFactorGetTotpUri>>,
+        TError,
+        {data: PostApiAuthTwoFactorGetTotpUriBody},
+        TContext
+      > => {
+
+      const mutationOptions = getPostApiAuthTwoFactorGetTotpUriMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Verify two factor TOTP
+ */
+export const postApiAuthTwoFactorVerifyTotp = (
+    postApiAuthTwoFactorVerifyTotpBody: PostApiAuthTwoFactorVerifyTotpBody,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<PostApiAuthTwoFactorVerifyTotp200>(
+      {url: `/api/auth/two-factor/verify-totp`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: postApiAuthTwoFactorVerifyTotpBody, signal
+    },
+      options);
+    }
+  
+
+
+export const getPostApiAuthTwoFactorVerifyTotpMutationOptions = <TError = PostApiAuthTwoFactorVerifyTotp400 | PostApiAuthTwoFactorVerifyTotp401 | PostApiAuthTwoFactorVerifyTotp403 | PostApiAuthTwoFactorVerifyTotp404 | PostApiAuthTwoFactorVerifyTotp429 | PostApiAuthTwoFactorVerifyTotp500,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAuthTwoFactorVerifyTotp>>, TError,{data: PostApiAuthTwoFactorVerifyTotpBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiAuthTwoFactorVerifyTotp>>, TError,{data: PostApiAuthTwoFactorVerifyTotpBody}, TContext> => {
+
+const mutationKey = ['postApiAuthTwoFactorVerifyTotp'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiAuthTwoFactorVerifyTotp>>, {data: PostApiAuthTwoFactorVerifyTotpBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postApiAuthTwoFactorVerifyTotp(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiAuthTwoFactorVerifyTotpMutationResult = NonNullable<Awaited<ReturnType<typeof postApiAuthTwoFactorVerifyTotp>>>
+    export type PostApiAuthTwoFactorVerifyTotpMutationBody = PostApiAuthTwoFactorVerifyTotpBody
+    export type PostApiAuthTwoFactorVerifyTotpMutationError = PostApiAuthTwoFactorVerifyTotp400 | PostApiAuthTwoFactorVerifyTotp401 | PostApiAuthTwoFactorVerifyTotp403 | PostApiAuthTwoFactorVerifyTotp404 | PostApiAuthTwoFactorVerifyTotp429 | PostApiAuthTwoFactorVerifyTotp500
+
+    export const usePostApiAuthTwoFactorVerifyTotp = <TError = PostApiAuthTwoFactorVerifyTotp400 | PostApiAuthTwoFactorVerifyTotp401 | PostApiAuthTwoFactorVerifyTotp403 | PostApiAuthTwoFactorVerifyTotp404 | PostApiAuthTwoFactorVerifyTotp429 | PostApiAuthTwoFactorVerifyTotp500,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAuthTwoFactorVerifyTotp>>, TError,{data: PostApiAuthTwoFactorVerifyTotpBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiAuthTwoFactorVerifyTotp>>,
+        TError,
+        {data: PostApiAuthTwoFactorVerifyTotpBody},
+        TContext
+      > => {
+
+      const mutationOptions = getPostApiAuthTwoFactorVerifyTotpMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Send two factor OTP to the user
+ */
+export const postApiAuthTwoFactorSendOtp = (
+    
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<PostApiAuthTwoFactorSendOtp200>(
+      {url: `/api/auth/two-factor/send-otp`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getPostApiAuthTwoFactorSendOtpMutationOptions = <TError = PostApiAuthTwoFactorSendOtp400 | PostApiAuthTwoFactorSendOtp401 | PostApiAuthTwoFactorSendOtp403 | PostApiAuthTwoFactorSendOtp404 | PostApiAuthTwoFactorSendOtp429 | PostApiAuthTwoFactorSendOtp500,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAuthTwoFactorSendOtp>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiAuthTwoFactorSendOtp>>, TError,void, TContext> => {
+
+const mutationKey = ['postApiAuthTwoFactorSendOtp'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiAuthTwoFactorSendOtp>>, void> = () => {
+          
+
+          return  postApiAuthTwoFactorSendOtp(requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiAuthTwoFactorSendOtpMutationResult = NonNullable<Awaited<ReturnType<typeof postApiAuthTwoFactorSendOtp>>>
+    
+    export type PostApiAuthTwoFactorSendOtpMutationError = PostApiAuthTwoFactorSendOtp400 | PostApiAuthTwoFactorSendOtp401 | PostApiAuthTwoFactorSendOtp403 | PostApiAuthTwoFactorSendOtp404 | PostApiAuthTwoFactorSendOtp429 | PostApiAuthTwoFactorSendOtp500
+
+    export const usePostApiAuthTwoFactorSendOtp = <TError = PostApiAuthTwoFactorSendOtp400 | PostApiAuthTwoFactorSendOtp401 | PostApiAuthTwoFactorSendOtp403 | PostApiAuthTwoFactorSendOtp404 | PostApiAuthTwoFactorSendOtp429 | PostApiAuthTwoFactorSendOtp500,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAuthTwoFactorSendOtp>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiAuthTwoFactorSendOtp>>,
+        TError,
+        void,
+        TContext
+      > => {
+
+      const mutationOptions = getPostApiAuthTwoFactorSendOtpMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Verify two factor OTP
+ */
+export const postApiAuthTwoFactorVerifyOtp = (
+    postApiAuthTwoFactorVerifyOtpBody: PostApiAuthTwoFactorVerifyOtpBody,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<PostApiAuthTwoFactorVerifyOtp200>(
+      {url: `/api/auth/two-factor/verify-otp`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: postApiAuthTwoFactorVerifyOtpBody, signal
+    },
+      options);
+    }
+  
+
+
+export const getPostApiAuthTwoFactorVerifyOtpMutationOptions = <TError = PostApiAuthTwoFactorVerifyOtp400 | PostApiAuthTwoFactorVerifyOtp401 | PostApiAuthTwoFactorVerifyOtp403 | PostApiAuthTwoFactorVerifyOtp404 | PostApiAuthTwoFactorVerifyOtp429 | PostApiAuthTwoFactorVerifyOtp500,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAuthTwoFactorVerifyOtp>>, TError,{data: PostApiAuthTwoFactorVerifyOtpBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiAuthTwoFactorVerifyOtp>>, TError,{data: PostApiAuthTwoFactorVerifyOtpBody}, TContext> => {
+
+const mutationKey = ['postApiAuthTwoFactorVerifyOtp'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiAuthTwoFactorVerifyOtp>>, {data: PostApiAuthTwoFactorVerifyOtpBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postApiAuthTwoFactorVerifyOtp(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiAuthTwoFactorVerifyOtpMutationResult = NonNullable<Awaited<ReturnType<typeof postApiAuthTwoFactorVerifyOtp>>>
+    export type PostApiAuthTwoFactorVerifyOtpMutationBody = PostApiAuthTwoFactorVerifyOtpBody
+    export type PostApiAuthTwoFactorVerifyOtpMutationError = PostApiAuthTwoFactorVerifyOtp400 | PostApiAuthTwoFactorVerifyOtp401 | PostApiAuthTwoFactorVerifyOtp403 | PostApiAuthTwoFactorVerifyOtp404 | PostApiAuthTwoFactorVerifyOtp429 | PostApiAuthTwoFactorVerifyOtp500
+
+    export const usePostApiAuthTwoFactorVerifyOtp = <TError = PostApiAuthTwoFactorVerifyOtp400 | PostApiAuthTwoFactorVerifyOtp401 | PostApiAuthTwoFactorVerifyOtp403 | PostApiAuthTwoFactorVerifyOtp404 | PostApiAuthTwoFactorVerifyOtp429 | PostApiAuthTwoFactorVerifyOtp500,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAuthTwoFactorVerifyOtp>>, TError,{data: PostApiAuthTwoFactorVerifyOtpBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiAuthTwoFactorVerifyOtp>>,
+        TError,
+        {data: PostApiAuthTwoFactorVerifyOtpBody},
+        TContext
+      > => {
+
+      const mutationOptions = getPostApiAuthTwoFactorVerifyOtpMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Verify a backup code for two-factor authentication
+ */
+export const postApiAuthTwoFactorVerifyBackupCode = (
+    postApiAuthTwoFactorVerifyBackupCodeBody: PostApiAuthTwoFactorVerifyBackupCodeBody,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<PostApiAuthTwoFactorVerifyBackupCode200>(
+      {url: `/api/auth/two-factor/verify-backup-code`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: postApiAuthTwoFactorVerifyBackupCodeBody, signal
+    },
+      options);
+    }
+  
+
+
+export const getPostApiAuthTwoFactorVerifyBackupCodeMutationOptions = <TError = PostApiAuthTwoFactorVerifyBackupCode400 | PostApiAuthTwoFactorVerifyBackupCode401 | PostApiAuthTwoFactorVerifyBackupCode403 | PostApiAuthTwoFactorVerifyBackupCode404 | PostApiAuthTwoFactorVerifyBackupCode429 | PostApiAuthTwoFactorVerifyBackupCode500,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAuthTwoFactorVerifyBackupCode>>, TError,{data: PostApiAuthTwoFactorVerifyBackupCodeBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiAuthTwoFactorVerifyBackupCode>>, TError,{data: PostApiAuthTwoFactorVerifyBackupCodeBody}, TContext> => {
+
+const mutationKey = ['postApiAuthTwoFactorVerifyBackupCode'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiAuthTwoFactorVerifyBackupCode>>, {data: PostApiAuthTwoFactorVerifyBackupCodeBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postApiAuthTwoFactorVerifyBackupCode(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiAuthTwoFactorVerifyBackupCodeMutationResult = NonNullable<Awaited<ReturnType<typeof postApiAuthTwoFactorVerifyBackupCode>>>
+    export type PostApiAuthTwoFactorVerifyBackupCodeMutationBody = PostApiAuthTwoFactorVerifyBackupCodeBody
+    export type PostApiAuthTwoFactorVerifyBackupCodeMutationError = PostApiAuthTwoFactorVerifyBackupCode400 | PostApiAuthTwoFactorVerifyBackupCode401 | PostApiAuthTwoFactorVerifyBackupCode403 | PostApiAuthTwoFactorVerifyBackupCode404 | PostApiAuthTwoFactorVerifyBackupCode429 | PostApiAuthTwoFactorVerifyBackupCode500
+
+    export const usePostApiAuthTwoFactorVerifyBackupCode = <TError = PostApiAuthTwoFactorVerifyBackupCode400 | PostApiAuthTwoFactorVerifyBackupCode401 | PostApiAuthTwoFactorVerifyBackupCode403 | PostApiAuthTwoFactorVerifyBackupCode404 | PostApiAuthTwoFactorVerifyBackupCode429 | PostApiAuthTwoFactorVerifyBackupCode500,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAuthTwoFactorVerifyBackupCode>>, TError,{data: PostApiAuthTwoFactorVerifyBackupCodeBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiAuthTwoFactorVerifyBackupCode>>,
+        TError,
+        {data: PostApiAuthTwoFactorVerifyBackupCodeBody},
+        TContext
+      > => {
+
+      const mutationOptions = getPostApiAuthTwoFactorVerifyBackupCodeMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Generate new backup codes for two-factor authentication
+ */
+export const postApiAuthTwoFactorGenerateBackupCodes = (
+    postApiAuthTwoFactorGenerateBackupCodesBody: PostApiAuthTwoFactorGenerateBackupCodesBody,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<PostApiAuthTwoFactorGenerateBackupCodes200>(
+      {url: `/api/auth/two-factor/generate-backup-codes`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: postApiAuthTwoFactorGenerateBackupCodesBody, signal
+    },
+      options);
+    }
+  
+
+
+export const getPostApiAuthTwoFactorGenerateBackupCodesMutationOptions = <TError = PostApiAuthTwoFactorGenerateBackupCodes400 | PostApiAuthTwoFactorGenerateBackupCodes401 | PostApiAuthTwoFactorGenerateBackupCodes403 | PostApiAuthTwoFactorGenerateBackupCodes404 | PostApiAuthTwoFactorGenerateBackupCodes429 | PostApiAuthTwoFactorGenerateBackupCodes500,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAuthTwoFactorGenerateBackupCodes>>, TError,{data: PostApiAuthTwoFactorGenerateBackupCodesBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiAuthTwoFactorGenerateBackupCodes>>, TError,{data: PostApiAuthTwoFactorGenerateBackupCodesBody}, TContext> => {
+
+const mutationKey = ['postApiAuthTwoFactorGenerateBackupCodes'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiAuthTwoFactorGenerateBackupCodes>>, {data: PostApiAuthTwoFactorGenerateBackupCodesBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postApiAuthTwoFactorGenerateBackupCodes(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiAuthTwoFactorGenerateBackupCodesMutationResult = NonNullable<Awaited<ReturnType<typeof postApiAuthTwoFactorGenerateBackupCodes>>>
+    export type PostApiAuthTwoFactorGenerateBackupCodesMutationBody = PostApiAuthTwoFactorGenerateBackupCodesBody
+    export type PostApiAuthTwoFactorGenerateBackupCodesMutationError = PostApiAuthTwoFactorGenerateBackupCodes400 | PostApiAuthTwoFactorGenerateBackupCodes401 | PostApiAuthTwoFactorGenerateBackupCodes403 | PostApiAuthTwoFactorGenerateBackupCodes404 | PostApiAuthTwoFactorGenerateBackupCodes429 | PostApiAuthTwoFactorGenerateBackupCodes500
+
+    export const usePostApiAuthTwoFactorGenerateBackupCodes = <TError = PostApiAuthTwoFactorGenerateBackupCodes400 | PostApiAuthTwoFactorGenerateBackupCodes401 | PostApiAuthTwoFactorGenerateBackupCodes403 | PostApiAuthTwoFactorGenerateBackupCodes404 | PostApiAuthTwoFactorGenerateBackupCodes429 | PostApiAuthTwoFactorGenerateBackupCodes500,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAuthTwoFactorGenerateBackupCodes>>, TError,{data: PostApiAuthTwoFactorGenerateBackupCodesBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiAuthTwoFactorGenerateBackupCodes>>,
+        TError,
+        {data: PostApiAuthTwoFactorGenerateBackupCodesBody},
+        TContext
+      > => {
+
+      const mutationOptions = getPostApiAuthTwoFactorGenerateBackupCodesMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Use this endpoint to enable two factor authentication. This will generate a TOTP URI and backup codes. Once the user verifies the TOTP URI, the two factor authentication will be enabled.
+ */
+export const postApiAuthTwoFactorEnable = (
+    postApiAuthTwoFactorEnableBody: PostApiAuthTwoFactorEnableBody,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<PostApiAuthTwoFactorEnable200>(
+      {url: `/api/auth/two-factor/enable`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: postApiAuthTwoFactorEnableBody, signal
+    },
+      options);
+    }
+  
+
+
+export const getPostApiAuthTwoFactorEnableMutationOptions = <TError = PostApiAuthTwoFactorEnable400 | PostApiAuthTwoFactorEnable401 | PostApiAuthTwoFactorEnable403 | PostApiAuthTwoFactorEnable404 | PostApiAuthTwoFactorEnable429 | PostApiAuthTwoFactorEnable500,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAuthTwoFactorEnable>>, TError,{data: PostApiAuthTwoFactorEnableBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiAuthTwoFactorEnable>>, TError,{data: PostApiAuthTwoFactorEnableBody}, TContext> => {
+
+const mutationKey = ['postApiAuthTwoFactorEnable'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiAuthTwoFactorEnable>>, {data: PostApiAuthTwoFactorEnableBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postApiAuthTwoFactorEnable(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiAuthTwoFactorEnableMutationResult = NonNullable<Awaited<ReturnType<typeof postApiAuthTwoFactorEnable>>>
+    export type PostApiAuthTwoFactorEnableMutationBody = PostApiAuthTwoFactorEnableBody
+    export type PostApiAuthTwoFactorEnableMutationError = PostApiAuthTwoFactorEnable400 | PostApiAuthTwoFactorEnable401 | PostApiAuthTwoFactorEnable403 | PostApiAuthTwoFactorEnable404 | PostApiAuthTwoFactorEnable429 | PostApiAuthTwoFactorEnable500
+
+    export const usePostApiAuthTwoFactorEnable = <TError = PostApiAuthTwoFactorEnable400 | PostApiAuthTwoFactorEnable401 | PostApiAuthTwoFactorEnable403 | PostApiAuthTwoFactorEnable404 | PostApiAuthTwoFactorEnable429 | PostApiAuthTwoFactorEnable500,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAuthTwoFactorEnable>>, TError,{data: PostApiAuthTwoFactorEnableBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiAuthTwoFactorEnable>>,
+        TError,
+        {data: PostApiAuthTwoFactorEnableBody},
+        TContext
+      > => {
+
+      const mutationOptions = getPostApiAuthTwoFactorEnableMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    

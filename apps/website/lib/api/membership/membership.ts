@@ -124,7 +124,7 @@ export function useGetApiMembershipTiers<TData = Awaited<ReturnType<typeof getAp
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-  return { ...query, queryKey: queryOptions.queryKey }
+  return { ...query, queryKey: queryOptions.queryKey };
 }
 
 
@@ -214,7 +214,7 @@ export function useGetApiMembershipUsersUserId<TData = Awaited<ReturnType<typeof
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-  return { ...query, queryKey: queryOptions.queryKey }
+  return { ...query, queryKey: queryOptions.queryKey };
 }
 
 

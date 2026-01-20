@@ -1,0 +1,26 @@
+---
+name: standard-casing
+description: Establishes rules for standard capitalization following orthographic and semantic rules
+---
+
+# Overview
+
+Use standard capitalization: avoid uppercase unless required. The first letter should be uppercase when appropriate, following orthographic and semantic rules.
+
+## Capitalization Rules
+
+1. **Default to lowercase**: Use lowercase by default unless uppercase is required by orthographic or semantic rules.
+
+2. **First letter capitalization**: Capitalize the first letter when:
+   - Starting a sentence
+   - Beginning a new statement or declaration
+   - Required by language-specific orthographic rules
+
+3. **Avoid unnecessary uppercase**: Do not use uppercase letters unless:
+   - Required by orthographic rules (proper nouns, acronyms, etc.)
+   - Required by semantic meaning (specific terms, constants, etc.)
+   - Required by code conventions (class names, component names, etc.)
+
+4. **Follow orthographic rules**: Capitalization should follow standard orthographic rules for the language being used, prioritizing semantic clarity and readability.
+
+5. **Code conventions**: When code conventions require specific casing (e.g., PascalCase for components, camelCase for variables), follow those conventions while maintaining standard capitalization for text content, comments, and user-facing strings.

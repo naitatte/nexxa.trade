@@ -78,3 +78,4 @@ temp/
 *.pem
 .cache/
 .parcel-cache/
+apps/server/storage/

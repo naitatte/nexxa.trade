@@ -14,6 +14,31 @@ import {
   adaptSchemasToDb,
 } from "./utils/openapi-merge";
 
+function dedupeOperationIds(document: OpenAPIV3.Document) {
+  const used = new Map<string, number>();
+  const sanitize = (value: string) => value.replace(/[^a-zA-Z0-9_]/g, "_");
+
+  Object.entries(document.paths || {}).forEach(([path, pathItem]) => {
+    if (!pathItem) return;
+    const methods = ["get", "post", "put", "patch", "delete", "options", "head"];
+    methods.forEach((method) => {
+      const operation = (pathItem as Record<string, any>)[method];
+      if (!operation || !operation.operationId) return;
+      const id = operation.operationId as string;
+      const count = used.get(id) ?? 0;
+      if (count === 0) {
+        used.set(id, 1);
+        return;
+      }
+      const suffix = sanitize(`${method}_${path}`);
+      const nextId = `${id}_${suffix}`;
+      operation.operationId = nextId;
+      used.set(id, count + 1);
+      used.set(nextId, 1);
+    });
+  });
+}
+
 export async function buildApp() {
   const loggerConfig: Exclude<FastifyServerOptions["logger"], boolean | undefined> = {
     level: env.NODE_ENV === "production" ? "info" : "debug",
@@ -34,6 +59,7 @@ export async function buildApp() {
     requestIdHeader: "x-request-id",
     requestIdLogLabel: "reqId",
     disableRequestLogging: false,
+    bodyLimit: 6 * 1024 * 1024,
   });
 
   await registerPlugins(app);
@@ -68,6 +94,7 @@ export async function buildApp() {
           );
 
           adaptSchemasToDb(document);
+          dedupeOperationIds(document);
 
           app.log.info("Better Auth OpenAPI schema integrated successfully");
         }

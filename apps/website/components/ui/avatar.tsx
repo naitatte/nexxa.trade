@@ -7,15 +7,17 @@ import { cn } from "@/lib/utils"
 
 function Avatar({
   className,
+  style,
   ...props
 }: React.ComponentProps<typeof AvatarPrimitive.Root>) {
   return (
     <AvatarPrimitive.Root
       data-slot="avatar"
       className={cn(
-        "relative flex size-8 shrink-0 overflow-hidden rounded-full",
+        "relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full",
         className
       )}
+      style={{ transform: "translateZ(0)", ...style }}
       {...props}
     />
   )
@@ -23,12 +25,25 @@ function Avatar({
 
 function AvatarImage({
   className,
+  style,
+  src,
   ...props
 }: React.ComponentProps<typeof AvatarPrimitive.Image>) {
+  if (!src || src === "") {
+    return null
+  }
+  
   return (
     <AvatarPrimitive.Image
       data-slot="avatar-image"
-      className={cn("aspect-square size-full", className)}
+      className={cn("h-full w-full", className)}
+      style={{
+        objectFit: "cover",
+        width: "100%",
+        height: "100%",
+        ...style,
+      }}
+      src={src}
       {...props}
     />
   )

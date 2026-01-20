@@ -1,4 +1,3 @@
-import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import { DashboardBreadcrumb } from "@/components/features/dashboard/breadcrumb/dashboard-breadcrumb"
 import { SubscriptionStatusBadge } from "@/components/features/membership/membership/subscription-status-badge"
@@ -7,6 +6,8 @@ import { MembershipInfo } from "@/components/features/membership/membership/memb
 import { PlanSelector } from "@/components/features/membership/plans/plan-selector"
 import { UpgradePrompt } from "@/components/features/membership/plans/upgrade-prompt"
 import { auth } from "@/lib/auth/server"
+import { getApiBaseUrl } from "@/lib/api/base-url"
+import { getRequestHeaders } from "@/lib/auth/request-headers"
 
 type MembershipStatus = "active" | "inactive" | "deleted"
 type MembershipTier = "trial_weekly" | "annual" | "lifetime"
@@ -19,7 +20,7 @@ type MembershipData = {
   activatedAt: Date | null
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || ""
+const API_BASE_URL = getApiBaseUrl()
 
 async function getMembershipData(userId: string, cookieHeader: string | null): Promise<MembershipData | null> {
   try {
@@ -49,11 +50,11 @@ async function getMembershipData(userId: string, cookieHeader: string | null): P
 }
 
 export default async function MembershipPage() {
-  const headersList = await headers()
+  const headersList = await getRequestHeaders()
   const cookieHeader = headersList.get("cookie")
   
   const session = await auth.api.getSession({
-    headers: new Headers(cookieHeader ? { cookie: cookieHeader } : undefined),
+    headers: headersList as unknown as Headers,
   })
 
   if (!session) redirect("/login")
