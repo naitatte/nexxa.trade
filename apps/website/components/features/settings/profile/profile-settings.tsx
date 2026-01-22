@@ -15,6 +15,8 @@ type ProfileSettingsProps = {
   user: {
     id: string
     name: string
+    username?: string | null
+    displayUsername?: string | null
     email: string
     image?: string | null
     emailVerified: boolean
@@ -150,7 +152,7 @@ export function ProfileSettings({ user, onUpdateProfile }: ProfileSettingsProps)
   }
 
   return (
-    <div className="grid gap-6 rounded-lg border p-6 text-sm">
+    <div className="grid gap-4 sm:gap-6 rounded-lg border p-4 sm:p-6 text-sm">
       <div className="space-y-1">
         <div className="flex items-center gap-2">
           <User className="size-4 text-muted-foreground" />
@@ -161,30 +163,30 @@ export function ProfileSettings({ user, onUpdateProfile }: ProfileSettingsProps)
         </p>
       </div>
 
-      <div className="flex items-start gap-6">
-        <div className="relative">
-          <Avatar className="size-20">
+      <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
+        <div className="relative flex-shrink-0">
+          <Avatar className="size-20 sm:size-24">
             <AvatarImage src={imagePreview || undefined} alt={user.name} />
-            <AvatarFallback className="text-lg">{initials}</AvatarFallback>
+            <AvatarFallback className="text-base sm:text-lg">{initials}</AvatarFallback>
           </Avatar>
           <Button
             variant="secondary"
             size="icon"
-            className="absolute -bottom-1 -right-1 size-7 rounded-full"
+            className="absolute -bottom-1 -right-1 size-6 sm:size-7 rounded-full"
             onClick={() => fileInputRef.current?.click()}
             disabled={isLoading}
           >
-            <Camera className="size-3.5" />
+            <Camera className="size-3 sm:size-3.5" />
           </Button>
           {imagePreview && (
             <Button
               variant="destructive"
               size="icon"
-              className="absolute -top-1 -right-1 size-6 rounded-full"
+              className="absolute -top-1 -right-1 size-5 sm:size-6 rounded-full"
               onClick={handleImageRemove}
               disabled={isLoading}
             >
-              <X className="size-3" />
+              <X className="size-2.5 sm:size-3" />
             </Button>
           )}
           <Input
@@ -202,24 +204,24 @@ export function ProfileSettings({ user, onUpdateProfile }: ProfileSettingsProps)
           />
         </div>
 
-        <div className="flex-1 space-y-4">
+        <div className="flex-1 w-full space-y-3 sm:space-y-4">
           <div className="space-y-2">
             <Label htmlFor="profile-name" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Name
             </Label>
             {isEditing ? (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <Input
                   id="profile-name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="h-9"
+                  className="h-9 flex-1 min-w-[200px]"
                   autoFocus
                 />
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="size-9 text-green-600 hover:text-green-700"
+                  className="size-9 flex-shrink-0 text-green-600 hover:text-green-700"
                   onClick={handleSave}
                   disabled={isLoading}
                 >
@@ -228,7 +230,7 @@ export function ProfileSettings({ user, onUpdateProfile }: ProfileSettingsProps)
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="size-9 text-muted-foreground"
+                  className="size-9 flex-shrink-0 text-muted-foreground"
                   onClick={handleCancel}
                   disabled={isLoading}
                 >
@@ -236,12 +238,12 @@ export function ProfileSettings({ user, onUpdateProfile }: ProfileSettingsProps)
                 </Button>
               </div>
             ) : (
-              <div className="flex items-center gap-2">
-                <p className="font-medium">{user.name}</p>
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="font-medium break-words flex-1 min-w-0">{user.name}</p>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="size-7"
+                  className="size-7 flex-shrink-0"
                   onClick={() => setIsEditing(true)}
                 >
                   <Pencil className="size-3" />
@@ -252,16 +254,23 @@ export function ProfileSettings({ user, onUpdateProfile }: ProfileSettingsProps)
 
           <div className="space-y-2">
             <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Username
+            </Label>
+            <p className="font-medium break-words">{user.username || "Not set"}</p>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Email
             </Label>
-            <div className="flex items-center gap-2">
-              <p className="font-medium">{user.email}</p>
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="font-medium break-all flex-1 min-w-0">{user.email}</p>
               {user.emailVerified ? (
-                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-green-500/10 text-green-600 dark:bg-green-500/20 dark:text-green-400 border-green-500/20 dark:border-green-500/30">
+                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 flex-shrink-0 bg-green-500/10 text-green-600 dark:bg-green-500/20 dark:text-green-400 border-green-500/20 dark:border-green-500/30">
                   Verified
                 </Badge>
               ) : (
-                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 border-amber-500/20 dark:border-amber-500/30">
+                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 flex-shrink-0 bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 border-amber-500/20 dark:border-amber-500/30">
                   Unverified
                 </Badge>
               )}
@@ -272,7 +281,7 @@ export function ProfileSettings({ user, onUpdateProfile }: ProfileSettingsProps)
             <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Member since
             </Label>
-            <p className="font-medium">{formatDate(user.createdAt)}</p>
+            <p className="font-medium break-words">{formatDate(user.createdAt)}</p>
           </div>
         </div>
       </div>

@@ -4,15 +4,21 @@ import type { SendMailOptions, SendMailResult } from "./types";
 export class Mailer {
   private transporter: Transporter;
   private defaultFrom?: string;
+  private sendTimeoutMs?: number;
 
-  constructor(transporter: Transporter, defaultFrom?: string) {
+  constructor(
+    transporter: Transporter,
+    defaultFrom?: string,
+    sendTimeoutMs?: number
+  ) {
     this.transporter = transporter;
     this.defaultFrom = defaultFrom;
+    this.sendTimeoutMs = sendTimeoutMs;
   }
 
   async sendMail(options: SendMailOptions): Promise<SendMailResult> {
     try {
-      const info = await this.transporter.sendMail({
+      const sendPromise = this.transporter.sendMail({
         from: options.from ?? this.defaultFrom,
         to: options.to,
         cc: options.cc,
@@ -23,6 +29,27 @@ export class Mailer {
         attachments: options.attachments,
         replyTo: options.replyTo,
       });
+
+      let timeoutId: NodeJS.Timeout | undefined;
+      const info = this.sendTimeoutMs
+        ? await Promise.race([
+            sendPromise,
+            new Promise<never>((_, reject) => {
+              timeoutId = setTimeout(() => {
+                reject(
+                  new Error(
+                    `SMTP send timed out after ${this.sendTimeoutMs}ms`
+                  )
+                );
+              }, this.sendTimeoutMs);
+              timeoutId.unref?.();
+            }),
+          ])
+        : await sendPromise;
+
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
 
       return {
         messageId: info.messageId,

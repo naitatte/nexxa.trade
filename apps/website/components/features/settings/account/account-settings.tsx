@@ -1,16 +1,23 @@
 "use client"
 
-import { useState } from "react"
-import { KeyRound, Mail, AlertTriangle } from "lucide-react"
+import { useCallback, useEffect, useRef, useState } from "react"
+import { KeyRound, Mail, AlertTriangle, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { VerifyEmailChangeDialog } from "./dialogs/verify-email-change-dialog"
 import { useLoadingState } from "@/lib/loading-state/hooks"
+import { LoadingSpinner } from "@/lib/loading-state/components"
+import { cn } from "@/lib/utils"
+import { usePostApiAuthIsUsernameAvailable } from "@/lib/api/auth/auth"
 import { translateErrorFromResponse } from "@/lib/error-translations"
 
+const usernamePattern = /^[a-zA-Z0-9_.]+$/
+
 type AccountSettingsProps = {
+  currentUsername?: string | null
   currentEmail: string
+  onChangeUsername?: (newUsername: string) => Promise<void>
   onChangeEmail?: (newEmail: string) => Promise<string | void>
   onChangePassword?: (currentPassword: string, newPassword: string) => Promise<void>
   onResendVerification?: () => Promise<void>
@@ -19,7 +26,9 @@ type AccountSettingsProps = {
 }
 
 export function AccountSettings({
+  currentUsername,
   currentEmail,
+  onChangeUsername,
   onChangeEmail,
   onChangePassword,
   onResendVerification,
@@ -28,13 +37,142 @@ export function AccountSettings({
 }: AccountSettingsProps) {
   const [isChangingEmail, setIsChangingEmail] = useState(false)
   const [isChangingPassword, setIsChangingPassword] = useState(false)
+  const [isChangingUsername, setIsChangingUsername] = useState(false)
   const [newEmail, setNewEmail] = useState("")
+  const [newUsername, setNewUsername] = useState("")
   const [pendingEmail, setPendingEmail] = useState<string | null>(null)
   const [showVerifyDialog, setShowVerifyDialog] = useState(false)
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const { isLoading, setLoading, setSuccess, setError, setIdle } = useLoadingState()
+  const [usernameAvailability, setUsernameAvailability] = useState<
+    "checking" | "available" | "unavailable" | null
+  >(null)
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const lastCheckedUsernameRef = useRef<string>("")
+
+  const handleUsernameCheckSuccess = useCallback(() => {
+    setUsernameAvailability("available")
+  }, [])
+
+  const handleUsernameCheckError = useCallback(() => {
+    setUsernameAvailability("unavailable")
+  }, [])
+
+  const checkUsernameMutation = usePostApiAuthIsUsernameAvailable({
+    mutation: {
+      onSuccess: handleUsernameCheckSuccess,
+      onError: handleUsernameCheckError,
+    },
+  })
+
+  useEffect(() => {
+    if (!isChangingUsername) {
+      setUsernameAvailability(null)
+      lastCheckedUsernameRef.current = ""
+      return
+    }
+
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current)
+    }
+
+    const trimmedUsername = newUsername.trim()
+
+    if (!trimmedUsername || trimmedUsername.length < 3) {
+      setUsernameAvailability(null)
+      lastCheckedUsernameRef.current = ""
+      return
+    }
+
+    if (!usernamePattern.test(trimmedUsername)) {
+      setUsernameAvailability(null)
+      lastCheckedUsernameRef.current = ""
+      return
+    }
+
+    if (currentUsername && trimmedUsername === currentUsername) {
+      setUsernameAvailability(null)
+      lastCheckedUsernameRef.current = ""
+      return
+    }
+
+    if (lastCheckedUsernameRef.current === trimmedUsername) {
+      return
+    }
+
+    setUsernameAvailability("checking")
+    const timeoutId = setTimeout(() => {
+      lastCheckedUsernameRef.current = trimmedUsername
+      checkUsernameMutation.mutate({
+        data: {
+          username: trimmedUsername,
+        },
+      })
+    }, 500)
+
+    debounceTimeoutRef.current = timeoutId
+
+    return () => {
+      clearTimeout(timeoutId)
+    }
+  }, [checkUsernameMutation, currentUsername, isChangingUsername, newUsername])
+
+  const handleUsernameChange = async () => {
+    if (!newUsername.trim()) {
+      setError("Username cannot be empty", "MISSING_REQUIRED_FIELD")
+      return
+    }
+
+    const trimmedUsername = newUsername.trim()
+
+    if (trimmedUsername.length < 3) {
+      setError("Username must be at least 3 characters", "USERNAME_TOO_SHORT")
+      return
+    }
+
+    if (trimmedUsername.length > 30) {
+      setError("Username must be 30 characters or less", "USERNAME_TOO_LONG")
+      return
+    }
+
+    if (!usernamePattern.test(trimmedUsername)) {
+      setError(
+        "Username can only use letters, numbers, underscores, and dots",
+        "INVALID_USERNAME"
+      )
+      return
+    }
+
+    if (currentUsername && trimmedUsername === currentUsername) {
+      setError("New username must be different from current username", "INVALID_INPUT")
+      return
+    }
+
+    if (usernameAvailability !== "available") {
+      setError("Please ensure the username is available before saving", "USERNAME_IS_ALREADY_TAKEN")
+      return
+    }
+
+    setLoading("Updating username...")
+    try {
+      await onChangeUsername?.(trimmedUsername)
+      setIsChangingUsername(false)
+      setNewUsername("")
+      setUsernameAvailability(null)
+      lastCheckedUsernameRef.current = ""
+      setSuccess("Username updated successfully")
+      setIdle()
+    } catch (error) {
+      const errorTranslation = translateErrorFromResponse(
+        error,
+        "Failed to update username"
+      )
+      setError(errorTranslation.message, errorTranslation.message)
+      setIdle()
+    }
+  }
 
   const handleEmailChange = async () => {
     if (!newEmail.trim()) {
@@ -137,7 +275,7 @@ export function AccountSettings({
           <h3 className="font-medium">Account settings</h3>
         </div>
         <p className="text-xs text-muted-foreground">
-          Manage your email and password.
+          Manage your username, email, and password.
         </p>
       </div>
 
@@ -165,6 +303,80 @@ export function AccountSettings({
       )}
 
       <div className="space-y-4">
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <User className="size-3.5 text-muted-foreground" />
+            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Username
+            </span>
+          </div>
+
+          {isChangingUsername ? (
+            <div className="ml-5 space-y-3">
+              <div className="space-y-2">
+                <Label htmlFor="new-username">New username</Label>
+                <Input
+                  id="new-username"
+                  type="text"
+                  value={newUsername}
+                  onChange={(e) => setNewUsername(e.target.value)}
+                  placeholder="Enter new username"
+                  className={cn(
+                    "h-9",
+                    usernameAvailability === "available" && "border-green-500",
+                    usernameAvailability === "unavailable" && "border-red-500",
+                    usernameAvailability === "checking" && "border-yellow-500"
+                  )}
+                />
+                {usernameAvailability === "checking" && (
+                  <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                    <LoadingSpinner size="sm" />
+                    Checking availability...
+                  </div>
+                )}
+                {usernameAvailability === "available" && (
+                  <p className="text-xs text-green-600">Username is available</p>
+                )}
+                {usernameAvailability === "unavailable" && (
+                  <p className="text-xs text-red-600">This username is already taken</p>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={handleUsernameChange}
+                  disabled={isLoading}
+                >
+                  Save changes
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setIsChangingUsername(false)
+                    setNewUsername("")
+                  }}
+                  disabled={isLoading}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="ml-5 flex items-center justify-between">
+              <p className="font-medium">{currentUsername || "Not set"}</p>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs"
+                onClick={() => setIsChangingUsername(true)}
+              >
+                Change username
+              </Button>
+            </div>
+          )}
+        </div>
+
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <Mail className="size-3.5 text-muted-foreground" />

@@ -295,6 +295,7 @@ export function useGetUser<TData = Awaited<ReturnType<typeof getUser>>, TError =
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+
   return { ...query, queryKey: queryOptions.queryKey };
 }
 
@@ -504,6 +505,7 @@ export function useListUsers<TData = Awaited<ReturnType<typeof listUsers>>, TErr
   const queryOptions = getListUsersQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
 
   return { ...query, queryKey: queryOptions.queryKey };
 }

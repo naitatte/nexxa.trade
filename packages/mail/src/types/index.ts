@@ -4,6 +4,11 @@ export interface SmtpConfig {
   host: string;
   port: number;
   secure?: boolean;
+  requireTLS?: boolean;
+  connectionTimeout?: number;
+  greetingTimeout?: number;
+  socketTimeout?: number;
+  sendTimeout?: number;
   auth: {
     user: string;
     pass: string;

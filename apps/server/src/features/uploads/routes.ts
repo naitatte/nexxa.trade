@@ -3,10 +3,15 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import { createReadStream } from "node:fs";
 import { randomUUID } from "node:crypto";
+import { fileURLToPath } from "node:url";
 import { auth } from "../auth/auth";
 import { asyncHandler } from "../../utils/async-handler";
 
-const STORAGE_ROOT = path.join(process.cwd(), "storage");
+const CURRENT_DIR = path.dirname(fileURLToPath(import.meta.url));
+const DEFAULT_STORAGE_ROOT = path.resolve(CURRENT_DIR, "../../../storage");
+const STORAGE_ROOT = process.env.STORAGE_ROOT
+  ? path.resolve(process.env.STORAGE_ROOT)
+  : DEFAULT_STORAGE_ROOT;
 const PROFILE_PICTURES_DIR = path.join(STORAGE_ROOT, "profile-pictures");
 const PROFILE_PICTURES_ROUTE = "/storage/profile-pictures";
 

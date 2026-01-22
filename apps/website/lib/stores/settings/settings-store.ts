@@ -5,6 +5,8 @@ import { create } from "zustand"
 export type SettingsUser = {
   id: string
   name: string
+  username?: string | null
+  displayUsername?: string | null
   email: string
   image?: string | null
   emailVerified: boolean

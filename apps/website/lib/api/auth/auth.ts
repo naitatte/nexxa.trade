@@ -123,6 +123,13 @@ import type {
   PostApiAuthGetAccessToken429,
   PostApiAuthGetAccessToken500,
   PostApiAuthGetAccessTokenBody,
+  PostApiAuthIsUsernameAvailable400,
+  PostApiAuthIsUsernameAvailable401,
+  PostApiAuthIsUsernameAvailable403,
+  PostApiAuthIsUsernameAvailable404,
+  PostApiAuthIsUsernameAvailable429,
+  PostApiAuthIsUsernameAvailable500,
+  PostApiAuthIsUsernameAvailableBody,
   PostApiAuthRefreshToken200,
   PostApiAuthRefreshToken401,
   PostApiAuthRefreshToken403,
@@ -154,6 +161,15 @@ import type {
   PostApiAuthRevokeSessions429,
   PostApiAuthRevokeSessions500,
   PostApiAuthRevokeSessionsBody,
+  PostApiAuthSignInUsername200,
+  PostApiAuthSignInUsername400,
+  PostApiAuthSignInUsername401,
+  PostApiAuthSignInUsername403,
+  PostApiAuthSignInUsername404,
+  PostApiAuthSignInUsername422,
+  PostApiAuthSignInUsername429,
+  PostApiAuthSignInUsername500,
+  PostApiAuthSignInUsernameBody,
   PostApiAuthTwoFactorDisable200,
   PostApiAuthTwoFactorDisable400,
   PostApiAuthTwoFactorDisable401,
@@ -580,6 +596,7 @@ export function useListUserSessions<TData = Awaited<ReturnType<typeof listUserSe
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+
   return { ...query, queryKey: queryOptions.queryKey };
 }
 
@@ -727,6 +744,7 @@ export function useGetSession<TData = Awaited<ReturnType<typeof getSession>>, TE
   const queryOptions = getGetSessionQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
@@ -1059,6 +1077,7 @@ export function useGetApiAuthVerifyEmail<TData = Awaited<ReturnType<typeof getAp
   const queryOptions = getGetApiAuthVerifyEmailQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
@@ -1518,6 +1537,7 @@ export function useResetPasswordCallback<TData = Awaited<ReturnType<typeof reset
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+
   return { ...query, queryKey: queryOptions.queryKey };
 }
 
@@ -1849,6 +1869,7 @@ export function useListUserAccounts<TData = Awaited<ReturnType<typeof listUserAc
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+
   return { ...query, queryKey: queryOptions.queryKey };
 }
 
@@ -1936,6 +1957,7 @@ export function useGetApiAuthDeleteUserCallback<TData = Awaited<ReturnType<typeo
   const queryOptions = getGetApiAuthDeleteUserCallbackQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
@@ -2207,6 +2229,7 @@ export function useGetApiAuthAccountInfo<TData = Awaited<ReturnType<typeof getAp
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+
   return { ...query, queryKey: queryOptions.queryKey };
 }
 
@@ -2293,6 +2316,7 @@ export function useGetApiAuthOk<TData = Awaited<ReturnType<typeof getApiAuthOk>>
   const queryOptions = getGetApiAuthOkQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
@@ -2381,6 +2405,7 @@ export function useGetApiAuthError<TData = Awaited<ReturnType<typeof getApiAuthE
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+
   return { ...query, queryKey: queryOptions.queryKey };
 }
 
@@ -2388,6 +2413,125 @@ export function useGetApiAuthError<TData = Awaited<ReturnType<typeof getApiAuthE
 
 
 /**
+ * Sign in with username
+ */
+export const postApiAuthSignInUsername = (
+    postApiAuthSignInUsernameBody: PostApiAuthSignInUsernameBody,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<PostApiAuthSignInUsername200>(
+      {url: `/api/auth/sign-in/username`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: postApiAuthSignInUsernameBody, signal
+    },
+      options);
+    }
+  
+
+
+export const getPostApiAuthSignInUsernameMutationOptions = <TError = PostApiAuthSignInUsername400 | PostApiAuthSignInUsername401 | PostApiAuthSignInUsername403 | PostApiAuthSignInUsername404 | PostApiAuthSignInUsername422 | PostApiAuthSignInUsername429 | PostApiAuthSignInUsername500,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAuthSignInUsername>>, TError,{data: PostApiAuthSignInUsernameBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiAuthSignInUsername>>, TError,{data: PostApiAuthSignInUsernameBody}, TContext> => {
+
+const mutationKey = ['postApiAuthSignInUsername'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiAuthSignInUsername>>, {data: PostApiAuthSignInUsernameBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postApiAuthSignInUsername(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiAuthSignInUsernameMutationResult = NonNullable<Awaited<ReturnType<typeof postApiAuthSignInUsername>>>
+    export type PostApiAuthSignInUsernameMutationBody = PostApiAuthSignInUsernameBody
+    export type PostApiAuthSignInUsernameMutationError = PostApiAuthSignInUsername400 | PostApiAuthSignInUsername401 | PostApiAuthSignInUsername403 | PostApiAuthSignInUsername404 | PostApiAuthSignInUsername422 | PostApiAuthSignInUsername429 | PostApiAuthSignInUsername500
+
+    export const usePostApiAuthSignInUsername = <TError = PostApiAuthSignInUsername400 | PostApiAuthSignInUsername401 | PostApiAuthSignInUsername403 | PostApiAuthSignInUsername404 | PostApiAuthSignInUsername422 | PostApiAuthSignInUsername429 | PostApiAuthSignInUsername500,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAuthSignInUsername>>, TError,{data: PostApiAuthSignInUsernameBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiAuthSignInUsername>>,
+        TError,
+        {data: PostApiAuthSignInUsernameBody},
+        TContext
+      > => {
+
+      const mutationOptions = getPostApiAuthSignInUsernameMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    export const postApiAuthIsUsernameAvailable = (
+    postApiAuthIsUsernameAvailableBody: PostApiAuthIsUsernameAvailableBody,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/api/auth/is-username-available`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: postApiAuthIsUsernameAvailableBody, signal
+    },
+      options);
+    }
+  
+
+
+export const getPostApiAuthIsUsernameAvailableMutationOptions = <TError = PostApiAuthIsUsernameAvailable400 | PostApiAuthIsUsernameAvailable401 | PostApiAuthIsUsernameAvailable403 | PostApiAuthIsUsernameAvailable404 | PostApiAuthIsUsernameAvailable429 | PostApiAuthIsUsernameAvailable500,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAuthIsUsernameAvailable>>, TError,{data: PostApiAuthIsUsernameAvailableBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiAuthIsUsernameAvailable>>, TError,{data: PostApiAuthIsUsernameAvailableBody}, TContext> => {
+
+const mutationKey = ['postApiAuthIsUsernameAvailable'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiAuthIsUsernameAvailable>>, {data: PostApiAuthIsUsernameAvailableBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postApiAuthIsUsernameAvailable(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiAuthIsUsernameAvailableMutationResult = NonNullable<Awaited<ReturnType<typeof postApiAuthIsUsernameAvailable>>>
+    export type PostApiAuthIsUsernameAvailableMutationBody = PostApiAuthIsUsernameAvailableBody
+    export type PostApiAuthIsUsernameAvailableMutationError = PostApiAuthIsUsernameAvailable400 | PostApiAuthIsUsernameAvailable401 | PostApiAuthIsUsernameAvailable403 | PostApiAuthIsUsernameAvailable404 | PostApiAuthIsUsernameAvailable429 | PostApiAuthIsUsernameAvailable500
+
+    export const usePostApiAuthIsUsernameAvailable = <TError = PostApiAuthIsUsernameAvailable400 | PostApiAuthIsUsernameAvailable401 | PostApiAuthIsUsernameAvailable403 | PostApiAuthIsUsernameAvailable404 | PostApiAuthIsUsernameAvailable429 | PostApiAuthIsUsernameAvailable500,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAuthIsUsernameAvailable>>, TError,{data: PostApiAuthIsUsernameAvailableBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiAuthIsUsernameAvailable>>,
+        TError,
+        {data: PostApiAuthIsUsernameAvailableBody},
+        TContext
+      > => {
+
+      const mutationOptions = getPostApiAuthIsUsernameAvailableMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
  * Use this endpoint to get the TOTP URI
  */
 export const postApiAuthTwoFactorGetTotpUri = (

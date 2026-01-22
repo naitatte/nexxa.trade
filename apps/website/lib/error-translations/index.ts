@@ -88,6 +88,26 @@ const ERROR_TRANSLATIONS: Record<ErrorCode, ErrorTranslation> = {
     message: "Email not verified",
     description: "Please verify your email address before continuing.",
   },
+  INVALID_USERNAME_OR_PASSWORD: {
+    message: "Invalid username or password",
+    description: "The username or password you entered is incorrect. Please try again.",
+  },
+  USERNAME_IS_ALREADY_TAKEN: {
+    message: "Username already taken",
+    description: "That username is already in use. Please choose another.",
+  },
+  USERNAME_TOO_SHORT: {
+    message: "Username too short",
+    description: "Username must be at least 3 characters long.",
+  },
+  USERNAME_TOO_LONG: {
+    message: "Username too long",
+    description: "Username must be 30 characters or less.",
+  },
+  INVALID_USERNAME: {
+    message: "Invalid username",
+    description: "Usernames can only use letters, numbers, underscores, and dots.",
+  },
 
   // Request errors
   INVALID_REQUEST: {

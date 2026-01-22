@@ -33,6 +33,13 @@ export function getSmtpConfigFromEnv(): SmtpConfig {
     host: requireEnv("SMTP_HOST"),
     port,
     secure,
+    requireTLS: process.env.SMTP_REQUIRE_TLS
+      ? getEnvBoolean("SMTP_REQUIRE_TLS", false)
+      : undefined,
+    connectionTimeout: getEnvNumber("SMTP_CONNECTION_TIMEOUT", 10000),
+    greetingTimeout: getEnvNumber("SMTP_GREETING_TIMEOUT", 10000),
+    socketTimeout: getEnvNumber("SMTP_SOCKET_TIMEOUT", 20000),
+    sendTimeout: getEnvNumber("SMTP_SEND_TIMEOUT", 15000),
     auth: {
       user: requireEnv("SMTP_USER"),
       pass: requireEnv("SMTP_PASS"),

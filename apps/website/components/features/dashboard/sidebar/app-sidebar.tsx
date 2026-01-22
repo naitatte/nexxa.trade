@@ -2,8 +2,8 @@
 
 import * as React from "react"
 import Link from "next/link"
+import Image from "next/image"
 import {
-  Command,
   LayoutDashboard,
   Radio,
   Network,
@@ -216,11 +216,23 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton size="lg" disabled>
-                <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                  <Command className="size-4" />
-                </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">Loading...</span>
+                <div className="flex items-center justify-start">
+                  <Image
+                    src="/graphics/logo-light.png"
+                    alt="Logo"
+                    width={180}
+                    height={38}
+                    className="h-7 w-auto dark:hidden"
+                    priority
+                  />
+                  <Image
+                    src="/graphics/logo-dark.png"
+                    alt="Logo"
+                    width={180}
+                    height={38}
+                    className="hidden h-7 w-auto dark:block"
+                    priority
+                  />
                 </div>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -243,17 +255,24 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
-              <Link href="/dashboard">
-                <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                  <Command className="size-4" />
-                </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">NexxaTrade</span>
-                  <span className="truncate text-xs">Trading Platform</span>
-                </div>
-              </Link>
-            </SidebarMenuButton>
+            <Link href="/dashboard" className="flex h-12 items-center justify-start px-2">
+              <Image
+                src="/graphics/logo-light.png"
+                alt="Logo"
+                width={180}
+                height={38}
+                className="h-7 w-auto dark:hidden"
+                priority
+              />
+              <Image
+                src="/graphics/logo-dark.png"
+                alt="Logo"
+                width={180}
+                height={38}
+                className="hidden h-7 w-auto dark:block"
+                priority
+              />
+            </Link>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>

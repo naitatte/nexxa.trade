@@ -35,6 +35,8 @@ export type Session = {
   user: {
     id: string;
     name: string;
+    username?: string | null;
+    displayUsername?: string | null;
     email: string;
     emailVerified: boolean;
     image?: string;

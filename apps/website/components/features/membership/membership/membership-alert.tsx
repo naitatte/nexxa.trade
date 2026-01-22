@@ -9,11 +9,7 @@ type MembershipAlertProps = {
   deletionDays?: number
 }
 
-function calculateTimeRemaining(inactiveAt: Date | null, deletionDays: number) {
-  if (!inactiveAt) {
-    return { days: deletionDays, hours: 0, minutes: 0, seconds: 0, percentage: 100 }
-  }
-
+function calculateTimeRemaining(inactiveAt: Date, deletionDays: number) {
   const deletionDate = new Date(inactiveAt)
   deletionDate.setDate(deletionDate.getDate() + deletionDays)
 
@@ -31,17 +27,19 @@ function calculateTimeRemaining(inactiveAt: Date | null, deletionDays: number) {
 }
 
 export function MembershipAlert({ inactiveAt, deletionDays = 7 }: MembershipAlertProps) {
+  const [initialInactiveAt] = useState<Date>(() => inactiveAt ?? new Date())
+  const effectiveInactiveAt = inactiveAt ?? initialInactiveAt
   const [timeRemaining, setTimeRemaining] = useState(() =>
-    calculateTimeRemaining(inactiveAt, deletionDays)
+    calculateTimeRemaining(effectiveInactiveAt, deletionDays)
   )
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setTimeRemaining(calculateTimeRemaining(inactiveAt, deletionDays))
+      setTimeRemaining(calculateTimeRemaining(effectiveInactiveAt, deletionDays))
     }, 1000)
 
     return () => clearInterval(interval)
-  }, [inactiveAt, deletionDays])
+  }, [effectiveInactiveAt, deletionDays])
 
   return (
     <Alert variant="destructive" className="bg-destructive/5 border-destructive/20 text-destructive">

@@ -135,9 +135,6 @@ export function DisableTwoFactorDialog({
             </div>
 
             <DialogFooter>
-              <Button variant="outline" onClick={handleClose} disabled={isLoading}>
-                Cancel
-              </Button>
               <Button onClick={handlePasswordSubmit} disabled={isLoading || !password.trim()}>
                 Continue
               </Button>

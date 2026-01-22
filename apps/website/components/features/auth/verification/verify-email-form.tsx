@@ -2,6 +2,7 @@
 
 import React from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -61,6 +62,24 @@ export function VerifyEmailForm({
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
+      <div className="flex justify-center mb-6">
+        <Image
+          src="/graphics/logo-light.png"
+          alt="Logo"
+          width={220}
+          height={46}
+          className="h-9 w-auto dark:hidden"
+          priority
+        />
+        <Image
+          src="/graphics/logo-dark.png"
+          alt="Logo"
+          width={220}
+          height={46}
+          className="hidden h-9 w-auto dark:block"
+          priority
+        />
+      </div>
       <Card>
         <CardHeader>
           <CardTitle>Check your email</CardTitle>

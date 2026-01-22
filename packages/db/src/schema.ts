@@ -4,9 +4,12 @@ import { pgTable, text, timestamp, boolean, index, integer } from "drizzle-orm/p
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
+  username: text("username").unique(),
+  displayUsername: text("display_username"),
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").default(false).notNull(),
   image: text("image"),
+  banned: boolean("banned").default(false).notNull(),
   twoFactorEnabled: boolean("two_factor_enabled").default(false),
   role: text("role", { enum: ["admin", "guest", "subscriber", "networker"] })
     .default("guest")

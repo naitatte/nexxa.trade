@@ -4,6 +4,134 @@
 /* stylelint-disable-next-line unknownAtRules */
 @custom-variant dark (&:is(.dark *));
 
+@font-face {
+  font-family: "NeueHaasDisplay";
+  src: url("/font/NeueHaasDisplay-XXThin.woff2") format("woff2");
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NeueHaasDisplay";
+  src: url("/font/NeueHaasDisplay-XXThinItalic.woff2") format("woff2");
+  font-weight: 100;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NeueHaasDisplay";
+  src: url("/font/NeueHaasDisplay-XThin.woff2") format("woff2");
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NeueHaasDisplay";
+  src: url("/font/NeueHaasDisplay-XThinItalic.woff2") format("woff2");
+  font-weight: 200;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NeueHaasDisplay";
+  src: url("/font/NeueHaasDisplay-Thin.woff2") format("woff2");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NeueHaasDisplay";
+  src: url("/font/NeueHaasDisplay-ThinItalic.woff2") format("woff2");
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NeueHaasDisplay";
+  src: url("/font/NeueHaasDisplay-Light.woff2") format("woff2");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NeueHaasDisplay";
+  src: url("/font/NeueHaasDisplay-LightItalic.woff2") format("woff2");
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NeueHaasDisplay";
+  src: url("/font/NeueHaasDisplay-Roman.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NeueHaasDisplay";
+  src: url("/font/NeueHaasDisplay-RomanItalic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NeueHaasDisplay";
+  src: url("/font/NeueHaasDisplay-Mediu.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NeueHaasDisplay";
+  src: url("/font/NeueHaasDisplay-MediumItalic.woff2") format("woff2");
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NeueHaasDisplay";
+  src: url("/font/NeueHaasDisplay-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NeueHaasDisplay";
+  src: url("/font/NeueHaasDisplay-BoldItalic.woff2") format("woff2");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NeueHaasDisplay";
+  src: url("/font/NeueHaasDisplay-Black.woff2") format("woff2");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NeueHaasDisplay";
+  src: url("/font/NeueHaasDisplay-BlackItalic.woff2") format("woff2");
+  font-weight: 900;
+  font-style: italic;
+  font-display: swap;
+}
+
 :root {
   --background: oklch(1.0000 0 0);
   --foreground: oklch(0.1884 0.0128 248.5103);
@@ -37,9 +165,9 @@
   --sidebar-accent-foreground: oklch(0.6723 0.1606 244.9955);
   --sidebar-border: oklch(0.75 0.02 238.5177);
   --sidebar-ring: oklch(0.6818 0.1584 243.3540);
-  --font-sans: Open Sans, sans-serif;
-  --font-serif: Georgia, serif;
-  --font-mono: Menlo, monospace;
+  --font-sans: "NeueHaasDisplay", sans-serif;
+  --font-serif: "NeueHaasDisplay", serif;
+  --font-mono: "NeueHaasDisplay", monospace;
   --radius: 1.3rem;
   --shadow-x: 0px;
   --shadow-y: 2px;
@@ -92,9 +220,9 @@
   --sidebar-accent-foreground: oklch(0.6692 0.1607 245.0110);
   --sidebar-border: oklch(0.3795 0.0220 240.5943);
   --sidebar-ring: oklch(0.6818 0.1584 243.3540);
-  --font-sans: Open Sans, sans-serif;
-  --font-serif: Georgia, serif;
-  --font-mono: Menlo, monospace;
+  --font-sans: "NeueHaasDisplay", sans-serif;
+  --font-serif: "NeueHaasDisplay", serif;
+  --font-mono: "NeueHaasDisplay", monospace;
   --radius: 1.3rem;
   --shadow-x: 0px;
   --shadow-y: 2px;

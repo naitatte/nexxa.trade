@@ -19,6 +19,8 @@ type SettingsContentProps = {
   user: {
     id: string
     name: string
+    username?: string | null
+    displayUsername?: string | null
     email: string
     image?: string | null
     emailVerified: boolean
@@ -46,9 +48,17 @@ export function SettingsContent({ user: initialUser }: SettingsContentProps) {
 
   useEffect(() => {
     if (session?.user) {
+      const sessionUsername = "username" in session.user
+        ? (session.user as { username?: string | null }).username ?? null
+        : null
+      const sessionDisplayUsername = "displayUsername" in session.user
+        ? (session.user as { displayUsername?: string | null }).displayUsername ?? null
+        : null
       setUser({
         id: session.user.id,
         name: session.user.name,
+        username: sessionUsername,
+        displayUsername: sessionDisplayUsername,
         email: session.user.email,
         image: session.user.image,
         emailVerified: session.user.emailVerified,
@@ -92,6 +102,22 @@ export function SettingsContent({ user: initialUser }: SettingsContentProps) {
     updateUser({
       name: data.name,
       image: data.image !== undefined ? data.image : resolvedUser.image,
+    })
+    queryClient.invalidateQueries({ queryKey: ["/api/auth/get-session"] })
+  }
+
+  const handleChangeUsername = async (newUsername: string) => {
+    type UpdateUserPayload = Parameters<typeof updateUserMutation.mutateAsync>[0]["data"] & {
+      username?: string
+    }
+    const updatePayload: UpdateUserPayload = { username: newUsername }
+    await updateUserMutation.mutateAsync({
+      data: updatePayload,
+    })
+    await refetchSession()
+    updateUser({
+      username: newUsername,
+      displayUsername: newUsername,
     })
     queryClient.invalidateQueries({ queryKey: ["/api/auth/get-session"] })
   }
@@ -160,8 +186,10 @@ export function SettingsContent({ user: initialUser }: SettingsContentProps) {
 
       <TabsContent value="account">
         <AccountSettings
+          currentUsername={resolvedUser.username}
           currentEmail={resolvedUser.email}
           emailVerified={resolvedUser.emailVerified}
+          onChangeUsername={handleChangeUsername}
           onChangeEmail={handleChangeEmail}
           onChangePassword={handleChangePassword}
           onResendVerification={handleResendVerification}

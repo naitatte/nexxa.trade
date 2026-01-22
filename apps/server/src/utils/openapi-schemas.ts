@@ -48,6 +48,8 @@ export const openApiSchemas: Record<string, OpenAPIV3.SchemaObject> = {
     properties: {
       id: { type: "string" },
       name: { type: "string" },
+      username: { type: "string", nullable: true },
+      displayUsername: { type: "string", nullable: true },
       email: { type: "string", format: "email" },
       emailVerified: { type: "boolean" },
       image: { type: "string", nullable: true },

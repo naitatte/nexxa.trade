@@ -211,13 +211,6 @@ export function EnableTwoFactorDialog({
             </div>
 
             <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={handleClose}
-                disabled={isLoading}
-              >
-                Cancel
-              </Button>
               <Button onClick={handlePasswordSubmit} disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 size-4 animate-spin" />}
                 Continue

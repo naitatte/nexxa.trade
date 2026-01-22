@@ -13,6 +13,7 @@ type Env = {
   SMTP_SECURE: boolean;
   SMTP_USER: string;
   SMTP_PASS: string;
+  SMTP_FROM: string;
   SMTP_POOL?: boolean;
   SMTP_MAX_CONNECTIONS?: number;
   SMTP_MAX_MESSAGES?: number;
@@ -68,6 +69,7 @@ export const env: Env = {
   SMTP_SECURE: smtpSecure,
   SMTP_USER: requireEnv("SMTP_USER"),
   SMTP_PASS: requireEnv("SMTP_PASS"),
+  SMTP_FROM: process.env.SMTP_FROM ?? requireEnv("SMTP_USER"),
   SMTP_POOL: process.env.SMTP_POOL ? getEnvBoolean("SMTP_POOL", true) : undefined,
   SMTP_MAX_CONNECTIONS: process.env.SMTP_MAX_CONNECTIONS ? getEnvNumber("SMTP_MAX_CONNECTIONS", 5) : undefined,
   SMTP_MAX_MESSAGES: process.env.SMTP_MAX_MESSAGES ? getEnvNumber("SMTP_MAX_MESSAGES", 100) : undefined,

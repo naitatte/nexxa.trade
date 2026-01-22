@@ -15,6 +15,20 @@
       "when": 1768826983916,
       "tag": "0001_broad_susan_delgado",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1769012010339,
+      "tag": "0002_empty_skullbuster",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1769079054323,
+      "tag": "0003_silent_username",
+      "breakpoints": true
     }
   ]
 }

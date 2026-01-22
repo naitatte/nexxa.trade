@@ -45,6 +45,10 @@ export const Def3 = {
 export interface Def4 {
   id: string;
   name: string;
+  /** @nullable */
+  username?: string | null;
+  /** @nullable */
+  displayUsername?: string | null;
   email: string;
   emailVerified: boolean;
   /** @nullable */
@@ -240,6 +244,8 @@ export interface User {
   readonly banned?: boolean;
   readonly banReason?: string;
   readonly banExpires?: string;
+  username?: string;
+  displayUsername?: string;
   readonly twoFactorEnabled?: boolean;
   readonly membershipStatus?: string;
   readonly membershipTier?: string;
@@ -555,6 +561,8 @@ export type SignUpWithEmailAndPasswordBody = {
   callbackURL?: string;
   /** If this is false, the session will not be remembered. Default is `true`. */
   rememberMe?: boolean;
+  username: string;
+  displayUsername?: string;
 };
 
 export type SignUpWithEmailAndPassword200User = {
@@ -2123,6 +2131,86 @@ export type PostApiAuthAdminHasPermission500 = {
   message?: string;
 };
 
+export type PostApiAuthSignInUsernameBody = {
+  /** The username of the user */
+  username: string;
+  /** The password of the user */
+  password: string;
+  /**
+   * Remember the user session
+   * @nullable
+   */
+  rememberMe?: boolean | null;
+  /**
+   * The URL to redirect to after email verification
+   * @nullable
+   */
+  callbackURL?: string | null;
+};
+
+export type PostApiAuthSignInUsername200 = {
+  /** Session token for the authenticated session */
+  token: string;
+  user: User;
+};
+
+export type PostApiAuthSignInUsername400 = {
+  message: string;
+};
+
+export type PostApiAuthSignInUsername401 = {
+  message: string;
+};
+
+export type PostApiAuthSignInUsername403 = {
+  message?: string;
+};
+
+export type PostApiAuthSignInUsername404 = {
+  message?: string;
+};
+
+export type PostApiAuthSignInUsername422 = {
+  message?: string;
+};
+
+export type PostApiAuthSignInUsername429 = {
+  message?: string;
+};
+
+export type PostApiAuthSignInUsername500 = {
+  message?: string;
+};
+
+export type PostApiAuthIsUsernameAvailableBody = {
+  /** The username to check */
+  username: string;
+};
+
+export type PostApiAuthIsUsernameAvailable400 = {
+  message: string;
+};
+
+export type PostApiAuthIsUsernameAvailable401 = {
+  message: string;
+};
+
+export type PostApiAuthIsUsernameAvailable403 = {
+  message?: string;
+};
+
+export type PostApiAuthIsUsernameAvailable404 = {
+  message?: string;
+};
+
+export type PostApiAuthIsUsernameAvailable429 = {
+  message?: string;
+};
+
+export type PostApiAuthIsUsernameAvailable500 = {
+  message?: string;
+};
+
 export type PostApiAuthTwoFactorGetTotpUriBody = {
   /** User password */
   password: string;
@@ -2462,3 +2550,4 @@ export type PostApiAuthTwoFactorEnable429 = {
 export type PostApiAuthTwoFactorEnable500 = {
   message?: string;
 };
+

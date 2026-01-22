@@ -1,17 +1,17 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { admin, openAPI, twoFactor } from "better-auth/plugins";
+import { admin, openAPI, twoFactor, username } from "better-auth/plugins";
 import { env } from "../../config/env";
 import { db } from "../../config/db";
 import { schema } from "@nexxatrade/db";
 import { createMailerFromEnv, createBetterAuthEmailHandlers } from "@nexxatrade/mail";
 import { ac, roles, type UserRole } from "./roles";
 
-const mailer = createMailerFromEnv(env.SMTP_USER);
+const mailer = createMailerFromEnv(env.SMTP_FROM);
 const emailHandlers = createBetterAuthEmailHandlers({
   mailer,
   appName: "NexxaTrade",
-  defaultFrom: env.SMTP_USER,
+  defaultFrom: env.SMTP_FROM,
 });
 
 export const auth = betterAuth({
@@ -26,6 +26,7 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,
+    requireEmailVerification: true,
     sendResetPassword: emailHandlers.sendResetPassword,
   },
   emailVerification: {
@@ -74,6 +75,10 @@ export const auth = betterAuth({
     }),
     openAPI({
       path: "/api-docs",
+    }),
+    username({
+      minUsernameLength: 3,
+      maxUsernameLength: 30,
     }),
     twoFactor({
       issuer: "NexxaTrade",

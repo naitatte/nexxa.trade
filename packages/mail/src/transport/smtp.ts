@@ -10,7 +10,11 @@ export function createSmtpTransporter(
     host: config.host,
     port: config.port,
     secure: config.secure ?? config.port === 465,
-    pool: config.pool ?? true,
+    requireTLS: config.requireTLS,
+    connectionTimeout: config.connectionTimeout ?? 10000,
+    greetingTimeout: config.greetingTimeout ?? 10000,
+    socketTimeout: config.socketTimeout ?? 20000,
+    pool: config.pool ?? false,
     maxConnections: config.maxConnections ?? 5,
     maxMessages: config.maxMessages ?? 100,
     auth: {

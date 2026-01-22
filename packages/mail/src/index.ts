@@ -21,7 +21,7 @@ export function createMailer(
   defaultFrom?: string
 ): Mailer {
   const transporter = createSmtpTransporter(config);
-  return new Mailer(transporter, defaultFrom);
+  return new Mailer(transporter, defaultFrom, config.sendTimeout);
 }
 
 export function createMailerFromEnv(defaultFrom?: string): Mailer {

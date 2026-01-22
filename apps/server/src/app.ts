@@ -39,6 +39,27 @@ function dedupeOperationIds(document: OpenAPIV3.Document) {
   });
 }
 
+function ensureUsernameInSignUp(document: OpenAPIV3.Document) {
+  const signUpPath = document.paths?.["/api/auth/sign-up/email"];
+  if (!signUpPath || "$ref" in signUpPath) return;
+  const post = signUpPath.post;
+  if (!post || !post.requestBody || "$ref" in post.requestBody) return;
+  const content = post.requestBody.content?.["application/json"];
+  if (!content || !content.schema || "$ref" in content.schema) return;
+  if (content.schema.type !== "object") return;
+
+  const properties = content.schema.properties ?? {};
+  content.schema.properties = {
+    ...properties,
+    username: { type: "string" },
+    displayUsername: { type: "string" },
+  };
+
+  const required = new Set(content.schema.required ?? []);
+  required.add("username");
+  content.schema.required = Array.from(required);
+}
+
 export async function buildApp() {
   const loggerConfig: Exclude<FastifyServerOptions["logger"], boolean | undefined> = {
     level: env.NODE_ENV === "production" ? "info" : "debug",
@@ -94,6 +115,7 @@ export async function buildApp() {
           );
 
           adaptSchemasToDb(document);
+          ensureUsernameInSignUp(document);
           dedupeOperationIds(document);
 
           app.log.info("Better Auth OpenAPI schema integrated successfully");

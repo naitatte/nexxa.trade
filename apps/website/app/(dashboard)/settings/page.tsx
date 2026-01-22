@@ -16,6 +16,8 @@ export default async function Settings() {
   const user = {
     id: session.user.id,
     name: session.user.name,
+    username: session.user.username ?? null,
+    displayUsername: session.user.displayUsername ?? null,
     email: session.user.email,
     image: session.user.image,
     emailVerified: session.user.emailVerified,

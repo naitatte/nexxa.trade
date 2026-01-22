@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -26,14 +27,46 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { useLoadingState } from "@/lib/loading-state/hooks"
 import { LoadingSpinner } from "@/lib/loading-state/components"
-import { useSignInEmail } from "@/lib/api/auth/auth"
+import { usePostApiAuthSignInUsername, useSignInEmail } from "@/lib/api/auth/auth"
 import { translateErrorFromResponse } from "@/lib/error-translations"
 import { VerifyTwoFactorDialog } from "./dialogs/verify-two-factor-dialog"
 
+const usernamePattern = /^[a-zA-Z0-9_.]+$/
+
 const loginSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
+  identifier: z.string().min(3, "Please enter your email or username"),
   password: z.string().min(8, "Password must be at least 8 characters"),
   rememberMe: z.boolean().default(false),
+}).superRefine((data, ctx) => {
+  const value = data.identifier.trim()
+  if (!value) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Please enter your email or username",
+      path: ["identifier"],
+    })
+    return
+  }
+
+  if (value.includes("@")) {
+    const emailCheck = z.string().email().safeParse(value)
+    if (!emailCheck.success) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Please enter a valid email address",
+        path: ["identifier"],
+      })
+    }
+    return
+  }
+
+  if (!usernamePattern.test(value)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Usernames can only use letters, numbers, underscores, and dots",
+      path: ["identifier"],
+    })
+  }
 })
 
 type LoginFormData = z.input<typeof loginSchema>
@@ -75,38 +108,65 @@ export function LoginForm({
     },
   })
 
-  const signInMutation = useSignInEmail({
+  const handleSignInSuccess = async (response: unknown) => {
+    setIdle()
+    
+    if (hasTwoFactorRedirect(response)) {
+      setShowTwoFactorDialog(true)
+      return
+    }
+    
+    setSuccess("Successfully signed in!")
+    await new Promise((resolve) => setTimeout(resolve, 500))
+    window.location.href = "/dashboard"
+  }
+
+  const handleSignInError = (error: unknown) => {
+    setIdle()
+    const translation = translateErrorFromResponse(error, "Failed to sign in")
+    setError(translation.message, translation.message)
+  }
+
+  const signInEmailMutation = useSignInEmail({
     mutation: {
       onMutate: () => {
         setLoading("Signing in...")
       },
-      onSuccess: async (response: unknown) => {
-        setIdle()
-        
-        if (hasTwoFactorRedirect(response)) {
-          setShowTwoFactorDialog(true)
-          return
-        }
-        
-        setSuccess("Successfully signed in!")
-        await new Promise((resolve) => setTimeout(resolve, 500))
-        window.location.href = "/dashboard"
+      onSuccess: handleSignInSuccess,
+      onError: handleSignInError,
+    },
+  })
+
+  const signInUsernameMutation = usePostApiAuthSignInUsername({
+    mutation: {
+      onMutate: () => {
+        setLoading("Signing in...")
       },
-      onError: (error: unknown) => {
-        setIdle()
-        const translation = translateErrorFromResponse(error, "Failed to sign in")
-        setError(translation.message, translation.message)
-      },
+      onSuccess: handleSignInSuccess,
+      onError: handleSignInError,
     },
   })
 
   const onSubmit = async (data: LoginFormData) => {
     const rememberMe = data.rememberMe ?? false
-    signInMutation.mutate({
+    const identifier = data.identifier.trim()
+
+    if (identifier.includes("@")) {
+      signInEmailMutation.mutate({
+        data: {
+          email: identifier,
+          password: data.password,
+          rememberMe: rememberMe ? "true" : undefined,
+        },
+      })
+      return
+    }
+
+    signInUsernameMutation.mutate({
       data: {
-        email: data.email,
+        username: identifier,
         password: data.password,
-        rememberMe: rememberMe ? "true" : undefined,
+        rememberMe: rememberMe ? true : undefined,
       },
     })
   }
@@ -119,27 +179,45 @@ export function LoginForm({
   return (
     <>
       <div className={cn("flex flex-col gap-6", className)} {...props}>
+        <div className="flex justify-center mb-6">
+          <Image
+            src="/graphics/logo-light.png"
+            alt="Logo"
+            width={220}
+            height={46}
+            className="h-9 w-auto dark:hidden"
+            priority
+          />
+          <Image
+            src="/graphics/logo-dark.png"
+            alt="Logo"
+            width={220}
+            height={46}
+            className="hidden h-9 w-auto dark:block"
+            priority
+          />
+        </div>
         <Card>
           <CardHeader>
             <CardTitle>Login to your account</CardTitle>
-            <CardDescription>
-              Enter your email below to login to your account
-            </CardDescription>
+          <CardDescription>
+              Enter your email or username below to login to your account
+          </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)}>
               <FieldGroup>
                 <Field>
-                  <FieldLabel htmlFor="email">Email</FieldLabel>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="m@example.com"
-                    {...register("email")}
-                    aria-invalid={!!errors.email}
-                  />
-                  <FieldError errors={errors.email ? [{ message: errors.email.message }] : undefined} />
-                </Field>
+                <FieldLabel htmlFor="identifier">Email or username</FieldLabel>
+                <Input
+                  id="identifier"
+                  type="text"
+                  placeholder="m@example.com or username"
+                  {...register("identifier")}
+                  aria-invalid={!!errors.identifier}
+                />
+                <FieldError errors={errors.identifier ? [{ message: errors.identifier.message }] : undefined} />
+              </Field>
                 <Field>
                   <div className="flex items-center">
                     <FieldLabel htmlFor="password">Password</FieldLabel>
@@ -173,8 +251,11 @@ export function LoginForm({
                   </div>
                 </Field>
                 <Field>
-                  <Button type="submit" disabled={signInMutation.isPending || loadingState === "loading"}>
-                    {(signInMutation.isPending || loadingState === "loading") && <LoadingSpinner size="sm" />}
+                  <Button
+                    type="submit"
+                    disabled={signInEmailMutation.isPending || signInUsernameMutation.isPending || loadingState === "loading"}
+                  >
+                    {(signInEmailMutation.isPending || signInUsernameMutation.isPending || loadingState === "loading") && <LoadingSpinner size="sm" />}
                     Login
                   </Button>
                   <FieldDescription className="text-center">

@@ -13,11 +13,11 @@ import { schema, and, eq, gt } from "@nexxatrade/db";
 
 const OTP_RESEND_COOLDOWN_SECONDS = 60;
 
-const mailer = createMailerFromEnv(env.SMTP_USER);
+const mailer = createMailerFromEnv(env.SMTP_FROM);
 const emailHandlers = createBetterAuthEmailHandlers({
   mailer,
   appName: "NexxaTrade",
-  defaultFrom: env.SMTP_USER,
+  defaultFrom: env.SMTP_FROM,
 });
 
 function applyAuthHeaders(reply: FastifyReply, headers?: Headers | null) {

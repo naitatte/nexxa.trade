@@ -26,7 +26,7 @@ export function createBetterAuthEmailHandlers(options: BetterAuthEmailOptions) {
       user.name ?? undefined
     );
 
-    void mailer.sendMail({
+    await mailer.sendMail({
       from: defaultFrom,
       to: user.email,
       subject: template.subject,
@@ -49,7 +49,7 @@ export function createBetterAuthEmailHandlers(options: BetterAuthEmailOptions) {
       user.name ?? undefined
     );
 
-    void mailer.sendMail({
+    await mailer.sendMail({
       from: defaultFrom,
       to: user.email,
       subject: template.subject,
@@ -74,7 +74,7 @@ export function createBetterAuthEmailHandlers(options: BetterAuthEmailOptions) {
       user.name ?? undefined
     );
 
-    void mailer.sendMail({
+    await mailer.sendMail({
       from: defaultFrom,
       to: newEmail,
       subject: template.subject,

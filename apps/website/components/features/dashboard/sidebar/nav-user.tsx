@@ -42,8 +42,13 @@ export function NavUser() {
   const settingsUser = useSettingsStore((state) => state.user)
   
   const sessionUser = sessionData?.user
+  const sessionUsername = sessionUser && "username" in sessionUser
+    ? (sessionUser as { username?: string | null }).username
+    : ""
   const userName = settingsUser?.name || sessionUser?.name || ""
+  const userUsername = settingsUser?.username || sessionUsername || ""
   const userEmail = settingsUser?.email || sessionUser?.email || ""
+  const userHandle = userUsername ? `@${userUsername}` : userEmail
   const userAvatar = settingsUser?.image || sessionUser?.image || undefined
 
   const handleSignOut = async () => {
@@ -84,7 +89,7 @@ export function NavUser() {
     )
   }
 
-  if (!sessionData || !sessionUser || !userName || !userEmail) {
+  if (!sessionData || !sessionUser || !userName || !userHandle) {
     return null
   }
 
@@ -110,7 +115,7 @@ export function NavUser() {
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{userName}</span>
-                <span className="truncate text-xs">{userEmail}</span>
+                <span className="truncate text-xs">{userHandle}</span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
             </SidebarMenuButton>
@@ -125,12 +130,12 @@ export function NavUser() {
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage src={userAvatar} alt={userName} />
-                  <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
-                </Avatar>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{userName}</span>
-                  <span className="truncate text-xs">{userEmail}</span>
-                </div>
+                <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
+              </Avatar>
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-medium">{userName}</span>
+                <span className="truncate text-xs">{userHandle}</span>
+              </div>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />

@@ -165,6 +165,7 @@ export function useGetStorageProfilePicturesFilename<TData = Awaited<ReturnType<
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+
   return { ...query, queryKey: queryOptions.queryKey };
 }
 
