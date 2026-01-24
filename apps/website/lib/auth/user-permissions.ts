@@ -1,4 +1,5 @@
-export type UserRole = "admin" | "guest" | "subscriber" | "networker";
+import type { UserRole as Role } from "@nexxatrade/core";
+export type { UserRole } from "@nexxatrade/core";
 
 export type UserStatus = "active" | "inactive";
 
@@ -21,7 +22,7 @@ export type SidebarMenuConfig = {
 };
 
 export type UserPermissions = {
-  role: UserRole;
+  role: Role;
   status: UserStatus;
   expirationDate?: Date | null;
   menuConfig: SidebarMenuConfig;
@@ -31,24 +32,24 @@ export type UserWithRole = {
   id: string;
   name: string;
   email: string;
-  role: UserRole;
+  role: Role;
   expirationDate?: Date | null;
 };
 
-function isUserActive(role: UserRole, expirationDate?: Date | null): UserStatus {
+function isUserActive(role: Role, expirationDate?: Date | null): UserStatus {
   if (role === "guest") {
     return "inactive";
   }
-  
+
   if (expirationDate) {
     return expirationDate > new Date() ? "active" : "inactive";
   }
-  
+
   return "active";
 }
 
 export function getUserPermissions(
-  role: UserRole,
+  role: Role,
   expirationDate?: Date | null
 ): UserPermissions {
   const status = isUserActive(role, expirationDate);

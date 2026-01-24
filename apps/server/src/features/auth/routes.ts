@@ -1,4 +1,4 @@
-import type { FastifyInstance, FastifyReply } from "fastify";
+import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { auth } from "./auth";
 import { asyncHandler } from "../../utils/async-handler";
 import { InternalServerError } from "../../types/errors";
@@ -34,6 +34,52 @@ function applyAuthHeaders(reply: FastifyReply, headers?: Headers | null) {
   });
 }
 
+function buildFetchHeaders(request: FastifyRequest): Headers {
+  const headers = new Headers();
+  for (const [key, value] of Object.entries(request.headers)) {
+    if (!value) continue;
+    if (Array.isArray(value)) {
+      value.forEach((entry) => headers.append(key, entry));
+    } else {
+      headers.append(key, value.toString());
+    }
+  }
+  return headers;
+}
+
+function buildRequestInit(request: FastifyRequest, headers: Headers): RequestInit {
+  const init: RequestInit = { method: request.method, headers };
+  if (request.method === "GET" || request.method === "HEAD" || request.body === undefined) {
+    return init;
+  }
+  if (typeof request.body === "string" || request.body instanceof Uint8Array) {
+    init.body = request.body as string | Uint8Array;
+  } else {
+    if (!headers.has("content-type")) {
+      headers.set("content-type", "application/json");
+    }
+    init.body = JSON.stringify(request.body);
+  }
+  return init;
+}
+
+function applyResponseHeaders(reply: FastifyReply, headers: Headers) {
+  const getSetCookie = (headers as Headers & { getSetCookie?: () => string[] }).getSetCookie;
+  const setCookies = typeof getSetCookie === "function" ? getSetCookie.call(headers) : [];
+  if (setCookies.length > 0) {
+    reply.header("set-cookie", setCookies);
+  } else {
+    const setCookie = headers.get("set-cookie");
+    if (setCookie) {
+      reply.header("set-cookie", setCookie);
+    }
+  }
+  headers.forEach((value: string, key: string) => {
+    if (key.toLowerCase() === "set-cookie") return;
+    reply.header(key, value);
+  });
+}
+
 export function registerAuthRoutes(app: FastifyInstance) {
   app.post(
     "/api/auth/change-email-otp",
@@ -62,18 +108,13 @@ export function registerAuthRoutes(app: FastifyInstance) {
       const session = await auth.api.getSession({
         headers: request.headers as Record<string, string>,
       });
-
       if (!session?.user) {
         return reply.status(401).send({ error: "Unauthorized" });
       }
-
       const { newEmail } = request.body as { newEmail: string };
-
       const identifier = `change-email:${session.user.id}:${newEmail}`;
       const now = new Date();
-      const resendAfter = new Date(
-        Date.now() - OTP_RESEND_COOLDOWN_SECONDS * 1000
-      );
+      const resendAfter = new Date(Date.now() - OTP_RESEND_COOLDOWN_SECONDS * 1000);
       const recentOtp = await db
         .select()
         .from(schema.verification)
@@ -85,37 +126,24 @@ export function registerAuthRoutes(app: FastifyInstance) {
           )
         )
         .limit(1);
-
       if (recentOtp.length > 0) {
         return reply.status(429).send({
           error: "Ya enviamos un codigo. Espera un momento antes de reintentar.",
         });
       }
-
-      const otpCode = await generateChangeEmailOTP(
-        session.user.id,
-        newEmail
-      );
-
+      const otpCode = await generateChangeEmailOTP(session.user.id, newEmail);
       try {
         await emailHandlers.sendChangeEmailOTP({
-          user: {
-            email: session.user.email,
-            name: session.user.name,
-          },
+          user: { email: session.user.email, name: session.user.name },
           newEmail,
           otpCode,
         });
       } catch (error) {
-        request.log.error(
-          { err: error },
-          "Failed to send change email OTP"
-        );
+        request.log.error({ err: error }, "Failed to send change email OTP");
         return reply.status(502).send({
           error: "No pudimos enviar el codigo. Intenta de nuevo mas tarde.",
         });
       }
-
       reply.send({ message: "OTP code sent successfully" });
     })
   );
@@ -148,32 +176,23 @@ export function registerAuthRoutes(app: FastifyInstance) {
       const session = await auth.api.getSession({
         headers: request.headers as Record<string, string>,
       });
-
       if (!session?.user) {
         return reply.status(401).send({ error: "Unauthorized" });
       }
-
-      const { password, code } = request.body as {
-        password: string;
-        code: string;
-      };
-
+      const { password, code } = request.body as { password: string; code: string };
       if (!code || code.trim().length !== 6) {
         return reply.status(400).send({ error: "Invalid code" });
       }
-
       try {
         await auth.api.verifyTOTP({
           headers: request.headers as Record<string, string>,
           body: { code: code.trim() },
         });
-      } catch (error: any) {
-        const status = error?.statusCode || error?.status || 400;
-        return reply.status(status).send({
-          error: error?.message || "Invalid code",
-        });
+      } catch (error: unknown) {
+        const err = error as { statusCode?: number; status?: number; message?: string };
+        const status = err?.statusCode || err?.status || 400;
+        return reply.status(status).send({ error: err?.message || "Invalid code" });
       }
-
       let disableResponse;
       try {
         disableResponse = await auth.api.disableTwoFactor({
@@ -181,15 +200,14 @@ export function registerAuthRoutes(app: FastifyInstance) {
           body: { password },
           returnHeaders: true,
         });
-      } catch (error: any) {
-        const status = error?.statusCode || error?.status || 400;
+      } catch (error: unknown) {
+        const err = error as { statusCode?: number; status?: number; message?: string };
+        const status = err?.statusCode || err?.status || 400;
         return reply.status(status).send({
-          error: error?.message || "Failed to disable two-factor authentication",
+          error: err?.message || "Failed to disable two-factor authentication",
         });
       }
-
       applyAuthHeaders(reply, disableResponse?.headers || null);
-
       reply.send({ message: "Two-factor authentication disabled" });
     })
   );
@@ -222,57 +240,26 @@ export function registerAuthRoutes(app: FastifyInstance) {
       const session = await auth.api.getSession({
         headers: request.headers as Record<string, string>,
       });
-
       if (!session?.user) {
         return reply.status(401).send({ error: "Unauthorized" });
       }
-
-      const { newEmail, otpCode } = request.body as {
-        newEmail: string;
-        otpCode: string;
-      };
-
-      const isValid = await verifyChangeEmailOTP(
-        session.user.id,
-        newEmail,
-        otpCode
-      );
-
+      const { newEmail, otpCode } = request.body as { newEmail: string; otpCode: string };
+      const isValid = await verifyChangeEmailOTP(session.user.id, newEmail, otpCode);
       if (!isValid) {
-        return reply.status(400).send({
-          error: "Invalid or expired OTP code",
-        });
+        return reply.status(400).send({ error: "Invalid or expired OTP code" });
       }
-
       await db
         .update(schema.user)
-        .set({
-          email: newEmail,
-          emailVerified: true,
-          updatedAt: new Date(),
-        })
+        .set({ email: newEmail, emailVerified: true, updatedAt: new Date() })
         .where(eq(schema.user.id, session.user.id));
-
       const sessionUpdate = await auth.api.updateUser({
         headers: request.headers as Record<string, string>,
         body: { name: session.user.name },
         returnHeaders: true,
       });
-
       if (sessionUpdate?.headers) {
-        const headers = sessionUpdate.headers;
-        if (typeof headers.getSetCookie === "function") {
-          const cookies = headers.getSetCookie();
-          if (cookies.length) {
-            reply.header("set-cookie", cookies);
-          }
-        }
-        headers.forEach((value: string, key: string) => {
-          if (key.toLowerCase() === "set-cookie") return;
-          reply.header(key, value);
-        });
+        applyAuthHeaders(reply, sessionUpdate.headers);
       }
-
       reply.send({ message: "Email changed successfully" });
     })
   );
@@ -331,11 +318,9 @@ export function registerAuthRoutes(app: FastifyInstance) {
       const session = await auth.api.getSession({
         headers: request.headers as Record<string, string>,
       });
-
       if (!session?.user) {
         return reply.status(401).send({ error: "Unauthorized" });
       }
-
       const sessions = await db
         .select()
         .from(schema.session)
@@ -346,7 +331,6 @@ export function registerAuthRoutes(app: FastifyInstance) {
           )
         )
         .orderBy(schema.session.updatedAt);
-
       return reply.send(sessions);
     }),
   );
@@ -354,68 +338,18 @@ export function registerAuthRoutes(app: FastifyInstance) {
   app.route({
     method: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     url: "/api/auth/*",
-    schema: {
-      hide: true,
-    },
+    schema: { hide: true },
     handler: asyncHandler(async (request, reply) => {
       const protocol =
         request.headers["x-forwarded-proto"] ||
         ((request.server as { https?: boolean }).https ? "https" : "http");
       const host = request.headers.host || "localhost";
       const url = new URL(request.url, `${protocol}://${host}`);
-
-      const headers = new Headers();
-      for (const [key, value] of Object.entries(request.headers)) {
-        if (!value) continue;
-        if (Array.isArray(value)) {
-          value.forEach((entry) => headers.append(key, entry));
-        } else {
-          headers.append(key, value.toString());
-        }
-      }
-
-      const init: RequestInit = {
-        method: request.method,
-        headers,
-      };
-
-      if (
-        request.method !== "GET" &&
-        request.method !== "HEAD" &&
-        request.body !== undefined
-      ) {
-        if (
-          typeof request.body === "string" ||
-          request.body instanceof Uint8Array
-        ) {
-          init.body = request.body as string | Uint8Array;
-        } else {
-          if (!headers.has("content-type")) {
-            headers.set("content-type", "application/json");
-          }
-          init.body = JSON.stringify(request.body);
-        }
-      }
-
+      const headers = buildFetchHeaders(request);
+      const init = buildRequestInit(request, headers);
       const response = await auth.handler(new Request(url.toString(), init));
       reply.status(response.status);
-
-      const getSetCookie = (response.headers as Headers & { getSetCookie?: () => string[] }).getSetCookie;
-      const setCookies = typeof getSetCookie === "function" ? getSetCookie.call(response.headers) : [];
-      if (setCookies.length > 0) {
-        reply.header("set-cookie", setCookies);
-      } else {
-        const setCookie = response.headers.get("set-cookie");
-        if (setCookie) {
-          reply.header("set-cookie", setCookie);
-        }
-      }
-
-      response.headers.forEach((value: string, key: string) => {
-        if (key.toLowerCase() === "set-cookie") return;
-        reply.header(key, value);
-      });
-
+      applyResponseHeaders(reply, response.headers);
       reply.send(response.body ? await response.text() : null);
     }),
   });

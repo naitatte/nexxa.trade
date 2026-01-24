@@ -596,8 +596,9 @@ export function useListUserSessions<TData = Awaited<ReturnType<typeof listUserSe
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+  query.queryKey = queryOptions.queryKey ;
 
-  return { ...query, queryKey: queryOptions.queryKey };
+  return query;
 }
 
 
@@ -745,8 +746,9 @@ export function useGetSession<TData = Awaited<ReturnType<typeof getSession>>, TE
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+  query.queryKey = queryOptions.queryKey ;
 
-  return { ...query, queryKey: queryOptions.queryKey };
+  return query;
 }
 
 
@@ -1078,8 +1080,9 @@ export function useGetApiAuthVerifyEmail<TData = Awaited<ReturnType<typeof getAp
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+  query.queryKey = queryOptions.queryKey ;
 
-  return { ...query, queryKey: queryOptions.queryKey };
+  return query;
 }
 
 
@@ -1537,8 +1540,9 @@ export function useResetPasswordCallback<TData = Awaited<ReturnType<typeof reset
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+  query.queryKey = queryOptions.queryKey ;
 
-  return { ...query, queryKey: queryOptions.queryKey };
+  return query;
 }
 
 
@@ -1869,8 +1873,9 @@ export function useListUserAccounts<TData = Awaited<ReturnType<typeof listUserAc
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+  query.queryKey = queryOptions.queryKey ;
 
-  return { ...query, queryKey: queryOptions.queryKey };
+  return query;
 }
 
 
@@ -1958,8 +1963,9 @@ export function useGetApiAuthDeleteUserCallback<TData = Awaited<ReturnType<typeo
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+  query.queryKey = queryOptions.queryKey ;
 
-  return { ...query, queryKey: queryOptions.queryKey };
+  return query;
 }
 
 
@@ -2229,8 +2235,9 @@ export function useGetApiAuthAccountInfo<TData = Awaited<ReturnType<typeof getAp
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+  query.queryKey = queryOptions.queryKey ;
 
-  return { ...query, queryKey: queryOptions.queryKey };
+  return query;
 }
 
 
@@ -2317,8 +2324,9 @@ export function useGetApiAuthOk<TData = Awaited<ReturnType<typeof getApiAuthOk>>
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+  query.queryKey = queryOptions.queryKey ;
 
-  return { ...query, queryKey: queryOptions.queryKey };
+  return query;
 }
 
 
@@ -2405,8 +2413,9 @@ export function useGetApiAuthError<TData = Awaited<ReturnType<typeof getApiAuthE
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+  query.queryKey = queryOptions.queryKey ;
 
-  return { ...query, queryKey: queryOptions.queryKey };
+  return query;
 }
 
 

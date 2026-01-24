@@ -10,6 +10,6 @@
 // export * from "./types";
 // export * from "./errors";
 // export * from "./validation";
+export * from "./roles";
 
 // Empty export to make this a valid module
-export {};

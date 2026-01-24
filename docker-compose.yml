@@ -13,3 +13,18 @@ services:
     image: redis:alpine
     ports:
       - "6379:6379"
+
+  scheduler:
+    image: node:20-alpine
+    working_dir: /app
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - ./apps/server/.env.scheduler
+    volumes:
+      - ./:/app
+    command: >
+      sh -c "corepack enable
+      && pnpm install --frozen-lockfile
+      && pnpm --filter server exec tsx src/worker.ts"

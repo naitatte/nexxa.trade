@@ -17,6 +17,8 @@ type MembershipData = {
   tier: MembershipTier | null
   expiresAt: Date | null
   inactiveAt: Date | null
+  deletionAt: Date | null
+  deletionDays: number | null
   activatedAt: Date | null
 }
 
@@ -42,6 +44,8 @@ async function getMembershipData(userId: string, cookieHeader: string | null): P
       tier: (data.tier as MembershipTier) || null,
       expiresAt: data.expiresAt ? new Date(data.expiresAt) : null,
       inactiveAt: data.inactiveAt ? new Date(data.inactiveAt) : null,
+      deletionAt: data.deletionAt ? new Date(data.deletionAt) : null,
+      deletionDays: typeof data.deletionDays === "number" ? data.deletionDays : null,
       activatedAt: data.activatedAt ? new Date(data.activatedAt) : null,
     }
   } catch {
@@ -66,6 +70,7 @@ export default async function MembershipPage() {
   const isLifetime = tier === "lifetime"
   const isActive = status === "active"
   const isInactive = status === "inactive"
+  const showDeletionAlert = isInactive && Boolean(membership?.inactiveAt)
 
   return (
     <>
@@ -80,8 +85,12 @@ export default async function MembershipPage() {
           <SubscriptionStatusBadge status={status} />
         </header>
 
-        {isInactive && (
-          <MembershipAlert inactiveAt={membership?.inactiveAt || null} deletionDays={7} />
+        {showDeletionAlert && (
+          <MembershipAlert
+            inactiveAt={membership?.inactiveAt || null}
+            deletionAt={membership?.deletionAt || null}
+            deletionDays={membership?.deletionDays ?? 7}
+          />
         )}
 
         {isActive && tier && (

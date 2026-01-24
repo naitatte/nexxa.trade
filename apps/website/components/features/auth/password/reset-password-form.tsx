@@ -114,17 +114,17 @@ export function ResetPasswordForm({
         <Image
           src="/graphics/logo-light.png"
           alt="Logo"
-          width={220}
-          height={46}
-          className="h-9 w-auto dark:hidden"
+          width={440}
+          height={92}
+          className="h-12 w-auto dark:hidden"
           priority
         />
         <Image
           src="/graphics/logo-dark.png"
           alt="Logo"
-          width={220}
-          height={46}
-          className="hidden h-9 w-auto dark:block"
+          width={440}
+          height={92}
+          className="hidden h-12 w-auto dark:block"
           priority
         />
       </div>

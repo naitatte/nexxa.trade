@@ -220,16 +220,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <Image
                     src="/graphics/logo-light.png"
                     alt="Logo"
-                    width={180}
-                    height={38}
+                    width={360}
+                    height={76}
                     className="h-7 w-auto dark:hidden"
                     priority
                   />
                   <Image
                     src="/graphics/logo-dark.png"
                     alt="Logo"
-                    width={180}
-                    height={38}
+                    width={360}
+                    height={76}
                     className="hidden h-7 w-auto dark:block"
                     priority
                   />
@@ -259,16 +259,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <Image
                 src="/graphics/logo-light.png"
                 alt="Logo"
-                width={180}
-                height={38}
+                width={360}
+                height={76}
                 className="h-7 w-auto dark:hidden"
                 priority
               />
               <Image
                 src="/graphics/logo-dark.png"
                 alt="Logo"
-                width={180}
-                height={38}
+                width={360}
+                height={76}
                 className="hidden h-7 w-auto dark:block"
                 priority
               />

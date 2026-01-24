@@ -1,0 +1,101 @@
+---
+name: typescript-code-practices
+description: Establishes TypeScript code practices and standards for functions, data, classes, exceptions, and Fastify architecture
+---
+
+# Overview
+
+This rule establishes TypeScript code practices covering type safety, function design, data handling, class structure, exception management, and Fastify-specific patterns.
+
+## TypeScript Basics
+
+1. **Language**: Use English for all code and documentation.
+
+2. **Type declarations**: Always declare the type of each variable and function (parameters and return value).
+
+3. **Avoid `any`**: Never use `any` type. Create proper types instead.
+
+4. **Type creation**: Create the necessary types for all data structures and function signatures.
+
+5. **No blank lines in functions**: Don't leave blank lines within a function body.
+
+## Functions
+
+### General Principles
+
+1. **Short functions**: Write short functions with a single purpose (preferably under 20 instructions).
+
+2. **Avoid nesting**: Avoid nesting blocks by:
+   - Using early checks and returns
+   - Extracting logic into utility functions
+   - Using higher-order functions (map, filter, reduce, etc.)
+
+3. **Arrow vs named functions**:
+   - Use arrow functions for simple functions (less than 3 instructions)
+   - Use named functions for non-simple functions
+
+4. **Default parameters**: Use default parameter values instead of checking for null or undefined.
+
+5. **RO-RO pattern**: Reduce function parameters using RO-RO (receive an object, return an object).
+
+6. **Type declarations**: Declare the necessary types for input arguments and output.
+
+7. **Single abstraction level**: Use a single level of abstraction within a function.
+
+## Data
+
+1. **Composite types**: Don't abuse primitive types; encapsulate data in composite types.
+
+2. **Validation**: Avoid doing data validations inside functions; prefer classes with internal validation.
+
+3. **Immutability**: Prefer immutability for data.
+
+4. **Readonly**: Use `readonly` for data that doesn't change.
+
+5. **Const assertions**: Use `as const` for literals that don't change.
+
+## Classes
+
+1. **SOLID principles**: Follow SOLID principles in class design.
+
+2. **Composition over inheritance**: Prefer composition over inheritance.
+
+3. **Interfaces**: Declare interfaces to define contracts.
+
+4. **Small classes**: Write small classes with a single purpose (under 200 instructions).
+
+5. **Public surface**: Keep public surface small (under 10 public methods, under 10 properties).
+
+## Exceptions
+
+1. **Use for unexpected errors**: Use exceptions for errors you don't expect.
+
+2. **Catch only when needed**: If you catch an exception, do it to:
+   - Fix an expected problem, or
+   - Add context
+   Otherwise, rely on a global handler.
+
+## Fastify Architecture
+
+### Modular Structure
+
+1. **Modular architecture**: Use a modular architecture.
+
+2. **API encapsulation**: Encapsulate the API into modules:
+   - One module per domain or main route
+   - One route per HTTP resource, encapsulated in plugins
+   - One handler per route that contains business logic
+
+3. **Hooks**: Use hooks (onRequest, preHandler, etc.) for request lifecycle management.
+
+### Validation and Configuration
+
+1. **Input validation**: Validate input with JSON Schemas and Fastify's built-in validation (Ajv).
+
+2. **Core folder**: Maintain a core folder for shared utilities:
+   - Common middleware
+   - Global error handlers
+   - Logging and instrumentation
+   - Cross-cutting utility functions
+
+3. **Environment variables**: Manage environment variables with dotenv (or similar) and keep secrets in env vars (e.g., DB_URL).

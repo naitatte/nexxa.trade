@@ -5,6 +5,7 @@ type Env = {
   HOST: string;
   PORT: number;
   DATABASE_URL: string;
+  REDIS_URL: string;
   BETTER_AUTH_SECRET: string;
   BETTER_AUTH_URL: string;
   BETTER_AUTH_TRUSTED_ORIGINS?: string[];
@@ -17,11 +18,19 @@ type Env = {
   SMTP_POOL?: boolean;
   SMTP_MAX_CONNECTIONS?: number;
   SMTP_MAX_MESSAGES?: number;
+  MEMBERSHIP_DELETION_DAYS: number;
+  MEMBERSHIP_EXPIRE_EVERY_MINUTES: number;
+  MEMBERSHIP_COMPRESS_EVERY_MINUTES: number;
 };
 
-function requireEnv(name: string): string {
+const isWorker = process.env.APP_MODE === "worker";
+
+function requireEnv(name: string, options?: { optional?: boolean }): string {
   const value = process.env[name];
   if (!value) {
+    if (options?.optional) {
+      return "";
+    }
     throw new Error(`Missing required env var: ${name}`);
   }
   return value;
@@ -61,16 +70,20 @@ export const env: Env = {
   HOST: process.env.HOST ?? "0.0.0.0",
   PORT: Number.isNaN(port) ? 4000 : port,
   DATABASE_URL: requireEnv("DATABASE_URL"),
-  BETTER_AUTH_SECRET: requireEnv("BETTER_AUTH_SECRET"),
+  REDIS_URL: process.env.REDIS_URL ?? "redis://localhost:6379",
+  BETTER_AUTH_SECRET: requireEnv("BETTER_AUTH_SECRET", { optional: isWorker }),
   BETTER_AUTH_URL: process.env.BETTER_AUTH_URL ?? `http://localhost:${Number.isNaN(port) ? 4000 : port}`,
   BETTER_AUTH_TRUSTED_ORIGINS: parseTrustedOrigins(),
-  SMTP_HOST: requireEnv("SMTP_HOST"),
+  SMTP_HOST: requireEnv("SMTP_HOST", { optional: isWorker }),
   SMTP_PORT: smtpPort,
   SMTP_SECURE: smtpSecure,
-  SMTP_USER: requireEnv("SMTP_USER"),
-  SMTP_PASS: requireEnv("SMTP_PASS"),
-  SMTP_FROM: process.env.SMTP_FROM ?? requireEnv("SMTP_USER"),
+  SMTP_USER: requireEnv("SMTP_USER", { optional: isWorker }),
+  SMTP_PASS: requireEnv("SMTP_PASS", { optional: isWorker }),
+  SMTP_FROM: process.env.SMTP_FROM ?? requireEnv("SMTP_USER", { optional: isWorker }),
   SMTP_POOL: process.env.SMTP_POOL ? getEnvBoolean("SMTP_POOL", true) : undefined,
   SMTP_MAX_CONNECTIONS: process.env.SMTP_MAX_CONNECTIONS ? getEnvNumber("SMTP_MAX_CONNECTIONS", 5) : undefined,
   SMTP_MAX_MESSAGES: process.env.SMTP_MAX_MESSAGES ? getEnvNumber("SMTP_MAX_MESSAGES", 100) : undefined,
+  MEMBERSHIP_DELETION_DAYS: getEnvNumber("MEMBERSHIP_DELETION_DAYS", 7),
+  MEMBERSHIP_EXPIRE_EVERY_MINUTES: getEnvNumber("MEMBERSHIP_EXPIRE_EVERY_MINUTES", 15),
+  MEMBERSHIP_COMPRESS_EVERY_MINUTES: getEnvNumber("MEMBERSHIP_COMPRESS_EVERY_MINUTES", 60),
 };

@@ -2,16 +2,19 @@ import type { FastifyInstance } from "fastify";
 import { asyncHandler } from "../../utils/async-handler";
 import { db } from "../../config/db";
 import { schema, eq } from "@nexxatrade/db";
+import { auth } from "../auth/auth";
 import {
   activateMembership,
   compressInactiveUsers,
   expireMemberships,
 } from "./service";
+import { MEMBERSHIP_DELETION_DAYS } from "./config";
 import {
   MEMBERSHIP_TIER_LIST,
   MEMBERSHIP_TIERS,
   type MembershipTier,
 } from "@nexxatrade/core";
+import type { Session } from "../auth/auth";
 import { NotFoundError, ValidationError } from "../../types/errors";
 
 const { user, membership } = schema;
@@ -23,6 +26,36 @@ function parseTier(tier: string): MembershipTier {
     return tier as MembershipTier;
   }
   throw new ValidationError("Invalid membership tier");
+}
+
+async function getSession(headers: Record<string, string | string[] | undefined>) {
+  return auth.api.getSession({ headers: headers as Record<string, string> });
+}
+
+type PermissionInput = Record<string, string[]>;
+
+async function hasPermissions(userId: string, permissions: PermissionInput): Promise<boolean> {
+  const result: unknown = await auth.api.userHasPermission({
+    body: {
+      userId,
+      permissions,
+    },
+  });
+
+  if (typeof result === "boolean") {
+    return result;
+  }
+
+  if (result && typeof result === "object") {
+    if ("success" in result) {
+      return (result as { success?: boolean }).success === true;
+    }
+    if ("data" in result) {
+      return (result as { data?: boolean }).data === true;
+    }
+  }
+
+  return false;
 }
 
 export function registerMembershipRoutes(app: FastifyInstance) {
@@ -71,8 +104,22 @@ export function registerMembershipRoutes(app: FastifyInstance) {
         },
       },
     },
-    asyncHandler(async (request) => {
+    asyncHandler(async (request, reply) => {
+      const session = await getSession(request.headers) as Session;
+      if (!session?.user) {
+        return reply.status(401).send({ error: "Unauthorized" });
+      }
+
       const { userId } = request.params as { userId: string };
+      if (session.user.id !== userId) {
+        const allowed = await hasPermissions(session.user.id, {
+          membership: ["manage"],
+        });
+        if (!allowed) {
+          return reply.status(403).send({ error: "Forbidden" });
+        }
+      }
+
       const userRecord = await db
         .select({
           id: user.id,
@@ -100,6 +147,12 @@ export function registerMembershipRoutes(app: FastifyInstance) {
       const expiresAt = userRecord[0].expiresAt?.toISOString();
       const inactiveAt = membershipRecord[0]?.inactiveAt?.toISOString();
       const activatedAt = membershipRecord[0]?.activatedAt?.toISOString();
+      const deletionAt = inactiveAt
+        ? new Date(
+            new Date(inactiveAt).getTime() +
+              MEMBERSHIP_DELETION_DAYS * 24 * 60 * 60 * 1000
+          ).toISOString()
+        : undefined;
 
       return {
         userId: userRecord[0].id,
@@ -107,7 +160,9 @@ export function registerMembershipRoutes(app: FastifyInstance) {
         ...(userRecord[0].tier ? { tier: userRecord[0].tier } : {}),
         ...(expiresAt ? { expiresAt } : {}),
         ...(inactiveAt ? { inactiveAt } : {}),
+        ...(deletionAt ? { deletionAt } : {}),
         ...(activatedAt ? { activatedAt } : {}),
+        deletionDays: MEMBERSHIP_DELETION_DAYS,
       };
     })
   );
@@ -128,7 +183,18 @@ export function registerMembershipRoutes(app: FastifyInstance) {
         },
       },
     },
-    asyncHandler(async (request) => {
+    asyncHandler(async (request, reply) => {
+      const session = await getSession(request.headers) as Session;
+      if (!session?.user) {
+        return reply.status(401).send({ error: "Unauthorized" });
+      }
+      const allowed = await hasPermissions(session.user.id, {
+        membership: ["manage"],
+      });
+      if (!allowed) {
+        return reply.status(403).send({ error: "Forbidden" });
+      }
+
       const body = request.body as {
         userId: string;
         tier: string;
@@ -179,7 +245,19 @@ export function registerMembershipRoutes(app: FastifyInstance) {
         },
       },
     },
-    asyncHandler(async () => expireMemberships())
+    asyncHandler(async (request, reply) => {
+      const session = await getSession(request.headers) as Session;
+      if (!session?.user) {
+        return reply.status(401).send({ error: "Unauthorized" });
+      }
+      const allowed = await hasPermissions(session.user.id, {
+        membership: ["manage"],
+      });
+      if (!allowed) {
+        return reply.status(403).send({ error: "Forbidden" });
+      }
+      return expireMemberships();
+    })
   );
 
   app.post(
@@ -187,7 +265,7 @@ export function registerMembershipRoutes(app: FastifyInstance) {
     {
       schema: {
         tags: ["Membership"],
-        summary: "Compress inactive users and delete accounts",
+        summary: "Compress inactive users and mark accounts deleted",
         response: {
           200: {
             $ref: "CompressMembershipsResponse#",
@@ -195,6 +273,18 @@ export function registerMembershipRoutes(app: FastifyInstance) {
         },
       },
     },
-    asyncHandler(async () => compressInactiveUsers())
+    asyncHandler(async (request, reply) => {
+      const session = await getSession(request.headers) as Session;
+      if (!session?.user) {
+        return reply.status(401).send({ error: "Unauthorized" });
+      }
+      const allowed = await hasPermissions(session.user.id, {
+        membership: ["manage"],
+      });
+      if (!allowed) {
+        return reply.status(403).send({ error: "Forbidden" });
+      }
+      return compressInactiveUsers();
+    })
   );
 }

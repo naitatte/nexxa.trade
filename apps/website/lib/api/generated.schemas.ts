@@ -8,6 +8,7 @@
 export type Def0 = typeof Def0[keyof typeof Def0];
 
 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const Def0 = {
   admin: 'admin',
   guest: 'guest',
@@ -18,6 +19,7 @@ export const Def0 = {
 export type Def1 = typeof Def1[keyof typeof Def1];
 
 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const Def1 = {
   trial_weekly: 'trial_weekly',
   annual: 'annual',
@@ -27,6 +29,7 @@ export const Def1 = {
 export type Def2 = typeof Def2[keyof typeof Def2];
 
 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const Def2 = {
   active: 'active',
   inactive: 'inactive',
@@ -36,6 +39,7 @@ export const Def2 = {
 export type Def3 = typeof Def3[keyof typeof Def3];
 
 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const Def3 = {
   pending: 'pending',
   confirmed: 'confirmed',
@@ -191,7 +195,10 @@ export interface Def15 {
   /** @nullable */
   inactiveAt?: string | null;
   /** @nullable */
+  deletionAt?: string | null;
+  /** @nullable */
   activatedAt?: string | null;
+  deletionDays?: number;
 }
 
 export interface Def16 {
@@ -225,6 +232,7 @@ export interface Def19 {
 export type UserRole = typeof UserRole[keyof typeof UserRole];
 
 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UserRole = {
   admin: 'admin',
   guest: 'guest',
@@ -808,6 +816,7 @@ export type ChangeEmailBody = {
 export type ChangeEmail200Message = typeof ChangeEmail200Message[keyof typeof ChangeEmail200Message] | null;
 
 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ChangeEmail200Message = {
   Email_updated: 'Email updated',
   Verification_email_sent: 'Verification email sent',
@@ -970,6 +979,7 @@ export type DeleteUserBody = {
 export type DeleteUser200Message = typeof DeleteUser200Message[keyof typeof DeleteUser200Message];
 
 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const DeleteUser200Message = {
   User_deleted: 'User deleted',
   Verification_email_sent: 'Verification email sent',
@@ -1305,6 +1315,7 @@ callbackURL?: string | null;
 export type GetApiAuthDeleteUserCallback200Message = typeof GetApiAuthDeleteUserCallback200Message[keyof typeof GetApiAuthDeleteUserCallback200Message];
 
 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const GetApiAuthDeleteUserCallback200Message = {
   User_deleted: 'User deleted',
 } as const;

@@ -124,8 +124,9 @@ export function useGetApiMembershipTiers<TData = Awaited<ReturnType<typeof getAp
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+  query.queryKey = queryOptions.queryKey ;
 
-  return { ...query, queryKey: queryOptions.queryKey };
+  return query;
 }
 
 
@@ -215,8 +216,9 @@ export function useGetApiMembershipUsersUserId<TData = Awaited<ReturnType<typeof
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+  query.queryKey = queryOptions.queryKey ;
 
-  return { ...query, queryKey: queryOptions.queryKey };
+  return query;
 }
 
 
@@ -349,7 +351,7 @@ export const usePostApiMembershipExpire = <TError = unknown,
       return useMutation(mutationOptions, queryClient);
     }
     /**
- * @summary Compress inactive users and delete accounts
+ * @summary Compress inactive users and mark accounts deleted
  */
 export const postApiMembershipCompress = (
     
@@ -395,7 +397,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type PostApiMembershipCompressMutationError = unknown
 
     /**
- * @summary Compress inactive users and delete accounts
+ * @summary Compress inactive users and mark accounts deleted
  */
 export const usePostApiMembershipCompress = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiMembershipCompress>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}

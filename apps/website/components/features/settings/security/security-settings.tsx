@@ -54,6 +54,8 @@ export function SecuritySettings({
   const [enableDialogOpen, setEnableDialogOpen] = useState(false)
   const [disableDialogOpen, setDisableDialogOpen] = useState(false)
   const [revokeAllDialogOpen, setRevokeAllDialogOpen] = useState(false)
+  const [revokeSessionDialogOpen, setRevokeSessionDialogOpen] = useState(false)
+  const [sessionToRevoke, setSessionToRevoke] = useState<{ token: string; device: string } | null>(null)
 
   const { data: sessions = [], isLoading: isLoadingSessions, error: sessionsError } = useSessions()
   const revokeSessionMutation = useRevokeSession()
@@ -61,16 +63,22 @@ export function SecuritySettings({
 
   const { setLoading: setRevokeLoading, setIdle: setRevokeIdle, setSuccess: setRevokeSuccess, setError: setRevokeError } = useLoadingState()
 
-  const [revokingSessionToken, setRevokingSessionToken] = useState<string | null>(null)
+  const handleRevokeSessionClick = (sessionToken: string, device: string) => {
+    setSessionToRevoke({ token: sessionToken, device })
+    setRevokeSessionDialogOpen(true)
+  }
 
-  const handleRevokeSession = async (sessionToken: string) => {
-    setRevokingSessionToken(sessionToken)
+  const handleRevokeSession = async () => {
+    if (!sessionToRevoke) return
+
+    setRevokeSessionDialogOpen(false)
     setRevokeLoading("Revoking session...")
     try {
       await revokeSessionMutation.mutateAsync({
-        data: { token: sessionToken },
+        data: { token: sessionToRevoke.token },
       })
       setRevokeSuccess("Session revoked successfully")
+      setSessionToRevoke(null)
     } catch (error) {
       const errorTranslation = translateErrorFromResponse(
         error,
@@ -78,7 +86,6 @@ export function SecuritySettings({
       )
       setRevokeError(errorTranslation.message, errorTranslation.message)
     } finally {
-      setRevokingSessionToken(null)
       setRevokeIdle()
     }
   }
@@ -105,6 +112,8 @@ export function SecuritySettings({
       setRevokeIdle()
     }
   }
+
+  const isLoadingRevoke = revokeSessionMutation.isPending || revokeOtherSessionsMutation.isPending
 
   const handleToggle2FA = (checked: boolean) => {
     if (checked && !twoFactorEnabled) {
@@ -162,7 +171,7 @@ export function SecuritySettings({
               size="sm"
               className="h-7 text-xs text-destructive hover:text-destructive"
               onClick={handleRevokeAllClick}
-              disabled={revokeOtherSessionsMutation.isPending}
+              disabled={isLoadingRevoke}
             >
               {revokeOtherSessionsMutation.isPending ? (
                 <>
@@ -204,7 +213,7 @@ export function SecuritySettings({
           <div className="space-y-2">
             {sessions.map((session) => {
               const DeviceIcon = getDeviceIcon(session.device)
-              const isRevoking = revokingSessionToken === session.token
+              const isRevoking = sessionToRevoke?.token === session.token && revokeSessionMutation.isPending
               return (
                 <div
                   key={session.id}
@@ -233,8 +242,8 @@ export function SecuritySettings({
                       variant="ghost"
                       size="sm"
                       className="h-7 text-xs"
-                      onClick={() => handleRevokeSession(session.token)}
-                      disabled={isRevoking}
+                      onClick={() => handleRevokeSessionClick(session.token, session.device)}
+                      disabled={isLoadingRevoke}
                     >
                       {isRevoking ? (
                         <>
@@ -265,6 +274,50 @@ export function SecuritySettings({
         onSuccess={handle2FASuccess}
       />
 
+      <Dialog open={revokeSessionDialogOpen} onOpenChange={setRevokeSessionDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader className="text-left">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="size-5 text-destructive" />
+              <DialogTitle>Revoke session?</DialogTitle>
+            </div>
+            <DialogDescription>
+              This will immediately log out the session on {sessionToRevoke?.device || "this device"}. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setRevokeSessionDialogOpen(false)
+                setSessionToRevoke(null)
+              }}
+              disabled={isLoadingRevoke}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleRevokeSession}
+              disabled={isLoadingRevoke}
+            >
+              {revokeSessionMutation.isPending ? (
+                <>
+                  <LoadingSpinner size="sm" className="mr-2" />
+                  Revoking...
+                </>
+              ) : (
+                <>
+                  <LogOut className="mr-2 size-4" />
+                  Revoke session
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={revokeAllDialogOpen} onOpenChange={setRevokeAllDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader className="text-left">
@@ -281,14 +334,14 @@ export function SecuritySettings({
             <Button
               variant="outline"
               onClick={() => setRevokeAllDialogOpen(false)}
-              disabled={revokeOtherSessionsMutation.isPending}
+              disabled={isLoadingRevoke}
             >
               Cancel
             </Button>
             <Button
               variant="destructive"
               onClick={handleRevokeAll}
-              disabled={revokeOtherSessionsMutation.isPending}
+              disabled={isLoadingRevoke}
             >
               {revokeOtherSessionsMutation.isPending ? (
                 <>

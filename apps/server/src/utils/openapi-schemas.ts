@@ -240,7 +240,9 @@ export const openApiSchemas: Record<string, OpenAPIV3.SchemaObject> = {
       },
       expiresAt: nullableDateTimeSchema,
       inactiveAt: nullableDateTimeSchema,
+      deletionAt: nullableDateTimeSchema,
       activatedAt: nullableDateTimeSchema,
+      deletionDays: { type: "number" },
     },
   },
   ActivateMembershipRequest: {

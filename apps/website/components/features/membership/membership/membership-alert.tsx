@@ -6,12 +6,27 @@ import { useEffect, useState } from "react"
 
 type MembershipAlertProps = {
   inactiveAt: Date | null
+  deletionAt?: Date | null
   deletionDays?: number
 }
 
-function calculateTimeRemaining(inactiveAt: Date, deletionDays: number) {
+function resolveDeletionDate(
+  inactiveAt: Date,
+  deletionAt: Date | null | undefined,
+  deletionDays: number
+) {
+  if (deletionAt) return deletionAt
   const deletionDate = new Date(inactiveAt)
   deletionDate.setDate(deletionDate.getDate() + deletionDays)
+  return deletionDate
+}
+
+function calculateTimeRemaining(
+  inactiveAt: Date,
+  deletionAt: Date | null | undefined,
+  deletionDays: number
+) {
+  const deletionDate = resolveDeletionDate(inactiveAt, deletionAt, deletionDays)
 
   const now = new Date()
   const totalMs = deletionDays * 24 * 60 * 60 * 1000
@@ -26,20 +41,26 @@ function calculateTimeRemaining(inactiveAt: Date, deletionDays: number) {
   return { days, hours, minutes, seconds, percentage }
 }
 
-export function MembershipAlert({ inactiveAt, deletionDays = 7 }: MembershipAlertProps) {
+export function MembershipAlert({
+  inactiveAt,
+  deletionAt,
+  deletionDays = 7,
+}: MembershipAlertProps) {
   const [initialInactiveAt] = useState<Date>(() => inactiveAt ?? new Date())
   const effectiveInactiveAt = inactiveAt ?? initialInactiveAt
   const [timeRemaining, setTimeRemaining] = useState(() =>
-    calculateTimeRemaining(effectiveInactiveAt, deletionDays)
+    calculateTimeRemaining(effectiveInactiveAt, deletionAt, deletionDays)
   )
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setTimeRemaining(calculateTimeRemaining(effectiveInactiveAt, deletionDays))
+      setTimeRemaining(
+        calculateTimeRemaining(effectiveInactiveAt, deletionAt, deletionDays)
+      )
     }, 1000)
 
     return () => clearInterval(interval)
-  }, [effectiveInactiveAt, deletionDays])
+  }, [effectiveInactiveAt, deletionAt, deletionDays])
 
   return (
     <Alert variant="destructive" className="bg-destructive/5 border-destructive/20 text-destructive">
