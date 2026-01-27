@@ -2,6 +2,7 @@ import type { UserRole as Role } from "@nexxatrade/core";
 export type { UserRole } from "@nexxatrade/core";
 
 export type UserStatus = "active" | "inactive";
+export type MembershipState = "active" | "inactive" | "deleted";
 
 export type MenuItem = {
   title: string;
@@ -36,23 +37,30 @@ export type UserWithRole = {
   expirationDate?: Date | null;
 };
 
-function isUserActive(role: Role, expirationDate?: Date | null): UserStatus {
-  if (role === "guest") {
+function resolveMembershipStatus(
+  membershipStatus?: MembershipState | null,
+  expirationDate?: Date | null
+): UserStatus {
+  if (membershipStatus === "active") {
+    return "active";
+  }
+  if (membershipStatus === "inactive" || membershipStatus === "deleted") {
     return "inactive";
   }
-
   if (expirationDate) {
     return expirationDate > new Date() ? "active" : "inactive";
   }
-
-  return "active";
+  return "inactive";
 }
 
 export function getUserPermissions(
   role: Role,
+  membershipStatus?: MembershipState | null,
   expirationDate?: Date | null
 ): UserPermissions {
-  const status = isUserActive(role, expirationDate);
+  const status = role === "admin"
+    ? "active"
+    : resolveMembershipStatus(membershipStatus, expirationDate);
 
   const menuConfig: SidebarMenuConfig = {
     dashboard: {

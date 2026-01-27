@@ -1,7 +1,6 @@
 import type { OpenAPIV3 } from "openapi-types";
 
 const userRoleEnum = ["admin", "guest", "subscriber", "networker"] as const;
-const membershipTierEnum = ["trial_weekly", "annual", "lifetime"] as const;
 const membershipStatusEnum = ["active", "inactive", "deleted"] as const;
 const membershipPaymentStatusEnum = ["pending", "confirmed", "failed"] as const;
 
@@ -23,7 +22,7 @@ export const openApiSchemas: Record<string, OpenAPIV3.SchemaObject> = {
   },
   MembershipTier: {
     type: "string",
-    enum: [...membershipTierEnum],
+    description: "Plan tier identifier",
   },
   MembershipStatus: {
     type: "string",
@@ -211,11 +210,15 @@ export const openApiSchemas: Record<string, OpenAPIV3.SchemaObject> = {
   },
   MembershipTierInfo: {
     type: "object",
-    required: ["tier", "priceUsdCents"],
+    required: ["tier", "name", "priceUsdCents", "isActive", "sortOrder"],
     properties: {
       tier: { $ref: "MembershipTier#" },
+      name: { type: "string" },
+      description: { type: "string", nullable: true },
       priceUsdCents: { type: "number" },
       durationDays: { type: "number", nullable: true },
+      isActive: { type: "boolean" },
+      sortOrder: { type: "number" },
     },
   },
   MembershipTierList: {

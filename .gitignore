@@ -38,6 +38,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+.pnpm-store/
 
 # OS files
 .DS_Store
@@ -79,3 +80,6 @@ temp/
 .cache/
 .parcel-cache/
 apps/server/storage/
+
+# Keys
+keys/

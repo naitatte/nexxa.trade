@@ -1,0 +1,47 @@
+services:
+  server:
+    ports:
+      - "4000:4000"
+    environment:
+      - DATABASE_URL=postgres://user:password@postgres:5432/nexxatrade
+      - REDIS_URL=redis://redis:6379
+      - PORT=4000
+      - PAYMENTS_RESERVE_URL=http://reserve:4100
+      - BETTER_AUTH_URL=${DEV_SITE_URL:-https://nexxa.trade}
+      - BETTER_AUTH_TRUSTED_ORIGINS=${DEV_SITE_URL:-https://nexxa.trade}
+    command: >
+      sh -c "corepack enable
+      && pnpm install --frozen-lockfile
+      && PORT=4000 pnpm --filter server exec tsx watch src/server.ts"
+
+  website:
+    ports:
+      - "3001:3001"
+    environment:
+      - NEXT_PUBLIC_SITE_URL=${DEV_SITE_URL:-https://nexxa.trade}
+      - API_SERVER_URL=http://server:4000
+      - NEXT_PUBLIC_API_URL=${DEV_API_URL:-https://nexxa.trade}
+      - NEXT_PUBLIC_AUTH_URL=${DEV_API_URL:-https://nexxa.trade}
+      - NEXT_TELEMETRY_DISABLED=1
+    command: >
+      sh -c "corepack enable
+      && pnpm install --frozen-lockfile
+      && pnpm --filter website --dir apps/website exec next dev --webpack -H 0.0.0.0 -p 3001"
+
+  scheduler:
+    environment:
+      - DATABASE_URL=postgres://user:password@postgres:5432/nexxatrade
+      - REDIS_URL=redis://redis:6379
+      - PAYMENTS_RESERVE_URL=http://reserve:4100
+    command: >
+      sh -c "corepack enable
+      && pnpm install --frozen-lockfile
+      && pnpm --filter server exec tsx watch src/worker.ts"
+
+  reserve:
+    environment:
+      - RESERVE_PORT=4100
+    command: >
+      sh -c "corepack enable
+      && pnpm install --frozen-lockfile
+      && pnpm --filter @nexxatrade/reserve exec tsx watch src/server.ts"

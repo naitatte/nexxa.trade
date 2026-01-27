@@ -9,24 +9,17 @@ import {
   expireMemberships,
 } from "./service";
 import { MEMBERSHIP_DELETION_DAYS } from "./config";
-import {
-  MEMBERSHIP_TIER_LIST,
-  MEMBERSHIP_TIERS,
-  type MembershipTier,
-} from "@nexxatrade/core";
+import type { MembershipTier } from "@nexxatrade/core";
 import type { Session } from "../auth/auth";
-import { NotFoundError, ValidationError } from "../../types/errors";
+import { NotFoundError } from "../../types/errors";
+import {
+  createMembershipPlan,
+  listMembershipPlans,
+  updateMembershipPlan,
+} from "./plans";
 
 const { user, membership } = schema;
 
-const tierList = [...MEMBERSHIP_TIER_LIST] as MembershipTier[];
-
-function parseTier(tier: string): MembershipTier {
-  if (tierList.includes(tier as MembershipTier)) {
-    return tier as MembershipTier;
-  }
-  throw new ValidationError("Invalid membership tier");
-}
 
 async function getSession(headers: Record<string, string | string[] | undefined>) {
   return auth.api.getSession({ headers: headers as Record<string, string> });
@@ -73,15 +66,128 @@ export function registerMembershipRoutes(app: FastifyInstance) {
       },
     },
     asyncHandler(async () => ({
-      tiers: tierList.map((tier) => {
-        const durationDays = MEMBERSHIP_TIERS[tier].durationDays;
-        return {
-          tier,
-          priceUsdCents: MEMBERSHIP_TIERS[tier].priceUsdCents,
-          ...(durationDays !== null ? { durationDays } : {}),
-        };
-      }),
+      tiers: await listMembershipPlans({ includeInactive: true }),
     }))
+  );
+
+  app.post(
+    "/api/membership/plans",
+    {
+      schema: {
+        tags: ["Membership"],
+        summary: "Create a membership plan",
+        body: {
+          type: "object",
+          required: ["tier", "name", "priceUsdCents", "durationDays"],
+          properties: {
+            tier: { type: "string" },
+            name: { type: "string" },
+            description: { type: "string", nullable: true },
+            priceUsdCents: { type: "number" },
+            durationDays: { type: "number", nullable: true },
+            isActive: { type: "boolean" },
+            sortOrder: { type: "number" },
+          },
+        },
+        response: {
+          200: {
+            $ref: "MembershipTierInfo#",
+          },
+        },
+      },
+    },
+    asyncHandler(async (request, reply) => {
+      const session = await getSession(request.headers) as Session;
+      if (!session?.user) {
+        return reply.status(401).send({ error: "Unauthorized" });
+      }
+      const allowed = await hasPermissions(session.user.id, {
+        membership: ["manage"],
+      });
+      if (!allowed) {
+        return reply.status(403).send({ error: "Forbidden" });
+      }
+
+      const body = request.body as {
+        tier: string;
+        name: string;
+        description?: string | null;
+        priceUsdCents: number;
+        durationDays: number | null;
+        isActive?: boolean;
+        sortOrder?: number;
+      };
+
+      const plan = await createMembershipPlan({
+        tier: body.tier,
+        name: body.name,
+        description: body.description,
+        priceUsdCents: body.priceUsdCents,
+        durationDays: body.durationDays,
+        isActive: body.isActive,
+        sortOrder: body.sortOrder,
+      });
+
+      return plan;
+    })
+  );
+
+  app.patch(
+    "/api/membership/plans/:tier",
+    {
+      schema: {
+        tags: ["Membership"],
+        summary: "Update a membership plan",
+        params: {
+          type: "object",
+          required: ["tier"],
+          properties: {
+            tier: { type: "string" },
+          },
+        },
+        body: {
+          type: "object",
+          properties: {
+            name: { type: "string" },
+            description: { type: "string", nullable: true },
+            priceUsdCents: { type: "number" },
+            durationDays: { type: "number", nullable: true },
+            isActive: { type: "boolean" },
+            sortOrder: { type: "number" },
+          },
+        },
+        response: {
+          200: {
+            $ref: "MembershipTierInfo#",
+          },
+        },
+      },
+    },
+    asyncHandler(async (request, reply) => {
+      const session = await getSession(request.headers) as Session;
+      if (!session?.user) {
+        return reply.status(401).send({ error: "Unauthorized" });
+      }
+      const allowed = await hasPermissions(session.user.id, {
+        membership: ["manage"],
+      });
+      if (!allowed) {
+        return reply.status(403).send({ error: "Forbidden" });
+      }
+
+      const params = request.params as { tier: string };
+      const body = request.body as {
+        name?: string;
+        description?: string | null;
+        priceUsdCents?: number;
+        durationDays?: number | null;
+        isActive?: boolean;
+        sortOrder?: number;
+      };
+
+      const plan = await updateMembershipPlan(params.tier, body);
+      return plan;
+    })
   );
 
   app.get(
@@ -207,7 +313,7 @@ export function registerMembershipRoutes(app: FastifyInstance) {
         reason?: string;
       };
 
-      const tier = parseTier(body.tier);
+      const tier: MembershipTier = body.tier;
 
       const result = await activateMembership({
         userId: body.userId,

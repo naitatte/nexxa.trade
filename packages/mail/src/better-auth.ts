@@ -12,6 +12,18 @@ export interface BetterAuthEmailOptions {
 export function createBetterAuthEmailHandlers(options: BetterAuthEmailOptions) {
   const { mailer, appName, defaultFrom } = options;
 
+  const normalizeVerificationUrl = (rawUrl: string): string => {
+    try {
+      const parsed = new URL(rawUrl);
+      if (parsed.pathname.endsWith("/api/auth/verify-email")) {
+        parsed.pathname = parsed.pathname.replace(/\/api\/auth\/verify-email$/, "/verify-email");
+      }
+      return parsed.toString();
+    } catch {
+      return rawUrl;
+    }
+  };
+
   const sendVerificationEmail = async ({
     user,
     url,
@@ -20,9 +32,10 @@ export function createBetterAuthEmailHandlers(options: BetterAuthEmailOptions) {
     url: string;
     token: string;
   }) => {
+    const verificationUrl = normalizeVerificationUrl(url);
     const template = getVerificationEmailTemplate(
       appName,
-      url,
+      verificationUrl,
       user.name ?? undefined
     );
 

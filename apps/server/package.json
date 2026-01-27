@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "PORT=4000 tsx watch src/server.ts",
+    "build": "tsc -p tsconfig.json --noEmit",
     "start": "PORT=4000 tsx src/server.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
@@ -18,6 +19,7 @@
     "better-auth": "^1.4.10",
     "bullmq": "^5.66.4",
     "dotenv": "^16.6.1",
+    "ethers": "^6.13.5",
     "fastify": "^5.6.2",
     "ioredis": "^5.9.1",
     "openapi-types": "^12.1.3"

@@ -25,12 +25,15 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  Def13,
   Def14,
   Def15,
   Def16,
   Def17,
   Def18,
-  Def19
+  Def19,
+  PatchApiMembershipPlansTierBody,
+  PostApiMembershipPlansBody
 } from '../generated.schemas';
 
 import { customInstance } from '.././mutator';
@@ -133,6 +136,134 @@ export function useGetApiMembershipTiers<TData = Awaited<ReturnType<typeof getAp
 
 
 /**
+ * @summary Create a membership plan
+ */
+export const postApiMembershipPlans = (
+    postApiMembershipPlansBody: PostApiMembershipPlansBody,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<Def13>(
+      {url: `/api/membership/plans`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: postApiMembershipPlansBody, signal
+    },
+      options);
+    }
+  
+
+
+export const getPostApiMembershipPlansMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiMembershipPlans>>, TError,{data: PostApiMembershipPlansBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiMembershipPlans>>, TError,{data: PostApiMembershipPlansBody}, TContext> => {
+
+const mutationKey = ['postApiMembershipPlans'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiMembershipPlans>>, {data: PostApiMembershipPlansBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postApiMembershipPlans(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiMembershipPlansMutationResult = NonNullable<Awaited<ReturnType<typeof postApiMembershipPlans>>>
+    export type PostApiMembershipPlansMutationBody = PostApiMembershipPlansBody
+    export type PostApiMembershipPlansMutationError = unknown
+
+    /**
+ * @summary Create a membership plan
+ */
+export const usePostApiMembershipPlans = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiMembershipPlans>>, TError,{data: PostApiMembershipPlansBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiMembershipPlans>>,
+        TError,
+        {data: PostApiMembershipPlansBody},
+        TContext
+      > => {
+
+      const mutationOptions = getPostApiMembershipPlansMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary Update a membership plan
+ */
+export const patchApiMembershipPlansTier = (
+    tier: string,
+    patchApiMembershipPlansTierBody: PatchApiMembershipPlansTierBody,
+ options?: SecondParameter<typeof customInstance>,) => {
+      
+      
+      return customInstance<Def13>(
+      {url: `/api/membership/plans/${tier}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: patchApiMembershipPlansTierBody
+    },
+      options);
+    }
+  
+
+
+export const getPatchApiMembershipPlansTierMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchApiMembershipPlansTier>>, TError,{tier: string;data: PatchApiMembershipPlansTierBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof patchApiMembershipPlansTier>>, TError,{tier: string;data: PatchApiMembershipPlansTierBody}, TContext> => {
+
+const mutationKey = ['patchApiMembershipPlansTier'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof patchApiMembershipPlansTier>>, {tier: string;data: PatchApiMembershipPlansTierBody}> = (props) => {
+          const {tier,data} = props ?? {};
+
+          return  patchApiMembershipPlansTier(tier,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PatchApiMembershipPlansTierMutationResult = NonNullable<Awaited<ReturnType<typeof patchApiMembershipPlansTier>>>
+    export type PatchApiMembershipPlansTierMutationBody = PatchApiMembershipPlansTierBody
+    export type PatchApiMembershipPlansTierMutationError = unknown
+
+    /**
+ * @summary Update a membership plan
+ */
+export const usePatchApiMembershipPlansTier = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchApiMembershipPlansTier>>, TError,{tier: string;data: PatchApiMembershipPlansTierBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof patchApiMembershipPlansTier>>,
+        TError,
+        {tier: string;data: PatchApiMembershipPlansTierBody},
+        TContext
+      > => {
+
+      const mutationOptions = getPatchApiMembershipPlansTierMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
  * @summary Get membership state for a user
  */
 export const getApiMembershipUsersUserId = (

@@ -5,7 +5,10 @@ export function calculateExpiresAt(
   tier: MembershipTier,
   activatedAt: Date
 ): Date | null {
-  const tierConfig = MEMBERSHIP_TIERS[tier];
+  const tierConfig =
+    tier in MEMBERSHIP_TIERS
+      ? MEMBERSHIP_TIERS[tier as keyof typeof MEMBERSHIP_TIERS]
+      : undefined;
   if (!tierConfig || tierConfig.durationDays === null) {
     return null;
   }

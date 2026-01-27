@@ -2,6 +2,12 @@
   "extends": "../config/tsconfig.base.json",
   "compilerOptions": {
     "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "declaration": true,
+    "declarationMap": true,
+    "noEmit": false,
+    "sourceMap": true,
     "types": ["node"],
     "lib": ["ES2022"],
     "outDir": "dist"

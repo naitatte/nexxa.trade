@@ -6,6 +6,8 @@ services:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
       POSTGRES_DB: nexxatrade
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
 
@@ -14,17 +16,94 @@ services:
     ports:
       - "6379:6379"
 
+  server:
+    image: node:20-alpine
+    working_dir: /app
+    depends_on:
+      - postgres
+      - redis
+      - reserve
+    env_file:
+      - ./apps/server/.env
+    environment:
+      - DATABASE_URL=postgres://user:password@postgres:5432/nexxatrade
+      - REDIS_URL=redis://redis:6379
+      - PAYMENTS_RESERVE_URL=http://reserve:4100
+      - PAYMENTS_XPUB_PATH=/app/keys/xpub.txt
+      - CI=true
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    ports:
+      - "4000:4000"
+    command: >
+      sh -c "corepack enable
+      && pnpm install --frozen-lockfile
+      && pnpm --filter server exec tsx src/server.ts"
+
+  website:
+    image: node:20-alpine
+    working_dir: /app
+    depends_on:
+      - server
+    env_file:
+      - ./apps/website/.env
+    environment:
+      - NEXT_PUBLIC_SITE_URL=https://nexxa.trade
+      - API_SERVER_URL=http://server:4000
+      - NEXT_PUBLIC_API_URL=https://nexxa.trade
+      - NEXT_PUBLIC_AUTH_URL=https://nexxa.trade
+      - CI=true
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    ports:
+      - "3001:3001"
+    command: >
+      sh -c "corepack enable
+      && pnpm install --frozen-lockfile
+      && pnpm --filter website run build
+      && pnpm --filter website exec next start -p 3001"
+
   scheduler:
     image: node:20-alpine
     working_dir: /app
     depends_on:
       - postgres
       - redis
+      - reserve
     env_file:
       - ./apps/server/.env.scheduler
+    environment:
+      - PAYMENTS_RESERVE_URL=http://reserve:4100
+      - PAYMENTS_XPUB_PATH=/app/keys/xpub.txt
+      - CI=true
     volumes:
       - ./:/app
+      - /app/node_modules
     command: >
       sh -c "corepack enable
       && pnpm install --frozen-lockfile
       && pnpm --filter server exec tsx src/worker.ts"
+
+  reserve:
+    image: node:20-alpine
+    working_dir: /app
+    depends_on:
+      - postgres
+    env_file:
+      - ./packages/reserve/.env.reserve
+    environment:
+      - CI=true
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    ports:
+      - "4100:4100"
+    command: >
+      sh -c "corepack enable
+      && pnpm install --frozen-lockfile
+      && pnpm --filter @nexxatrade/reserve exec tsx src/server.ts"
+
+volumes:
+  postgres_data:

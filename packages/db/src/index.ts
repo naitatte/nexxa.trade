@@ -5,10 +5,13 @@ import {
   eq,
   inArray,
   isNotNull,
+  isNull,
   gt,
   lte,
   lt,
+  or,
   sql,
+  asc,
 } from "drizzle-orm";
 import * as schema from "./schema";
 
@@ -17,4 +20,4 @@ export function createDb(connectionString: string) {
   return drizzle(client, { schema });
 }
 
-export { schema, sql, and, eq, inArray, isNotNull, gt, lte, lt };
+export { schema, sql, and, eq, inArray, isNotNull, isNull, gt, lte, lt, or, asc };

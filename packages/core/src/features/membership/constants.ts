@@ -3,19 +3,14 @@ export const MEMBERSHIP_TIERS = {
     priceUsdCents: 900,
     durationDays: 7,
   },
-  annual: {
-    priceUsdCents: 29900,
-    durationDays: 365,
-  },
   lifetime: {
     priceUsdCents: 49900,
-    durationDays: null,
+    durationDays: 36500,
   },
 } as const;
 
 export const MEMBERSHIP_TIER_LIST = [
   "trial_weekly",
-  "annual",
   "lifetime",
 ] as const;
 

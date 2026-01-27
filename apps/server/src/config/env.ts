@@ -1,4 +1,5 @@
 import "dotenv/config";
+import path from "node:path";
 
 type Env = {
   NODE_ENV: string;
@@ -21,6 +22,17 @@ type Env = {
   MEMBERSHIP_DELETION_DAYS: number;
   MEMBERSHIP_EXPIRE_EVERY_MINUTES: number;
   MEMBERSHIP_COMPRESS_EVERY_MINUTES: number;
+  PAYMENTS_XPUB_PATH: string;
+  PAYMENTS_CHAIN: string;
+  PAYMENTS_RPC_URL: string;
+  PAYMENTS_USDT_CONTRACT: string;
+  PAYMENTS_CONFIRMATIONS: number;
+  PAYMENTS_SCAN_BATCH: number;
+  PAYMENTS_SCAN_CHUNK: number;
+  PAYMENTS_SCAN_INTERVAL_SECONDS: number;
+  PAYMENTS_RESERVE_URL: string;
+  PAYMENTS_RESERVE_API_KEY: string;
+  PAYMENTS_TREASURY_ADDRESS: string;
 };
 
 const isWorker = process.env.APP_MODE === "worker";
@@ -64,6 +76,7 @@ const getEnvBoolean = (name: string, defaultValue: boolean): boolean => {
 
 const smtpPort = getEnvNumber("SMTP_PORT", 587);
 const smtpSecure = getEnvBoolean("SMTP_SECURE", smtpPort === 465);
+const defaultXpubPath = path.resolve(process.cwd(), "keys/xpub.txt");
 
 export const env: Env = {
   NODE_ENV: process.env.NODE_ENV ?? "development",
@@ -86,4 +99,15 @@ export const env: Env = {
   MEMBERSHIP_DELETION_DAYS: getEnvNumber("MEMBERSHIP_DELETION_DAYS", 7),
   MEMBERSHIP_EXPIRE_EVERY_MINUTES: getEnvNumber("MEMBERSHIP_EXPIRE_EVERY_MINUTES", 15),
   MEMBERSHIP_COMPRESS_EVERY_MINUTES: getEnvNumber("MEMBERSHIP_COMPRESS_EVERY_MINUTES", 60),
+  PAYMENTS_XPUB_PATH: process.env.PAYMENTS_XPUB_PATH ?? defaultXpubPath,
+  PAYMENTS_CHAIN: process.env.PAYMENTS_CHAIN ?? "bsc",
+  PAYMENTS_RPC_URL: requireEnv("PAYMENTS_RPC_URL"),
+  PAYMENTS_USDT_CONTRACT: requireEnv("PAYMENTS_USDT_CONTRACT"),
+  PAYMENTS_CONFIRMATIONS: getEnvNumber("PAYMENTS_CONFIRMATIONS", 12),
+  PAYMENTS_SCAN_BATCH: getEnvNumber("PAYMENTS_SCAN_BATCH", 5000),
+  PAYMENTS_SCAN_CHUNK: getEnvNumber("PAYMENTS_SCAN_CHUNK", 2500),
+  PAYMENTS_SCAN_INTERVAL_SECONDS: getEnvNumber("PAYMENTS_SCAN_INTERVAL_SECONDS", 30),
+  PAYMENTS_RESERVE_URL: requireEnv("PAYMENTS_RESERVE_URL"),
+  PAYMENTS_RESERVE_API_KEY: requireEnv("PAYMENTS_RESERVE_API_KEY"),
+  PAYMENTS_TREASURY_ADDRESS: requireEnv("PAYMENTS_TREASURY_ADDRESS"),
 };

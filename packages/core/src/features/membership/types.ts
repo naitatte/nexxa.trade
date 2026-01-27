@@ -1,6 +1,6 @@
-import type { MEMBERSHIP_STATUS_LIST, MEMBERSHIP_TIER_LIST } from "./constants";
+import type { MEMBERSHIP_STATUS_LIST } from "./constants";
 
-export type MembershipTier = (typeof MEMBERSHIP_TIER_LIST)[number];
+export type MembershipTier = string;
 export type MembershipStatus = (typeof MEMBERSHIP_STATUS_LIST)[number];
 
 export type MembershipPaymentStatus = "pending" | "confirmed" | "failed";

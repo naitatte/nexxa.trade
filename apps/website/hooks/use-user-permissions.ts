@@ -3,6 +3,7 @@ import type { AuthUser } from "@/lib/auth/types";
 import { 
   getUserPermissions, 
   type UserPermissions,
+  type MembershipState,
   type UserRole,
   type UserWithRole 
 } from "@/lib/auth/user-permissions";
@@ -43,6 +44,24 @@ function extractExpirationDate(user: AuthUser | null | undefined): Date | null {
   return null;
 }
 
+function normalizeMembershipStatus(value: string | null | undefined): MembershipState | null {
+  if (!value) {
+    return null;
+  }
+  const normalized = value.toLowerCase();
+  if (normalized === "active" || normalized === "inactive" || normalized === "deleted") {
+    return normalized as MembershipState;
+  }
+  return null;
+}
+
+function resolveEffectiveRole(role: UserRole, membershipStatus: MembershipState | null): UserRole {
+  if (role === "guest" && membershipStatus === "active") {
+    return "subscriber";
+  }
+  return role;
+}
+
 export function useUserPermissions(): UserPermissions | null {
   const { data: session, isPending } = useSession();
   const userId = session?.user?.id;
@@ -59,15 +78,20 @@ export function useUserPermissions(): UserPermissions | null {
       return null;
     }
 
-    const user = session.user;
-    const role = extractUserRole(user);
+    const user = session.user as AuthUser;
+    const rawRole = extractUserRole(user);
     
     let expirationDate = extractExpirationDate(user);
     if (!expirationDate && membershipData?.expiresAt) {
       expirationDate = new Date(membershipData.expiresAt);
     }
 
-    return getUserPermissions(role, expirationDate);
+    const membershipStatus =
+      normalizeMembershipStatus(user.membershipStatus) ??
+      normalizeMembershipStatus(membershipData?.status);
+    const role = resolveEffectiveRole(rawRole, membershipStatus);
+
+    return getUserPermissions(role, membershipStatus, expirationDate);
   }, [session, isPending, membershipData]);
 }
 
@@ -83,18 +107,23 @@ export function useUser(): UserWithRole | null {
       return null;
     }
 
-    const user = session.user;
+    const user = session.user as AuthUser;
     
     let expirationDate = extractExpirationDate(user);
     if (!expirationDate && membershipData?.expiresAt) {
       expirationDate = new Date(membershipData.expiresAt);
     }
     
+    const membershipStatus =
+      normalizeMembershipStatus(user.membershipStatus) ??
+      normalizeMembershipStatus(membershipData?.status);
+    const role = resolveEffectiveRole(extractUserRole(user), membershipStatus);
+
     return {
       id: user.id || "",
       name: user.name || "",
       email: user.email || "",
-      role: extractUserRole(user),
+      role,
       expirationDate,
     };
   }, [session, isPending, membershipData]);

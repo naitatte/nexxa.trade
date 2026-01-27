@@ -1,16 +1,25 @@
 import { redirect } from "next/navigation"
 import { DashboardBreadcrumb } from "@/components/features/dashboard/breadcrumb/dashboard-breadcrumb"
-import { SubscriptionStatusBadge } from "@/components/features/membership/membership/subscription-status-badge"
-import { MembershipAlert } from "@/components/features/membership/membership/membership-alert"
-import { MembershipInfo } from "@/components/features/membership/membership/membership-info"
+import { SubscriptionStatusBadge } from "@/components/features/membership/status/subscription-status-badge"
+import { MembershipAlert } from "@/components/features/membership/status/membership-alert"
+import { MembershipInfo } from "@/components/features/membership/status/membership-info"
 import { PlanSelector } from "@/components/features/membership/plans/plan-selector"
-import { UpgradePrompt } from "@/components/features/membership/plans/upgrade-prompt"
 import { auth } from "@/lib/auth/server"
 import { getApiBaseUrl } from "@/lib/api/base-url"
 import { getRequestHeaders } from "@/lib/auth/request-headers"
 
 type MembershipStatus = "active" | "inactive" | "deleted"
-type MembershipTier = "trial_weekly" | "annual" | "lifetime"
+type MembershipTier = string
+
+type PlanData = {
+  tier: string
+  name: string
+  description?: string | null
+  priceUsdCents: number
+  durationDays?: number | null
+  isActive?: boolean
+  sortOrder?: number
+}
 
 type MembershipData = {
   status: MembershipStatus
@@ -53,6 +62,26 @@ async function getMembershipData(userId: string, cookieHeader: string | null): P
   }
 }
 
+async function getPlanData(cookieHeader: string | null): Promise<PlanData[]> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/membership/tiers`, {
+      headers: {
+        "Content-Type": "application/json",
+        ...(cookieHeader ? { cookie: cookieHeader } : {}),
+      },
+      credentials: "include",
+      cache: "no-store",
+    })
+
+    if (!response.ok) return []
+
+    const data = await response.json()
+    return Array.isArray(data?.tiers) ? data.tiers : []
+  } catch {
+    return []
+  }
+}
+
 export default async function MembershipPage() {
   const headersList = await getRequestHeaders()
   const cookieHeader = headersList.get("cookie")
@@ -64,10 +93,14 @@ export default async function MembershipPage() {
   if (!session) redirect("/login")
 
   const membership = await getMembershipData(session.user.id, cookieHeader)
+  const plans = await getPlanData(cookieHeader)
 
   const status: MembershipStatus = membership?.status || "inactive"
   const tier = membership?.tier || null
-  const isLifetime = tier === "lifetime"
+  const currentPlan = tier ? plans.find((plan) => plan.tier === tier) : null
+  const isLifetime =
+    (currentPlan?.tier ?? tier) === "lifetime" ||
+    ((currentPlan?.durationDays ?? 0) >= 3650)
   const isActive = status === "active"
   const isInactive = status === "inactive"
   const showDeletionAlert = isInactive && Boolean(membership?.inactiveAt)
@@ -97,18 +130,12 @@ export default async function MembershipPage() {
            <div className="space-y-6">
               <MembershipInfo
                 tier={tier}
+                planName={currentPlan?.name}
+                priceUsdCents={currentPlan?.priceUsdCents ?? null}
+                durationDays={currentPlan?.durationDays ?? null}
                 expiresAt={membership?.expiresAt || null}
                 activatedAt={membership?.activatedAt || null}
               />
-              
-              {!isLifetime && (
-                 <div className="space-y-2">
-                    <h3 className="text-sm font-medium">Upgrade plan</h3>
-                    <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                      <UpgradePrompt currentTier={tier} />
-                    </div>
-                 </div>
-              )}
            </div>
         )}
 

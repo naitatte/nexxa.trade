@@ -7,6 +7,8 @@ import {
 import { compressInactiveUsers, expireMemberships } from "../features/membership/service";
 
 const QUEUE_NAME = "membership-maintenance";
+const JOB_RETRY_ATTEMPTS = 3;
+const JOB_RETRY_BACKOFF_MS = 1000;
 
 const connection = { url: env.REDIS_URL };
 
@@ -39,6 +41,8 @@ export async function registerMembershipRepeatableJobs(queue: Queue) {
     {
       jobId: "expire-memberships",
       repeat: { every: expireEveryMs },
+      attempts: JOB_RETRY_ATTEMPTS,
+      backoff: { type: "exponential", delay: JOB_RETRY_BACKOFF_MS },
       removeOnComplete: true,
     }
   );
@@ -49,6 +53,8 @@ export async function registerMembershipRepeatableJobs(queue: Queue) {
     {
       jobId: "compress-memberships",
       repeat: { every: compressEveryMs },
+      attempts: JOB_RETRY_ATTEMPTS,
+      backoff: { type: "exponential", delay: JOB_RETRY_BACKOFF_MS },
       removeOnComplete: true,
     }
   );

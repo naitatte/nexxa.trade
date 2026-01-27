@@ -16,15 +16,10 @@ export const Def0 = {
   networker: 'networker',
 } as const;
 
-export type Def1 = typeof Def1[keyof typeof Def1];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const Def1 = {
-  trial_weekly: 'trial_weekly',
-  annual: 'annual',
-  lifetime: 'lifetime',
-} as const;
+/**
+ * Plan tier identifier
+ */
+export type Def1 = string;
 
 export type Def2 = typeof Def2[keyof typeof Def2];
 
@@ -177,9 +172,14 @@ export interface Def12 {
 
 export interface Def13 {
   tier: Def1;
+  name: string;
+  /** @nullable */
+  description?: string | null;
   priceUsdCents: number;
   /** @nullable */
   durationDays?: number | null;
+  isActive: boolean;
+  sortOrder: number;
 }
 
 export interface Def14 {
@@ -309,11 +309,19 @@ export type GetHealth200 = {
   timestamp?: string;
 };
 
+export type GetHealthReady200Errors = {
+  database?: string;
+  redis?: string;
+  reserve?: string;
+};
+
 export type GetHealthReady200 = {
   ok?: boolean;
   timestamp?: string;
   database?: string;
-  error?: string;
+  redis?: string;
+  reserve?: string;
+  errors?: GetHealthReady200Errors;
 };
 
 export type PostApiAuthChangeEmailOtpBody = {
@@ -390,6 +398,60 @@ export type ListUserSessions429 = {
 
 export type ListUserSessions500 = {
   message?: string;
+};
+
+export type PostApiMembershipPlansBody = {
+  tier: string;
+  name: string;
+  /** @nullable */
+  description?: string | null;
+  priceUsdCents: number;
+  /** @nullable */
+  durationDays: number | null;
+  isActive?: boolean;
+  sortOrder?: number;
+};
+
+export type PatchApiMembershipPlansTierBody = {
+  name?: string;
+  /** @nullable */
+  description?: string | null;
+  priceUsdCents?: number;
+  /** @nullable */
+  durationDays?: number | null;
+  isActive?: boolean;
+  sortOrder?: number;
+};
+
+export type PostApiPaymentsAddressBody = {
+  tier: string;
+};
+
+export type PostApiPaymentsAddress200 = {
+  paymentId: string;
+  depositAddress: string;
+  amountUsdCents: number;
+  chain: string;
+};
+
+export type GetApiPaymentsPaymentId200 = {
+  paymentId: string;
+  status: string;
+  /** @nullable */
+  sweepStatus?: string | null;
+  /** @nullable */
+  depositAddress?: string | null;
+  amountUsdCents: number;
+  /** @nullable */
+  chain?: string | null;
+  /** @nullable */
+  txHash?: string | null;
+  /** @nullable */
+  confirmedAt?: string | null;
+  /** @nullable */
+  sweptAt?: string | null;
+  /** @nullable */
+  appliedAt?: string | null;
 };
 
 /**

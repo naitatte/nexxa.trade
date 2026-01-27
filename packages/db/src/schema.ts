@@ -1,5 +1,10 @@
-import { relations } from "drizzle-orm";
-import { pgTable, text, timestamp, boolean, index, integer } from "drizzle-orm/pg-core";
+import { relations, sql } from "drizzle-orm";
+import { pgTable, text, timestamp, boolean, index, integer, pgSequence } from "drizzle-orm/pg-core";
+
+export const paymentDerivationIndexSeq = pgSequence("payment_derivation_index_seq", {
+  startWith: 1,
+  increment: 1,
+});
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -19,9 +24,7 @@ export const user = pgTable("user", {
   })
     .default("inactive")
     .notNull(),
-  membershipTier: text("membership_tier", {
-    enum: ["trial_weekly", "annual", "lifetime"],
-  }),
+  membershipTier: text("membership_tier"),
   membershipExpiresAt: timestamp("membership_expires_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
@@ -36,9 +39,7 @@ export const membership = pgTable(
     userId: text("user_id")
       .primaryKey()
       .references(() => user.id, { onDelete: "cascade" }),
-    tier: text("tier", {
-      enum: ["trial_weekly", "annual", "lifetime"],
-    }).notNull(),
+    tier: text("tier").notNull(),
     status: text("status", { enum: ["active", "inactive", "deleted"] })
       .default("inactive")
       .notNull(),
@@ -81,9 +82,7 @@ export const membershipPayment = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    tier: text("tier", {
-      enum: ["trial_weekly", "annual", "lifetime"],
-    }).notNull(),
+    tier: text("tier").notNull(),
     status: text("status", { enum: ["pending", "confirmed", "failed"] })
       .default("pending")
       .notNull(),
@@ -92,12 +91,65 @@ export const membershipPayment = pgTable(
     txHash: text("tx_hash"),
     fromAddress: text("from_address"),
     toAddress: text("to_address"),
+    depositAddress: text("deposit_address").unique(),
+    derivationIndex: integer("derivation_index")
+      .unique()
+      .default(sql`nextval('payment_derivation_index_seq')`),
+    sweepStatus: text("sweep_status", {
+      enum: ["pending", "funding", "sweeping", "swept", "failed", "exhausted"],
+    }).default("pending"),
+    sweepTxHash: text("sweep_tx_hash"),
+    fundingTxHash: text("funding_tx_hash"),
+    sweepAttemptedAt: timestamp("sweep_attempted_at"),
+    sweepRetryCount: integer("sweep_retry_count").default(0),
+    sweepRetryAfter: timestamp("sweep_retry_after"),
+    sweepLastError: text("sweep_last_error"),
+    fundedAt: timestamp("funded_at"),
+    sweptAt: timestamp("swept_at"),
+    appliedAt: timestamp("applied_at"),
+    receivedUnits: text("received_units"),
+    expectedUnits: text("expected_units"),
+    overpaymentUnits: text("overpayment_units"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     confirmedAt: timestamp("confirmed_at"),
   },
   (table) => [
     index("membership_payment_userId_idx").on(table.userId),
     index("membership_payment_status_idx").on(table.status),
+    index("membership_payment_depositAddress_idx").on(table.depositAddress),
+    index("membership_payment_sweepStatus_idx").on(table.sweepStatus),
+  ],
+);
+
+export const paymentChainCursor = pgTable("payment_chain_cursor", {
+  chain: text("chain").primaryKey(),
+  contract: text("contract").notNull(),
+  lastScannedBlock: integer("last_scanned_block").notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
+export const membershipPlan = pgTable(
+  "membership_plan",
+  {
+    tier: text("tier").primaryKey(),
+    name: text("name").notNull(),
+    description: text("description"),
+    priceUsdCents: integer("price_usd_cents").notNull(),
+    durationDays: integer("duration_days"),
+    isActive: boolean("is_active").default(true).notNull(),
+    sortOrder: integer("sort_order").default(0).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("membership_plan_active_idx").on(table.isActive),
+    index("membership_plan_sort_idx").on(table.sortOrder),
   ],
 );
 

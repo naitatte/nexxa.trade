@@ -3,13 +3,14 @@ import { db } from "../../config/db";
 import { schema, sql, and, eq, inArray, isNotNull, lte, lt } from "@nexxatrade/db";
 import {
   calculateCommissionSplit,
-  calculateExpiresAt,
   COMMISSION_RULES,
   type MembershipTier,
   type MembershipStatus,
+  type UserRole,
 } from "@nexxatrade/core";
 import { NotFoundError, ValidationError } from "../../types/errors";
 import { MEMBERSHIP_DELETION_DAYS } from "./config";
+import { requireMembershipPlan } from "./plans";
 
 const {
   user,
@@ -32,6 +33,13 @@ type ActivateMembershipInput = {
   reason?: string;
 };
 
+type ActivateMembershipResult = {
+  paymentId: string;
+  expiresAt: Date | null;
+  status: "active";
+  commissionsCreated: number;
+};
+
 type MembershipEventInput = {
   userId: string;
   fromStatus?: MembershipStatus | null;
@@ -48,6 +56,15 @@ const DEFAULT_EVENT_REASON = "payment_confirmed";
 
 type Database = typeof db;
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+function calculateExpiresAtFromDuration(durationDays: number | null, baseDate: Date): Date | null {
+  if (durationDays === null) {
+    return null;
+  }
+  const expiresAt = new Date(baseDate);
+  expiresAt.setUTCDate(expiresAt.getUTCDate() + durationDays);
+  return expiresAt;
+}
 
 type CreateCommissionsInput = {
   tx: Transaction;
@@ -184,108 +201,117 @@ async function getUpline(
   return (result as unknown as UplineRow[]) ?? [];
 }
 
-export async function activateMembership(input: ActivateMembershipInput) {
-  const now = new Date();
-  const paymentId = input.paymentId ?? crypto.randomUUID();
-  const reason = input.reason ?? DEFAULT_EVENT_REASON;
-  return db.transaction(async (tx) => {
-    const existingUser = await tx
-      .select({ id: user.id })
-      .from(user)
-      .where(eq(user.id, input.userId))
-      .limit(1);
-    if (!existingUser.length) {
-      throw new NotFoundError("User", input.userId);
-    }
-    const existingMembership = await tx
-      .select()
-      .from(membership)
-      .where(eq(membership.userId, input.userId))
-      .limit(1);
-    const existing = existingMembership[0];
-    const hasLifetime =
-      (existing?.tier === "lifetime" || existing?.expiresAt === null) &&
-      existing?.status !== "deleted";
-    if (hasLifetime && input.tier !== "lifetime") {
-      throw new ValidationError("Cannot downgrade lifetime membership");
-    }
-    const previousStatus = existing?.status ?? ("inactive" as MembershipStatus);
-    const baseDate =
-      existing?.status === "active" && existing?.expiresAt
-        ? existing.expiresAt
-        : now;
-    const expiresAt = calculateExpiresAt(input.tier, baseDate);
-    if (existingMembership.length) {
-      await tx
-        .update(membership)
-        .set({
-          tier: input.tier,
-          status: "active",
-          activatedAt: now,
-          expiresAt,
-          inactiveAt: null,
-          updatedAt: now,
-        })
-        .where(eq(membership.userId, input.userId));
-    } else {
-      await tx.insert(membership).values({
-        userId: input.userId,
-        tier: input.tier,
+type ActivateMembershipWithTxInput = {
+  readonly tx: Transaction;
+  readonly input: ActivateMembershipInput;
+};
+
+export async function activateMembershipWithTx(input: ActivateMembershipWithTxInput): Promise<ActivateMembershipResult> {
+  const now: Date = new Date();
+  const paymentId: string = input.input.paymentId ?? crypto.randomUUID();
+  const reason: string = input.input.reason ?? DEFAULT_EVENT_REASON;
+  const tx: Transaction = input.tx;
+  const existingUser: Array<{ id: string; role: UserRole | null }> = await tx
+    .select({ id: user.id, role: user.role })
+    .from(user)
+    .where(eq(user.id, input.input.userId))
+    .limit(1);
+  if (!existingUser.length) {
+    throw new NotFoundError("User", input.input.userId);
+  }
+  const plan = await requireMembershipPlan(input.input.tier, tx);
+  const currentRole: UserRole = existingUser[0]?.role ?? "guest";
+  const nextRole: UserRole = currentRole === "guest" ? "subscriber" : currentRole;
+  const existingMembership: Array<typeof membership.$inferSelect> = await tx
+    .select()
+    .from(membership)
+    .where(eq(membership.userId, input.input.userId))
+    .limit(1);
+  const existing: typeof membership.$inferSelect | undefined = existingMembership[0];
+  const hasLifetime: boolean =
+    (existing?.tier === "lifetime" || existing?.expiresAt === null) &&
+    existing?.status !== "deleted";
+  if (hasLifetime && input.input.tier !== "lifetime") {
+    throw new ValidationError("Cannot downgrade lifetime membership");
+  }
+  const previousStatus: MembershipStatus = existing?.status ?? ("inactive" as MembershipStatus);
+  const baseDate: Date = existing?.status === "active" && existing?.expiresAt ? existing.expiresAt : now;
+  const expiresAt: Date | null = calculateExpiresAtFromDuration(plan.durationDays, baseDate);
+  if (existingMembership.length) {
+    await tx
+      .update(membership)
+      .set({
+        tier: input.input.tier,
         status: "active",
-        startsAt: now,
         activatedAt: now,
         expiresAt,
         inactiveAt: null,
-        createdAt: now,
-        updatedAt: now,
-      });
-    }
-    await tx
-      .update(user)
-      .set({
-        membershipStatus: "active",
-        membershipTier: input.tier,
-        membershipExpiresAt: expiresAt,
         updatedAt: now,
       })
-      .where(eq(user.id, input.userId));
-    await recordMembershipEvent(tx, {
-      userId: input.userId,
-      fromStatus: previousStatus,
-      toStatus: "active",
-      reason,
-    });
-    await upsertPayment({
-      tx,
-      paymentId,
-      userId: input.userId,
-      tier: input.tier,
-      amountUsdCents: input.amountUsdCents,
-      chain: input.chain,
-      txHash: input.txHash,
-      fromAddress: input.fromAddress,
-      toAddress: input.toAddress,
-      now,
-    });
-    const commissionsCreated = await createCommissions({
-      tx,
-      paymentId,
-      userId: input.userId,
-      amountUsdCents: input.amountUsdCents,
-      now,
-    });
-    return {
-      paymentId,
+      .where(eq(membership.userId, input.input.userId));
+  } else {
+    await tx.insert(membership).values({
+      userId: input.input.userId,
+      tier: input.input.tier,
+      status: "active",
+      startsAt: now,
+      activatedAt: now,
       expiresAt,
-      status: "active" as const,
-      commissionsCreated,
-    };
+      inactiveAt: null,
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
+  await tx
+    .update(user)
+    .set({
+      role: nextRole,
+      membershipStatus: "active",
+      membershipTier: input.input.tier,
+      membershipExpiresAt: expiresAt,
+      updatedAt: now,
+    })
+    .where(eq(user.id, input.input.userId));
+  await recordMembershipEvent(tx, {
+    userId: input.input.userId,
+    fromStatus: previousStatus,
+    toStatus: "active",
+    reason,
   });
+  await upsertPayment({
+    tx,
+    paymentId,
+    userId: input.input.userId,
+    tier: input.input.tier,
+    amountUsdCents: input.input.amountUsdCents,
+    chain: input.input.chain,
+    txHash: input.input.txHash,
+    fromAddress: input.input.fromAddress,
+    toAddress: input.input.toAddress,
+    now,
+  });
+  const commissionsCreated: number = await createCommissions({
+    tx,
+    paymentId,
+    userId: input.input.userId,
+    amountUsdCents: input.input.amountUsdCents,
+    now,
+  });
+  return {
+    paymentId,
+    expiresAt,
+    status: "active" as const,
+    commissionsCreated,
+  };
+}
+
+export async function activateMembership(input: ActivateMembershipInput): Promise<ActivateMembershipResult> {
+  return db.transaction(async (tx: Transaction): Promise<ActivateMembershipResult> => activateMembershipWithTx({ tx, input }));
 }
 
 export async function expireMemberships() {
   const now = new Date();
-  return db.transaction(async (tx) => {
+  return db.transaction(async (tx: Transaction) => {
     const expiring = await tx
       .select({
         userId: membership.userId,
@@ -335,7 +361,7 @@ export async function expireMemberships() {
 export async function compressInactiveUsers() {
   const now = new Date();
   const cutoff = new Date(now.getTime() - MEMBERSHIP_DELETION_DAYS * 24 * 60 * 60 * 1000);
-  return db.transaction(async (tx) => {
+  return db.transaction(async (tx: Transaction) => {
     const candidates = await tx
       .select({ userId: membership.userId })
       .from(membership)
