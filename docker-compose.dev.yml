@@ -45,3 +45,13 @@ services:
       sh -c "corepack enable
       && pnpm install --frozen-lockfile
       && pnpm --filter @nexxatrade/reserve exec tsx watch src/server.ts"
+
+  messager:
+    ports:
+      - "4201:4201"
+    environment:
+      - SIGNALS_API_URL=http://server:4000
+    command: >
+      sh -c "corepack enable
+      && pnpm install --frozen-lockfile
+      && pnpm --filter @nexxatrade/messager exec tsx watch src/relay.ts"

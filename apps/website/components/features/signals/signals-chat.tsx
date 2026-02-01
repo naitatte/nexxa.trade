@@ -181,9 +181,9 @@ export function SignalsChat() {
               )}
             >
               <div className="relative">
-                <Avatar>
+                <Avatar className="bg-accent">
                   <AvatarImage src={channel.avatarUrl ?? undefined} />
-                  <AvatarFallback>{channel.name[0]}</AvatarFallback>
+                  <AvatarFallback className="bg-accent">{channel.name[0]}</AvatarFallback>
                 </Avatar>
               </div>
               <div className="flex-1 min-w-0">
@@ -238,9 +238,9 @@ export function SignalsChat() {
             >
               <Menu className="h-5 w-5" />
             </Button>
-            <Avatar className="h-8 w-8 lg:h-10 lg:w-10">
+            <Avatar className="h-8 w-8 lg:h-10 lg:w-10 bg-accent">
               <AvatarImage src={selectedChannel?.avatarUrl ?? undefined} />
-              <AvatarFallback>{selectedChannel?.name?.[0] ?? "S"}</AvatarFallback>
+              <AvatarFallback className="bg-accent">{selectedChannel?.name?.[0] ?? "S"}</AvatarFallback>
             </Avatar>
             <h3 className="font-semibold text-base leading-none tracking-tight">
               {selectedChannel?.name ?? (isLoadingChannels ? "Loading..." : isErrorChannels ? "Error" : channels.length === 0 ? "No channel selected" : "Signals")}
@@ -281,76 +281,78 @@ export function SignalsChat() {
             const timestamp: string = message.sourceTimestamp ?? message.createdAt
             return (
               <div key={message.id} className="flex gap-3 max-w-[85%] lg:max-w-[75%]">
-                <Avatar className="h-8 w-8 flex-shrink-0 mt-1 hidden sm:block">
-                  <AvatarFallback>{selectedChannel?.name?.[0] ?? "S"}</AvatarFallback>
+                <Avatar className="h-8 w-8 flex-shrink-0 mt-1 hidden sm:block bg-accent">
+                  <AvatarFallback className="bg-accent">{selectedChannel?.name?.[0] ?? "S"}</AvatarFallback>
                 </Avatar>
-                <div className="flex flex-col items-start">
-                  <div className="px-4 py-3 rounded-2xl text-sm shadow-sm bg-card border rounded-bl-none">
-                    {message.type === "text" && message.content && (
-                      <p className="whitespace-pre-line leading-relaxed">{message.content}</p>
-                    )}
-                    {message.type === "image" && message.attachments.length > 0 && (
-                      <div className="space-y-2">
-                        {message.attachments.map((attachment: SignalAttachment) => (
-                          <img
-                            key={attachment.id}
-                            src={attachment.url}
-                            alt={attachment.fileName ?? "Signal image"}
-                            className="rounded-lg max-w-[260px]"
-                          />
-                        ))}
-                        {message.content && (
-                          <p className="whitespace-pre-line leading-relaxed">{message.content}</p>
-                        )}
-                      </div>
-                    )}
-                    {message.type === "audio" && message.attachments.length > 0 && (
-                      <div className="space-y-2">
-                        {message.attachments.map((attachment: SignalAttachment) => (
-                          <audio key={attachment.id} controls className="w-full">
-                            <source src={attachment.url} />
-                          </audio>
-                        ))}
-                        {message.content && (
-                          <p className="whitespace-pre-line leading-relaxed">{message.content}</p>
-                        )}
-                      </div>
-                    )}
-                    {message.type === "link" && message.link && (
-                      <div className="space-y-2">
-                        <a
-                          href={message.link.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="block rounded-lg border bg-background p-3 hover:bg-muted/40 transition"
-                        >
-                          {message.link.imageUrl && (
-                            <img
-                              src={message.link.imageUrl}
-                              alt={message.link.title ?? "Link preview"}
-                              className="rounded-md mb-2 max-w-[260px]"
-                            />
+                <div className="flex flex-col items-start gap-1">
+                  {message.type === "image" && message.attachments.length > 0 && (
+                    <div className="space-y-1">
+                      {message.attachments.map((attachment: SignalAttachment) => (
+                        <img
+                          key={attachment.id}
+                          src={attachment.url}
+                          alt={attachment.fileName ?? "Signal image"}
+                          className="rounded-lg max-w-[260px] border shadow-sm"
+                        />
+                      ))}
+                    </div>
+                  )}
+                  {((message.type === "image" && message.content) || message.type !== "image") && (
+                    <div className="px-4 py-3 rounded-2xl text-sm shadow-sm bg-card border rounded-bl-none">
+                      {message.type === "text" && message.content && (
+                        <p className="whitespace-pre-line leading-relaxed">{message.content}</p>
+                      )}
+                      {message.type === "image" && message.content && (
+                        <p className="whitespace-pre-line leading-relaxed">{message.content}</p>
+                      )}
+                      {message.type === "audio" && message.attachments.length > 0 && (
+                        <div className="space-y-2">
+                          {message.attachments.map((attachment: SignalAttachment) => (
+                            <audio key={attachment.id} controls className="w-full">
+                              <source src={attachment.url} />
+                            </audio>
+                          ))}
+                          {message.content && (
+                            <p className="whitespace-pre-line leading-relaxed">{message.content}</p>
                           )}
-                          <div className="text-sm font-medium">
-                            {message.link.title ?? message.link.url}
-                          </div>
-                          {message.link.description && (
-                            <div className="text-xs text-muted-foreground mt-1">{message.link.description}</div>
+                        </div>
+                      )}
+                      {message.type === "link" && message.link && (
+                        <div className="space-y-2">
+                          <a
+                            href={message.link.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="block rounded-lg border bg-background p-3 hover:bg-muted/40 transition"
+                          >
+                            {message.link.imageUrl && (
+                              <img
+                                src={message.link.imageUrl}
+                                alt={message.link.title ?? "Link preview"}
+                                className="rounded-md mb-2 max-w-[260px]"
+                              />
+                            )}
+                            <div className="text-sm font-medium">
+                              {message.link.title ?? message.link.url}
+                            </div>
+                            {message.link.description && (
+                              <div className="text-xs text-muted-foreground mt-1">{message.link.description}</div>
+                            )}
+                            {message.link.siteName && (
+                              <div className="text-[10px] text-muted-foreground mt-2">{message.link.siteName}</div>
+                            )}
+                          </a>
+                          {message.content && (
+                            <p className="whitespace-pre-line leading-relaxed">{message.content}</p>
                           )}
-                          {message.link.siteName && (
-                            <div className="text-[10px] text-muted-foreground mt-2">{message.link.siteName}</div>
-                          )}
-                        </a>
-                        {message.content && (
-                          <p className="whitespace-pre-line leading-relaxed">{message.content}</p>
-                        )}
-                      </div>
-                    )}
-                    {message.type !== "text" && message.type !== "image" && message.type !== "audio" && message.type !== "link" && message.content && (
-                      <p className="whitespace-pre-line leading-relaxed">{message.content}</p>
-                    )}
-                  </div>
-                  <span className="text-[10px] text-muted-foreground mt-1 px-1">
+                        </div>
+                      )}
+                      {message.type !== "text" && message.type !== "image" && message.type !== "audio" && message.type !== "link" && message.content && (
+                        <p className="whitespace-pre-line leading-relaxed">{message.content}</p>
+                      )}
+                    </div>
+                  )}
+                  <span className="text-[10px] text-muted-foreground px-1">
                     {formatTime(timestamp)}
                   </span>
                 </div>

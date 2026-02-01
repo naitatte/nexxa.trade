@@ -1,4 +1,7 @@
 import type { FastifyInstance, FastifyRequest } from "fastify";
+import path from "node:path";
+import fs from "node:fs/promises";
+import { createReadStream } from "node:fs";
 import type { SocketStream } from "@fastify/websocket";
 import { asyncHandler } from "../../utils/async-handler";
 import { env } from "../../config/env";
@@ -26,6 +29,11 @@ type SignalMessagesQuery = {
 type SignalMessagesParams = {
   readonly channelId: string;
 };
+
+const SIGNALS_MEDIA_ROOT = process.env.SIGNALS_MEDIA_ROOT
+  ? path.resolve(process.env.SIGNALS_MEDIA_ROOT)
+  : path.resolve(process.cwd(), "storage", "signals-media");
+const SIGNALS_MEDIA_ROUTE = "/api/signals/media";
 
 function getHeaderValue(value: string | string[] | undefined): string {
   if (!value) {
@@ -105,6 +113,45 @@ async function handleSignalStream(connection: SocketStream, request: FastifyRequ
 }
 
 export function registerSignalRoutes(app: FastifyInstance) {
+  app.get(
+    `${SIGNALS_MEDIA_ROUTE}/*`,
+    asyncHandler(async (request, reply) => {
+      const params = request.params as { "*": string };
+      const rawPath = params["*"] ?? "";
+      if (!rawPath) {
+        return reply.status(404).send({ error: "Not found" });
+      }
+      const safePath = path.normalize(rawPath);
+      if (safePath.includes("..")) {
+        return reply.status(400).send({ error: "Invalid path" });
+      }
+      const filePath = path.join(SIGNALS_MEDIA_ROOT, safePath);
+      try {
+        await fs.access(filePath);
+      } catch {
+        return reply.status(404).send({ error: "Not found" });
+      }
+      const ext = path.extname(filePath).toLowerCase();
+      const contentType =
+        ext === ".jpg" || ext === ".jpeg"
+          ? "image/jpeg"
+          : ext === ".png"
+          ? "image/png"
+          : ext === ".webp"
+          ? "image/webp"
+          : ext === ".gif"
+          ? "image/gif"
+          : ext === ".mp3"
+          ? "audio/mpeg"
+          : ext === ".ogg"
+          ? "audio/ogg"
+          : ext === ".m4a"
+          ? "audio/mp4"
+          : "application/octet-stream";
+      reply.type(contentType);
+      return reply.send(createReadStream(filePath));
+    })
+  );
   app.get(
     "/api/signals/channels",
     {

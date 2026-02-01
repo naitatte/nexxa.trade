@@ -30,10 +30,12 @@ services:
       - REDIS_URL=redis://redis:6379
       - PAYMENTS_RESERVE_URL=http://reserve:4100
       - PAYMENTS_XPUB_PATH=/app/keys/xpub.txt
+      - SIGNALS_MEDIA_ROOT=/data/messager
       - CI=true
     volumes:
       - ./:/app
       - /app/node_modules
+      - messager_media:/data/messager
     ports:
       - "4000:4000"
     command: >
@@ -105,5 +107,27 @@ services:
       && pnpm install --frozen-lockfile
       && pnpm --filter @nexxatrade/reserve exec tsx src/server.ts"
 
+  messager:
+    image: node:20-alpine
+    working_dir: /app
+    depends_on:
+      - server
+    env_file:
+      - ./packages/messager/.env.messager
+    environment:
+      - SIGNALS_API_URL=http://server:4000
+      - CI=true
+    volumes:
+      - ./:/app
+      - /app/node_modules
+      - messager_media:/data
+    ports:
+      - "4201:4201"
+    command: >
+      sh -c "corepack enable
+      && pnpm install --frozen-lockfile
+      && pnpm --filter @nexxatrade/messager exec tsx src/relay.ts"
+
 volumes:
   postgres_data:
+  messager_media:
