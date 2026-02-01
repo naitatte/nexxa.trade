@@ -3,6 +3,8 @@ import type { OpenAPIV3 } from "openapi-types";
 const userRoleEnum = ["admin", "guest", "subscriber", "networker"] as const;
 const membershipStatusEnum = ["active", "inactive", "deleted"] as const;
 const membershipPaymentStatusEnum = ["pending", "confirmed", "failed"] as const;
+const signalMessageTypeEnum = ["text", "image", "audio", "link"] as const;
+const signalAttachmentTypeEnum = ["image", "audio"] as const;
 
 const dateTimeSchema: OpenAPIV3.SchemaObject = {
   type: "string",
@@ -287,6 +289,192 @@ export const openApiSchemas: Record<string, OpenAPIV3.SchemaObject> = {
       compressedCount: { type: "number" },
     },
   },
+  SignalMessageType: {
+    type: "string",
+    enum: [...signalMessageTypeEnum],
+  },
+  SignalAttachmentType: {
+    type: "string",
+    enum: [...signalAttachmentTypeEnum],
+  },
+  SignalAttachment: {
+    type: "object",
+    required: ["id", "type", "url"],
+    properties: {
+      id: { type: "string" },
+      type: { $ref: "SignalAttachmentType#" },
+      url: { type: "string" },
+      mimeType: { type: "string", nullable: true },
+      fileName: { type: "string", nullable: true },
+      size: { type: "number", nullable: true },
+      width: { type: "number", nullable: true },
+      height: { type: "number", nullable: true },
+      durationSeconds: { type: "number", nullable: true },
+    },
+  },
+  SignalLink: {
+    type: "object",
+    required: ["id", "url"],
+    properties: {
+      id: { type: "string" },
+      url: { type: "string" },
+      title: { type: "string", nullable: true },
+      description: { type: "string", nullable: true },
+      imageUrl: { type: "string", nullable: true },
+      siteName: { type: "string", nullable: true },
+    },
+  },
+  SignalMessagePreview: {
+    type: "object",
+    required: ["id", "channelId", "type", "createdAt"],
+    properties: {
+      id: { type: "string" },
+      channelId: { type: "string" },
+      type: { $ref: "SignalMessageType#" },
+      content: { type: "string", nullable: true },
+      createdAt: dateTimeSchema,
+    },
+  },
+  SignalMessage: {
+    type: "object",
+    required: ["id", "channelId", "type", "attachments", "createdAt"],
+    properties: {
+      id: { type: "string" },
+      channelId: { type: "string" },
+      type: { $ref: "SignalMessageType#" },
+      content: { type: "string", nullable: true },
+      source: { type: "string", nullable: true },
+      sourceId: { type: "string", nullable: true },
+      sourceTimestamp: nullableDateTimeSchema,
+      createdAt: dateTimeSchema,
+      attachments: {
+        type: "array",
+        items: { $ref: "SignalAttachment#" },
+      },
+      link: {
+        $ref: "SignalLink#",
+      },
+    },
+  },
+  SignalChannel: {
+    type: "object",
+    required: [
+      "id",
+      "name",
+      "isActive",
+      "sortOrder",
+      "createdAt",
+      "updatedAt",
+    ],
+    properties: {
+      id: { type: "string" },
+      name: { type: "string" },
+      description: { type: "string", nullable: true },
+      avatarUrl: { type: "string", nullable: true },
+      source: { type: "string", nullable: true },
+      sourceId: { type: "string", nullable: true },
+      isActive: { type: "boolean" },
+      sortOrder: { type: "number" },
+      createdAt: dateTimeSchema,
+      updatedAt: dateTimeSchema,
+      lastMessage: {
+        $ref: "SignalMessagePreview#",
+      },
+    },
+  },
+  SignalChannelList: {
+    type: "object",
+    required: ["channels"],
+    properties: {
+      channels: {
+        type: "array",
+        items: { $ref: "SignalChannel#" },
+      },
+    },
+  },
+  SignalMessageList: {
+    type: "object",
+    required: ["items"],
+    properties: {
+      items: {
+        type: "array",
+        items: { $ref: "SignalMessage#" },
+      },
+      nextCursor: { type: "string", nullable: true },
+    },
+  },
+  SignalIngestAttachment: {
+    type: "object",
+    required: ["type", "url"],
+    properties: {
+      type: { $ref: "SignalAttachmentType#" },
+      url: { type: "string" },
+      mimeType: { type: "string", nullable: true },
+      fileName: { type: "string", nullable: true },
+      size: { type: "number", nullable: true },
+      width: { type: "number", nullable: true },
+      height: { type: "number", nullable: true },
+      durationSeconds: { type: "number", nullable: true },
+    },
+  },
+  SignalIngestLink: {
+    type: "object",
+    required: ["url"],
+    properties: {
+      url: { type: "string" },
+      title: { type: "string", nullable: true },
+      description: { type: "string", nullable: true },
+      imageUrl: { type: "string", nullable: true },
+      siteName: { type: "string", nullable: true },
+    },
+  },
+  SignalIngestMessage: {
+    type: "object",
+    required: ["type"],
+    properties: {
+      source: { type: "string", nullable: true },
+      sourceId: { type: "string", nullable: true },
+      type: { $ref: "SignalMessageType#" },
+      content: { type: "string", nullable: true },
+      sourceTimestamp: nullableDateTimeSchema,
+      attachments: {
+        type: "array",
+        items: { $ref: "SignalIngestAttachment#" },
+      },
+      link: {
+        $ref: "SignalIngestLink#",
+      },
+    },
+  },
+  SignalIngestChannel: {
+    type: "object",
+    properties: {
+      source: { type: "string", nullable: true },
+      sourceId: { type: "string", nullable: true },
+      name: { type: "string", nullable: true },
+      description: { type: "string", nullable: true },
+      avatarUrl: { type: "string", nullable: true },
+      isActive: { type: "boolean", nullable: true },
+      sortOrder: { type: "number", nullable: true },
+    },
+  },
+  SignalIngestRequest: {
+    type: "object",
+    required: ["message"],
+    properties: {
+      channelId: { type: "string", nullable: true },
+      channel: { $ref: "SignalIngestChannel#" },
+      message: { $ref: "SignalIngestMessage#" },
+    },
+  },
+  SignalIngestResponse: {
+    type: "object",
+    required: ["channel", "message"],
+    properties: {
+      channel: { $ref: "SignalChannel#" },
+      message: { $ref: "SignalMessage#" },
+    },
+  },
 };
 
 export const openApiTags: OpenAPIV3.TagObject[] = [
@@ -305,5 +493,9 @@ export const openApiTags: OpenAPIV3.TagObject[] = [
   {
     name: "System",
     description: "Health checks and internal metadata endpoints",
+  },
+  {
+    name: "Signals",
+    description: "Signals channels, messages, and realtime updates",
   },
 ];

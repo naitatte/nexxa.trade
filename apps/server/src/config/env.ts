@@ -33,6 +33,7 @@ type Env = {
   PAYMENTS_RESERVE_URL: string;
   PAYMENTS_RESERVE_API_KEY: string;
   PAYMENTS_TREASURY_ADDRESS: string;
+  SIGNALS_INGEST_KEY: string;
 };
 
 const isWorker = process.env.APP_MODE === "worker";
@@ -77,6 +78,7 @@ const getEnvBoolean = (name: string, defaultValue: boolean): boolean => {
 const smtpPort = getEnvNumber("SMTP_PORT", 587);
 const smtpSecure = getEnvBoolean("SMTP_SECURE", smtpPort === 465);
 const defaultXpubPath = path.resolve(process.cwd(), "keys/xpub.txt");
+const signalsIngestKey: string = process.env.SIGNALS_INGEST_KEY ?? "";
 
 export const env: Env = {
   NODE_ENV: process.env.NODE_ENV ?? "development",
@@ -110,4 +112,5 @@ export const env: Env = {
   PAYMENTS_RESERVE_URL: requireEnv("PAYMENTS_RESERVE_URL"),
   PAYMENTS_RESERVE_API_KEY: requireEnv("PAYMENTS_RESERVE_API_KEY"),
   PAYMENTS_TREASURY_ADDRESS: requireEnv("PAYMENTS_TREASURY_ADDRESS"),
+  SIGNALS_INGEST_KEY: signalsIngestKey,
 };

@@ -12,6 +12,7 @@ import {
   or,
   sql,
   asc,
+  desc,
 } from "drizzle-orm";
 import * as schema from "./schema";
 
@@ -20,4 +21,4 @@ export function createDb(connectionString: string) {
   return drizzle(client, { schema });
 }
 
-export { schema, sql, and, eq, inArray, isNotNull, isNull, gt, lte, lt, or, asc };
+export { schema, sql, and, eq, inArray, isNotNull, isNull, gt, lte, lt, or, asc, desc };

@@ -27,8 +27,8 @@ export default async function Settings() {
   return (
     <>
       <DashboardBreadcrumb />
-      <div className="flex flex-1 flex-col gap-8 p-6 lg:p-8">
-        <header className="flex items-center justify-between border-b pb-4">
+      <div className="flex flex-1 flex-col gap-6 p-6 lg:p-8">
+        <header className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-semibold tracking-tight">Settings</h1>
             <p className="text-sm text-muted-foreground">Manage your account settings and preferences.</p>

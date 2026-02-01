@@ -1,9 +1,7 @@
 import { redirect } from "next/navigation"
 import { DashboardBreadcrumb } from "@/components/features/dashboard/breadcrumb/dashboard-breadcrumb"
 import { SubscriptionStatusBadge } from "@/components/features/membership/status/subscription-status-badge"
-import { MembershipAlert } from "@/components/features/membership/status/membership-alert"
-import { MembershipInfo } from "@/components/features/membership/status/membership-info"
-import { PlanSelector } from "@/components/features/membership/plans/plan-selector"
+import { MembershipContent } from "@/components/features/membership/membership-content"
 import { auth } from "@/lib/auth/server"
 import { getApiBaseUrl } from "@/lib/api/base-url"
 import { getRequestHeaders } from "@/lib/auth/request-headers"
@@ -29,6 +27,27 @@ type MembershipData = {
   deletionAt: Date | null
   deletionDays: number | null
   activatedAt: Date | null
+}
+
+type MembershipInvoice = {
+  id: string
+  tier: string
+  status: string
+  sweepStatus: string | null
+  amountUsdCents: number
+  chain: string | null
+  txHash: string | null
+  depositAddress: string | null
+  createdAt: string
+  confirmedAt: string | null
+  appliedAt: string | null
+}
+
+type InvoiceResponse = {
+  page: number
+  pageSize: number
+  total: number
+  items: MembershipInvoice[]
 }
 
 const API_BASE_URL = getApiBaseUrl()
@@ -82,6 +101,33 @@ async function getPlanData(cookieHeader: string | null): Promise<PlanData[]> {
   }
 }
 
+async function getInvoiceData(cookieHeader: string | null): Promise<InvoiceResponse> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/payments/invoices?page=1&pageSize=100`, {
+      headers: {
+        "Content-Type": "application/json",
+        ...(cookieHeader ? { cookie: cookieHeader } : {}),
+      },
+      credentials: "include",
+      cache: "no-store",
+    })
+
+    if (!response.ok) {
+      return { page: 1, pageSize: 0, total: 0, items: [] }
+    }
+
+    const data = await response.json()
+    return {
+      page: typeof data.page === "number" ? data.page : 1,
+      pageSize: typeof data.pageSize === "number" ? data.pageSize : 0,
+      total: typeof data.total === "number" ? data.total : 0,
+      items: Array.isArray(data.items) ? data.items : [],
+    }
+  } catch {
+    return { page: 1, pageSize: 0, total: 0, items: [] }
+  }
+}
+
 export default async function MembershipPage() {
   const headersList = await getRequestHeaders()
   const cookieHeader = headersList.get("cookie")
@@ -94,23 +140,27 @@ export default async function MembershipPage() {
 
   const membership = await getMembershipData(session.user.id, cookieHeader)
   const plans = await getPlanData(cookieHeader)
+  const invoices = await getInvoiceData(cookieHeader)
 
   const status: MembershipStatus = membership?.status || "inactive"
   const tier = membership?.tier || null
   const currentPlan = tier ? plans.find((plan) => plan.tier === tier) : null
-  const isLifetime =
-    (currentPlan?.tier ?? tier) === "lifetime" ||
-    ((currentPlan?.durationDays ?? 0) >= 3650)
-  const isActive = status === "active"
-  const isInactive = status === "inactive"
-  const showDeletionAlert = isInactive && Boolean(membership?.inactiveAt)
+  const membershipDates = membership
+    ? {
+        expiresAt: membership.expiresAt?.toISOString() ?? null,
+        inactiveAt: membership.inactiveAt?.toISOString() ?? null,
+        deletionAt: membership.deletionAt?.toISOString() ?? null,
+        deletionDays: membership.deletionDays ?? null,
+        activatedAt: membership.activatedAt?.toISOString() ?? null,
+      }
+    : null
 
   return (
     <>
       <DashboardBreadcrumb />
-      <div className="flex flex-1 flex-col gap-8 p-6 lg:p-8">
+      <div className="flex flex-1 flex-col gap-6 p-6 lg:p-8">
         
-        <header className="flex items-center justify-between border-b pb-4">
+        <header className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-semibold tracking-tight">Membership</h1>
             <p className="text-sm text-muted-foreground">Manage your plan and billing.</p>
@@ -118,41 +168,13 @@ export default async function MembershipPage() {
           <SubscriptionStatusBadge status={status} />
         </header>
 
-        {showDeletionAlert && (
-          <MembershipAlert
-            inactiveAt={membership?.inactiveAt || null}
-            deletionAt={membership?.deletionAt || null}
-            deletionDays={membership?.deletionDays ?? 7}
-          />
-        )}
-
-        {isActive && tier && (
-           <div className="space-y-6">
-              <MembershipInfo
-                tier={tier}
-                planName={currentPlan?.name}
-                priceUsdCents={currentPlan?.priceUsdCents ?? null}
-                durationDays={currentPlan?.durationDays ?? null}
-                expiresAt={membership?.expiresAt || null}
-                activatedAt={membership?.activatedAt || null}
-              />
-           </div>
-        )}
-
-        {(isInactive || (isActive && !isLifetime)) && (
-          <section className="space-y-4 pt-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-medium">
-                 {isActive ? "Change plan" : "Available plans"}
-              </h2>
-            </div>
-            <PlanSelector 
-              currentTier={tier} 
-              isActive={isActive} 
-              showOnlyUpgrades={isActive} 
-            />
-          </section>
-        )}
+        <MembershipContent
+          status={status}
+          tier={tier}
+          currentPlan={currentPlan}
+          membershipDates={membershipDates}
+          invoices={invoices}
+        />
       </div>
     </>
   )

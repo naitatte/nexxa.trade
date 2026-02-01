@@ -1,6 +1,12 @@
 const TRAILING_AUTH_PATH = /\/api\/auth\/?$/;
 
 export function getApiBaseUrl(): string {
+  if (typeof window === "undefined") {
+    const serverUrl = (process.env.API_SERVER_URL || "").trim();
+    if (serverUrl) {
+      return serverUrl.replace(TRAILING_AUTH_PATH, "");
+    }
+  }
   const raw = (process.env.NEXT_PUBLIC_API_URL || "").trim();
   if (raw) {
     return raw.replace(TRAILING_AUTH_PATH, "");

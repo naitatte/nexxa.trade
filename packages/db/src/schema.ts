@@ -1,5 +1,5 @@
 import { relations, sql } from "drizzle-orm";
-import { pgTable, text, timestamp, boolean, index, integer, pgSequence } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, index, integer, pgSequence, uniqueIndex } from "drizzle-orm/pg-core";
 
 export const paymentDerivationIndexSeq = pgSequence("payment_derivation_index_seq", {
   startWith: 1,
@@ -267,6 +267,88 @@ export const twoFactor = pgTable(
     index("twoFactor_secret_idx").on(table.secret),
     index("twoFactor_userId_idx").on(table.userId),
   ],
+);
+
+export const signalChannel = pgTable(
+  "signal_channel",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    description: text("description"),
+    avatarUrl: text("avatar_url"),
+    source: text("source"),
+    sourceId: text("source_id"),
+    isActive: boolean("is_active").default(true).notNull(),
+    sortOrder: integer("sort_order").default(0).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("signal_channel_source_idx").on(table.source),
+    index("signal_channel_sort_idx").on(table.sortOrder),
+    uniqueIndex("signal_channel_source_sourceId_idx").on(table.source, table.sourceId),
+  ],
+);
+
+export const signalMessage = pgTable(
+  "signal_message",
+  {
+    id: text("id").primaryKey(),
+    channelId: text("channel_id")
+      .notNull()
+      .references(() => signalChannel.id, { onDelete: "cascade" }),
+    type: text("type", { enum: ["text", "image", "audio", "link"] }).notNull(),
+    content: text("content"),
+    source: text("source"),
+    sourceId: text("source_id"),
+    sourceTimestamp: timestamp("source_timestamp"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("signal_message_channelId_idx").on(table.channelId),
+    index("signal_message_createdAt_idx").on(table.createdAt),
+    uniqueIndex("signal_message_source_sourceId_idx").on(table.source, table.sourceId),
+  ],
+);
+
+export const signalMessageAttachment = pgTable(
+  "signal_message_attachment",
+  {
+    id: text("id").primaryKey(),
+    messageId: text("message_id")
+      .notNull()
+      .references(() => signalMessage.id, { onDelete: "cascade" }),
+    type: text("type", { enum: ["image", "audio"] }).notNull(),
+    url: text("url").notNull(),
+    mimeType: text("mime_type"),
+    fileName: text("file_name"),
+    size: integer("size"),
+    width: integer("width"),
+    height: integer("height"),
+    durationSeconds: integer("duration_seconds"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [index("signal_message_attachment_messageId_idx").on(table.messageId)],
+);
+
+export const signalMessageLink = pgTable(
+  "signal_message_link",
+  {
+    id: text("id").primaryKey(),
+    messageId: text("message_id")
+      .notNull()
+      .references(() => signalMessage.id, { onDelete: "cascade" }),
+    url: text("url").notNull(),
+    title: text("title"),
+    description: text("description"),
+    imageUrl: text("image_url"),
+    siteName: text("site_name"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [index("signal_message_link_messageId_idx").on(table.messageId)],
 );
 
 export const userRelations = relations(user, ({ many, one }) => ({

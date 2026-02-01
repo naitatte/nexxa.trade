@@ -1,0 +1,27 @@
+{
+  "name": "telegram-relay",
+  "version": "1.0.0",
+  "description": "Relay automático de mensajes entre grupos/canales de Telegram usando MTProto",
+  "main": "relay.js",
+  "type": "module",
+  "scripts": {
+    "start": "node relay.js",
+    "dev": "node relay.js",
+    "list-chats": "node list-chats.js",
+    "delete-my-messages": "node delete-my-messages.js",
+    "remove-duplicates": "node remove-duplicates.js"
+  },
+  "keywords": [
+    "telegram",
+    "relay",
+    "mtproto",
+    "gramjs"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "telegram": "^2.25.0",
+    "input": "^1.0.1",
+    "dotenv": "^16.4.5"
+  }
+}

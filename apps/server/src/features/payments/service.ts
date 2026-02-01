@@ -15,6 +15,7 @@ const SWEEP_REQUEST_TIMEOUT_MS: number = 60000;
 const MAX_SWEEP_RETRIES: number = 3;
 const RETRY_BACKOFF_MULTIPLIER: number = 2;
 const BASE_RETRY_DELAY_MS: number = 5000;
+const PAYMENT_INTENT_TTL_MS: number = 60 * 60 * 1000;
 
 const transferInterface: Interface = new Interface([
   "event Transfer(address indexed from, address indexed to, uint256 value)",
@@ -48,6 +49,27 @@ export type PaymentStatusResult = {
   readonly appliedAt: string | null;
 };
 
+export type PaymentInvoice = {
+  readonly id: string;
+  readonly tier: MembershipTier;
+  readonly status: string;
+  readonly sweepStatus: string | null;
+  readonly amountUsdCents: number;
+  readonly chain: string | null;
+  readonly txHash: string | null;
+  readonly depositAddress: string | null;
+  readonly createdAt: string;
+  readonly confirmedAt: string | null;
+  readonly appliedAt: string | null;
+};
+
+export type ListUserPaymentsResult = {
+  readonly page: number;
+  readonly pageSize: number;
+  readonly total: number;
+  readonly items: PaymentInvoice[];
+};
+
 export type ScanResult = {
   readonly scannedFromBlock: number;
   readonly scannedToBlock: number;
@@ -63,7 +85,12 @@ export type ApplyResult = {
   readonly appliedCount: number;
 };
 
+export type ExpireResult = {
+  readonly expiredCount: number;
+};
+
 export type PipelineResult = {
+  readonly expire: ExpireResult;
   readonly scan: ScanResult;
   readonly sweep: SweepResult;
   readonly apply: ApplyResult;
@@ -200,6 +227,59 @@ export async function getPaymentStatus(input: { readonly paymentId: string; read
     confirmedAt: row.confirmedAt ? row.confirmedAt.toISOString() : null,
     sweptAt: row.sweptAt ? row.sweptAt.toISOString() : null,
     appliedAt: row.appliedAt ? row.appliedAt.toISOString() : null,
+  };
+}
+
+export async function listUserPayments(input: {
+  readonly userId: string;
+  readonly page?: number;
+  readonly pageSize?: number;
+}): Promise<ListUserPaymentsResult> {
+  const page = Math.max(1, Math.floor(input.page ?? 1));
+  const pageSize = Math.min(100, Math.max(1, Math.floor(input.pageSize ?? 10)));
+  const offset = (page - 1) * pageSize;
+  const [{ count }] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(membershipPayment)
+    .where(eq(membershipPayment.userId, input.userId));
+  const total = typeof count === "number" ? count : Number(count ?? 0);
+  const rows = await db
+    .select({
+      id: membershipPayment.id,
+      tier: membershipPayment.tier,
+      status: membershipPayment.status,
+      sweepStatus: membershipPayment.sweepStatus,
+      amountUsdCents: membershipPayment.amountUsdCents,
+      chain: membershipPayment.chain,
+      txHash: membershipPayment.txHash,
+      depositAddress: membershipPayment.depositAddress,
+      createdAt: membershipPayment.createdAt,
+      confirmedAt: membershipPayment.confirmedAt,
+      appliedAt: membershipPayment.appliedAt,
+    })
+    .from(membershipPayment)
+    .where(eq(membershipPayment.userId, input.userId))
+    .orderBy(sql`${membershipPayment.createdAt} desc`)
+    .limit(pageSize)
+    .offset(offset);
+  const items = rows.map((row) => ({
+    id: row.id,
+    tier: row.tier,
+    status: row.status,
+    sweepStatus: row.sweepStatus,
+    amountUsdCents: row.amountUsdCents,
+    chain: row.chain,
+    txHash: row.txHash,
+    depositAddress: row.depositAddress,
+    createdAt: row.createdAt.toISOString(),
+    confirmedAt: row.confirmedAt ? row.confirmedAt.toISOString() : null,
+    appliedAt: row.appliedAt ? row.appliedAt.toISOString() : null,
+  }));
+  return {
+    page,
+    pageSize,
+    total,
+    items,
   };
 }
 
@@ -377,10 +457,24 @@ export async function applySweptPayments(): Promise<ApplyResult> {
 }
 
 export async function processPaymentsPipeline(): Promise<PipelineResult> {
+  const expire: ExpireResult = await expirePendingPayments();
   const scan: ScanResult = await scanPaymentIntents();
   const sweep: SweepResult = await sweepConfirmedPayments();
   const apply: ApplyResult = await applySweptPayments();
-  return { scan, sweep, apply };
+  return { expire, scan, sweep, apply };
+}
+
+export async function expirePendingPayments(): Promise<ExpireResult> {
+  const cutoff: Date = new Date(Date.now() - PAYMENT_INTENT_TTL_MS);
+  const expired: Array<{ id: string }> = await db
+    .update(membershipPayment)
+    .set({ status: "failed" })
+    .where(and(eq(membershipPayment.status, "pending"), lte(membershipPayment.createdAt, cutoff)))
+    .returning({ id: membershipPayment.id });
+  if (expired.length > 0) {
+    logger.info("Expired pending payments", { expiredCount: expired.length, cutoff: cutoff.toISOString() });
+  }
+  return { expiredCount: expired.length };
 }
 
 async function allocateDerivationIndex(): Promise<number> {

@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import type { OpenAPIV3 } from "openapi-types";
 import cors from "@fastify/cors";
 import multipart from "@fastify/multipart";
+import websocket from "@fastify/websocket";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import { env } from "../config/env";
@@ -34,6 +35,7 @@ export async function registerPlugins(app: FastifyInstance) {
     origin: true,
     credentials: true,
   });
+  await app.register(websocket);
 
   await app.register(multipart, {
     limits: {

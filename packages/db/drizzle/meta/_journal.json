@@ -50,6 +50,13 @@
       "when": 1769549008833,
       "tag": "0006_membership_plans",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1769949581868,
+      "tag": "0007_skinny_quicksilver",
+      "breakpoints": true
     }
   ]
 }

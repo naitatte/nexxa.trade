@@ -154,24 +154,24 @@ export function SettingsContent({ user: initialUser }: SettingsContentProps) {
       onValueChange={(value) => setActiveTab("settings", value)}
       className="space-y-6"
     >
-      <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-flex">
-        <TabsTrigger value="profile" className="gap-1.5">
+      <TabsList variant="line" className="mb-6 w-full justify-between sm:justify-start">
+        <TabsTrigger variant="line" value="profile" className="flex-1 justify-center gap-1.5 sm:flex-none">
           <User className="size-4" />
           <span className="hidden sm:inline">Profile</span>
         </TabsTrigger>
-        <TabsTrigger value="account" className="gap-1.5">
+        <TabsTrigger variant="line" value="account" className="flex-1 justify-center gap-1.5 sm:flex-none">
           <KeyRound className="size-4" />
           <span className="hidden sm:inline">Account</span>
         </TabsTrigger>
-        <TabsTrigger value="notifications" className="gap-1.5" disabled>
+        <TabsTrigger variant="line" value="notifications" className="flex-1 justify-center gap-1.5 sm:flex-none" disabled>
           <Bell className="size-4" />
           <span className="hidden sm:inline">Notifications</span>
         </TabsTrigger>
-        <TabsTrigger value="appearance" className="gap-1.5">
+        <TabsTrigger variant="line" value="appearance" className="flex-1 justify-center gap-1.5 sm:flex-none">
           <Palette className="size-4" />
           <span className="hidden sm:inline">Appearance</span>
         </TabsTrigger>
-        <TabsTrigger value="security" className="gap-1.5">
+        <TabsTrigger variant="line" value="security" className="flex-1 justify-center gap-1.5 sm:flex-none">
           <Shield className="size-4" />
           <span className="hidden sm:inline">Security</span>
         </TabsTrigger>

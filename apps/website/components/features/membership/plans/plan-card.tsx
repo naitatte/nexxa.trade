@@ -48,7 +48,7 @@ export function PlanCard({
     <div
       onClick={onClick}
       className={cn(
-        "relative w-full rounded-lg border p-4 transition-colors cursor-pointer",
+        "relative w-full md:w-[350px] rounded-lg border p-6 transition-colors cursor-pointer",
         isCurrent ? "border-primary bg-primary/5" : "hover:border-primary/50 bg-card",
         className
       )}

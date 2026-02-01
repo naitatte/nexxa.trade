@@ -229,6 +229,183 @@ export interface Def19 {
   compressedCount: number;
 }
 
+export type Def20 = typeof Def20[keyof typeof Def20];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const Def20 = {
+  text: 'text',
+  image: 'image',
+  audio: 'audio',
+  link: 'link',
+} as const;
+
+export type Def21 = typeof Def21[keyof typeof Def21];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const Def21 = {
+  image: 'image',
+  audio: 'audio',
+} as const;
+
+export interface Def22 {
+  id: string;
+  type: Def21;
+  url: string;
+  /** @nullable */
+  mimeType?: string | null;
+  /** @nullable */
+  fileName?: string | null;
+  /** @nullable */
+  size?: number | null;
+  /** @nullable */
+  width?: number | null;
+  /** @nullable */
+  height?: number | null;
+  /** @nullable */
+  durationSeconds?: number | null;
+}
+
+export interface Def23 {
+  id: string;
+  url: string;
+  /** @nullable */
+  title?: string | null;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  imageUrl?: string | null;
+  /** @nullable */
+  siteName?: string | null;
+}
+
+export interface Def24 {
+  id: string;
+  channelId: string;
+  type: Def20;
+  /** @nullable */
+  content?: string | null;
+  createdAt: string;
+}
+
+export interface Def25 {
+  id: string;
+  channelId: string;
+  type: Def20;
+  /** @nullable */
+  content?: string | null;
+  /** @nullable */
+  source?: string | null;
+  /** @nullable */
+  sourceId?: string | null;
+  /** @nullable */
+  sourceTimestamp?: string | null;
+  createdAt: string;
+  attachments: Def22[];
+  link?: Def23;
+}
+
+export interface Def26 {
+  id: string;
+  name: string;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  avatarUrl?: string | null;
+  /** @nullable */
+  source?: string | null;
+  /** @nullable */
+  sourceId?: string | null;
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+  lastMessage?: Def24;
+}
+
+export interface Def27 {
+  channels: Def26[];
+}
+
+export interface Def28 {
+  items: Def25[];
+  /** @nullable */
+  nextCursor?: string | null;
+}
+
+export interface Def29 {
+  type: Def21;
+  url: string;
+  /** @nullable */
+  mimeType?: string | null;
+  /** @nullable */
+  fileName?: string | null;
+  /** @nullable */
+  size?: number | null;
+  /** @nullable */
+  width?: number | null;
+  /** @nullable */
+  height?: number | null;
+  /** @nullable */
+  durationSeconds?: number | null;
+}
+
+export interface Def30 {
+  url: string;
+  /** @nullable */
+  title?: string | null;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  imageUrl?: string | null;
+  /** @nullable */
+  siteName?: string | null;
+}
+
+export interface Def31 {
+  /** @nullable */
+  source?: string | null;
+  /** @nullable */
+  sourceId?: string | null;
+  type: Def20;
+  /** @nullable */
+  content?: string | null;
+  /** @nullable */
+  sourceTimestamp?: string | null;
+  attachments?: Def29[];
+  link?: Def30;
+}
+
+export interface Def32 {
+  /** @nullable */
+  source?: string | null;
+  /** @nullable */
+  sourceId?: string | null;
+  /** @nullable */
+  name?: string | null;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  avatarUrl?: string | null;
+  /** @nullable */
+  isActive?: boolean | null;
+  /** @nullable */
+  sortOrder?: number | null;
+}
+
+export interface Def33 {
+  /** @nullable */
+  channelId?: string | null;
+  channel?: Def32;
+  message: Def31;
+}
+
+export interface Def34 {
+  channel: Def26;
+  message: Def25;
+}
+
 export type UserRole = typeof UserRole[keyof typeof UserRole];
 
 
@@ -423,6 +600,38 @@ export type PatchApiMembershipPlansTierBody = {
   sortOrder?: number;
 };
 
+export type GetApiPaymentsInvoicesParams = {
+page?: number;
+pageSize?: number;
+};
+
+export type GetApiPaymentsInvoices200ItemsItem = {
+  id: string;
+  tier: string;
+  status: string;
+  /** @nullable */
+  sweepStatus?: string | null;
+  amountUsdCents: number;
+  /** @nullable */
+  chain?: string | null;
+  /** @nullable */
+  txHash?: string | null;
+  /** @nullable */
+  depositAddress?: string | null;
+  createdAt: string;
+  /** @nullable */
+  confirmedAt?: string | null;
+  /** @nullable */
+  appliedAt?: string | null;
+};
+
+export type GetApiPaymentsInvoices200 = {
+  page: number;
+  pageSize: number;
+  total: number;
+  items: GetApiPaymentsInvoices200ItemsItem[];
+};
+
 export type PostApiPaymentsAddressBody = {
   tier: string;
 };
@@ -452,6 +661,11 @@ export type GetApiPaymentsPaymentId200 = {
   sweptAt?: string | null;
   /** @nullable */
   appliedAt?: string | null;
+};
+
+export type GetApiSignalsChannelsChannelIdMessagesParams = {
+limit?: number;
+before?: string;
 };
 
 /**
