@@ -110,6 +110,7 @@ services:
   messager:
     image: node:20-alpine
     working_dir: /app
+    entrypoint: /app/packages/messager/entrypoint.sh
     depends_on:
       - server
     env_file:

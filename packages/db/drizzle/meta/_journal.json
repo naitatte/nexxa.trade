@@ -57,6 +57,13 @@
       "when": 1769949581868,
       "tag": "0007_skinny_quicksilver",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1770508800000,
+      "tag": "0008_signal_message_reply",
+      "breakpoints": true
     }
   ]
 }

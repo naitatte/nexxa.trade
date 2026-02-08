@@ -1,8 +1,5 @@
 "use client"
 
-import { Download } from "lucide-react"
-import { Button } from "@/components/ui/button"
-
 type MembershipInfoProps = {
   tier: string
   planName?: string | null
@@ -74,15 +71,6 @@ export function MembershipInfo({
           <p className="font-medium">{formatAmount(priceUsdCents, durationDays)}</p>
         </div>
       </div>
-      
-      {isLifetime && (
-        <div className="flex items-center justify-end border-t pt-4">
-            <Button variant="ghost" size="sm" className="h-8 text-xs">
-              <Download className="mr-2 size-3.5" />
-              Download receipt
-            </Button>
-        </div>
-      )}
     </div>
   )
 }

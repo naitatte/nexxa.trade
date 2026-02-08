@@ -144,7 +144,9 @@ export default async function MembershipPage() {
 
   const status: MembershipStatus = membership?.status || "inactive"
   const tier = membership?.tier || null
-  const currentPlan = tier ? plans.find((plan) => plan.tier === tier) : null
+  const currentPlan: PlanData | null = tier
+    ? (plans.find((plan) => plan.tier === tier) ?? null)
+    : null
   const membershipDates = membership
     ? {
         expiresAt: membership.expiresAt?.toISOString() ?? null,

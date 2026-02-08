@@ -3,17 +3,23 @@ import { createReadStream } from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import http from "node:http";
+import { exec } from "node:child_process";
+import { promisify } from "node:util";
 import dotenv from "dotenv";
 import input from "input";
 import { TelegramClient } from "telegram";
 import { StringSession } from "telegram/sessions/index.js";
 import { NewMessage } from "telegram/events/index.js";
+import { EditedMessage, EditedMessageEvent } from "telegram/events/EditedMessage.js";
+import { DeletedMessage, DeletedMessageEvent } from "telegram/events/DeletedMessage.js";
 import { Api } from "telegram/tl/index.js";
+
+const execAsync = promisify(exec);
 
 dotenv.config();
 
 type SignalIngestAttachmentInput = {
-  readonly type: "image" | "audio";
+  readonly type: "image" | "audio" | "video";
   readonly url: string;
   readonly mimeType?: string | null;
   readonly fileName?: string | null;
@@ -34,9 +40,10 @@ type SignalIngestLinkInput = {
 type SignalIngestMessageInput = {
   readonly source?: string | null;
   readonly sourceId?: string | null;
-  readonly type: "text" | "image" | "audio" | "link";
+  readonly type: "text" | "image" | "audio" | "link" | "video";
   readonly content?: string | null;
   readonly sourceTimestamp?: string | null;
+  readonly replyToSourceId?: string | null;
   readonly attachments?: SignalIngestAttachmentInput[];
   readonly link?: SignalIngestLinkInput;
 };
@@ -55,6 +62,19 @@ type SignalIngestInput = {
   readonly channelId?: string | null;
   readonly channel?: SignalIngestChannelInput;
   readonly message: SignalIngestMessageInput;
+};
+
+type SignalEditInput = {
+  readonly source: string;
+  readonly sourceId: string;
+  readonly content?: string | null;
+  readonly attachments?: SignalIngestAttachmentInput[];
+  readonly link?: SignalIngestLinkInput;
+};
+
+type SignalDeleteInput = {
+  readonly source: string;
+  readonly sourceIds: string[];
 };
 
 type Config = {
@@ -82,13 +102,15 @@ type Config = {
 type PeerKey = `${"channel" | "chat" | "user" | "name"}:${string}`;
 type GetEntityInput = Parameters<TelegramClient["getEntity"]>[0];
 type GetMessagesInput = Parameters<TelegramClient["getMessages"]>[0];
-type ResolvedEntity = Awaited<ReturnType<TelegramClient["getEntity"]>>;
+type RawEntity = Awaited<ReturnType<TelegramClient["getEntity"]>>;
+type ResolvedEntity = RawEntity extends Array<infer U> ? U : RawEntity;
 
 type OriginDescriptor = {
   readonly key: PeerKey;
   readonly name: string;
   readonly fallbackName?: string | null;
   readonly messageId: string;
+  readonly entity?: ResolvedEntity | null;
 };
 
 type ResolvedChat = {
@@ -157,6 +179,25 @@ const normalizeId = (value: unknown): string | null => {
   if (typeof value === "bigint") {
     return value.toString();
   }
+  if (typeof value === "object") {
+    const record = value as { value?: unknown; toString?: () => string };
+    const inner = record.value;
+    if (typeof inner === "string" && inner.length) {
+      return inner;
+    }
+    if (typeof inner === "number" && Number.isFinite(inner)) {
+      return Math.trunc(inner).toString();
+    }
+    if (typeof inner === "bigint") {
+      return inner.toString();
+    }
+    if (typeof record.toString === "function") {
+      const text = record.toString();
+      if (/^-?\d+$/.test(text)) {
+        return text;
+      }
+    }
+  }
   return null;
 };
 
@@ -223,6 +264,74 @@ const getEntityDisplayName = (entity: unknown): string | null => {
   return full.length ? full : null;
 };
 
+const normalizeResolvedEntity = (value: unknown): ResolvedEntity | null => {
+  if (!value) {
+    return null;
+  }
+  if (Array.isArray(value)) {
+    return (value[0] as ResolvedEntity) ?? null;
+  }
+  return value as ResolvedEntity;
+};
+
+const buildEntityCandidatesFromPeerKey = (key: PeerKey): string[] => {
+  const [kind, rawId] = key.split(":");
+  if (!rawId) {
+    return [];
+  }
+  const id = rawId.trim();
+  if (!id.length) {
+    return [];
+  }
+  const candidates: string[] = [];
+  if (kind === "channel") {
+    if (id.startsWith("-100")) {
+      candidates.push(id);
+    } else {
+      candidates.push(`-100${id}`, id);
+    }
+  } else if (kind === "chat") {
+    if (id.startsWith("-")) {
+      candidates.push(id);
+    } else {
+      candidates.push(`-${id}`, id);
+    }
+  } else if (kind === "user") {
+    candidates.push(id);
+  }
+  return [...new Set(candidates)];
+};
+
+const resolveEntityFromPeerKey = async (
+  client: TelegramClient,
+  key: PeerKey
+): Promise<ResolvedEntity | null> => {
+  const candidates = buildEntityCandidatesFromPeerKey(key);
+  for (const candidate of candidates) {
+    try {
+      const raw = await client.getEntity(candidate as unknown as GetEntityInput);
+      const normalized = normalizeResolvedEntity(raw as unknown);
+      if (normalized) {
+        return normalized;
+      }
+    } catch {
+      continue;
+    }
+  }
+  return null;
+};
+
+const extractPhotoIdFromEntity = (entity: ResolvedEntity): string | null => {
+  if (!entity || typeof entity !== "object") {
+    return null;
+  }
+  const photo = (entity as { photo?: unknown }).photo;
+  if (!photo || typeof photo !== "object") {
+    return null;
+  }
+  return normalizeId((photo as { photoId?: unknown }).photoId);
+};
+
 const config: Config = {
   telegramApiId: parseNumber(process.env.TELEGRAM_API_ID, 0),
   telegramApiHash: process.env.TELEGRAM_API_HASH ?? "",
@@ -246,6 +355,8 @@ const config: Config = {
 };
 
 const peerNameCache = new Map<PeerKey, string>();
+const peerAvatarCache = new Map<PeerKey, { url: string | null; photoId: string | null; updatedAt: number }>();
+const AVATAR_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 
 const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -280,6 +391,71 @@ const buildMediaUrl = (relativePath: string): string => {
   }
   const base = config.mediaPublicUrl.replace(/\/$/, "");
   return `${base}${mediaRoute}/${relativePath}`;
+};
+
+const resolveChannelAvatarUrl = async (
+  client: TelegramClient,
+  origin: OriginDescriptor
+): Promise<string | null> => {
+  if (!config.mediaPublicUrl) {
+    return null;
+  }
+  const cached = peerAvatarCache.get(origin.key);
+  const now = Date.now();
+  if (cached && now - cached.updatedAt < AVATAR_CACHE_TTL_MS) {
+    return cached.url;
+  }
+  const entity = origin.entity ?? await resolveEntityFromPeerKey(client, origin.key);
+  if (!entity) {
+    peerAvatarCache.set(origin.key, { url: null, photoId: null, updatedAt: now });
+    return null;
+  }
+  const photoId = extractPhotoIdFromEntity(entity);
+  if (!photoId) {
+    peerAvatarCache.set(origin.key, { url: null, photoId: null, updatedAt: now });
+    return null;
+  }
+  if (cached && cached.photoId === photoId && cached.url) {
+    peerAvatarCache.set(origin.key, { ...cached, updatedAt: now });
+    return cached.url;
+  }
+  const safeKey = origin.key.replace(/[^a-zA-Z0-9_-]/g, "_");
+  const fileName = `avatar-${safeKey}-${photoId}.jpg`;
+  const dir = path.join(config.mediaRoot, "avatars");
+  await fs.mkdir(dir, { recursive: true });
+  const filePath = path.join(dir, fileName);
+  try {
+    await fs.access(filePath);
+  } catch {
+    try {
+      const result = await client.downloadProfilePhoto(entity, { isBig: true, outputFile: filePath });
+      if (Buffer.isBuffer(result) && result.length === 0) {
+        peerAvatarCache.set(origin.key, { url: null, photoId: null, updatedAt: now });
+        return null;
+      }
+    } catch (error) {
+      console.warn(`[messager] Failed to download avatar for ${origin.key}:`, (error as Error).message);
+      if (cached) {
+        peerAvatarCache.set(origin.key, { ...cached, updatedAt: now });
+        return cached.url;
+      }
+      return null;
+    }
+  }
+  try {
+    await fs.access(filePath);
+  } catch {
+    peerAvatarCache.set(origin.key, { url: null, photoId: null, updatedAt: now });
+    return null;
+  }
+  const relativePath = path.relative(config.mediaRoot, filePath).replace(/\\/g, "/");
+  const url = buildMediaUrl(relativePath);
+  if (!url) {
+    peerAvatarCache.set(origin.key, { url: null, photoId: null, updatedAt: now });
+    return null;
+  }
+  peerAvatarCache.set(origin.key, { url, photoId, updatedAt: now });
+  return url;
 };
 
 const startMediaServer = async (): Promise<http.Server> => {
@@ -363,43 +539,52 @@ const authenticateUser = async (client: TelegramClient): Promise<string> => {
 
 const resolveChatIdentifier = async (client: TelegramClient, identifier: string): Promise<unknown> => {
   if (/^-?\d+$/.test(identifier)) {
-    try {
-      return await client.getEntity(identifier as unknown as GetEntityInput);
-    } catch (error) {
-      try {
-        const dialogs = await client.getDialogs();
-        const found = dialogs.find((dialog) => {
-          const entity = dialog.entity as { id?: unknown };
-          const entityId = normalizeId(entity?.id);
-          if (!entityId) return false;
-          if (identifier.startsWith("-100")) {
-            return entityId === identifier.slice(4) || `-100${entityId}` === identifier;
-          }
-          return entityId === identifier || `-100${entityId}` === identifier || entityId === identifier.replace("-100", "");
-        });
-        if (found) {
-          return found.entity;
-        }
-      } catch {
+    const numeric = identifier.replace("-100", "").replace("-", "");
+    const candidates = new Set<string>();
+    candidates.add(identifier);
+    if (numeric && numeric !== identifier) {
+      candidates.add(numeric);
+      if (!identifier.startsWith("-100")) {
+        candidates.add(`-100${numeric}`);
       }
-      const fallback = identifier.startsWith("-100") ? identifier.slice(4) : identifier;
-      if (fallback !== identifier) {
-        return await client.getEntity(fallback as unknown as GetEntityInput);
-      }
-      throw error;
     }
+    let lastError: unknown;
+    for (const candidate of candidates) {
+      try {
+        return await client.getEntity(candidate as unknown as GetEntityInput);
+      } catch (error) {
+        lastError = error;
+      }
+    }
+    try {
+      const dialogs = await client.getDialogs();
+      const found = dialogs.find((dialog) => {
+        const entity = dialog.entity as { id?: unknown };
+        const entityId = normalizeId(entity?.id);
+        if (!entityId) return false;
+        if (identifier.startsWith("-100")) {
+          return entityId === identifier.slice(4) || `-100${entityId}` === identifier;
+        }
+        if (numeric && entityId === numeric) {
+          return true;
+        }
+        return entityId === identifier || `-100${entityId}` === identifier;
+      });
+      if (found) {
+        return found.entity;
+      }
+    } catch {
+    }
+    if (lastError) {
+      throw lastError;
+    }
+    throw new Error(`Unable to resolve chat identifier: ${identifier}`);
   }
   const cleaned = identifier.startsWith("@") ? identifier.slice(1) : identifier;
   return client.getEntity(cleaned as unknown as GetEntityInput);
 };
 
 const deriveForwardedMessageId = (message: Api.Message): string => {
-  const forward = (message as { fwdFrom?: Api.MessageFwdHeader }).fwdFrom;
-  const forwardRecord = forward as { channelPost?: unknown; savedFromMsgId?: unknown } | undefined;
-  const channelPost = normalizeId(forwardRecord?.channelPost);
-  if (channelPost) return channelPost;
-  const savedFromMsgId = normalizeId(forwardRecord?.savedFromMsgId);
-  if (savedFromMsgId) return savedFromMsgId;
   const fallbackId = normalizeId((message as { id?: unknown }).id);
   return fallbackId ?? crypto.randomUUID();
 };
@@ -470,15 +655,22 @@ const resolveOriginDescriptor = async (
       name: peerNameCache.get(originKey) ?? originKey,
       fallbackName: forwardName,
       messageId: deriveForwardedMessageId(message),
+      entity: null,
     };
   }
   let resolvedName: string | null = null;
   let resolvedKey: PeerKey = originKey;
+  let resolvedEntity: ResolvedEntity | null = null;
   const resolveEntity = async (entityInput: GetEntityInput) => {
     try {
-      const entity = await client.getEntity(entityInput);
-      resolvedName = getEntityDisplayName(entity) ?? resolvedName;
-      const keyFromEntity = buildPeerKeyFromEntity(entity);
+      const raw = await client.getEntity(entityInput as unknown as GetEntityInput);
+      const normalized = normalizeResolvedEntity(raw as unknown);
+      if (!normalized) {
+        return;
+      }
+      resolvedEntity = normalized;
+      resolvedName = getEntityDisplayName(normalized) ?? resolvedName;
+      const keyFromEntity = buildPeerKeyFromEntity(normalized);
       if (keyFromEntity) {
         resolvedKey = keyFromEntity;
       }
@@ -518,6 +710,7 @@ const resolveOriginDescriptor = async (
     name,
     fallbackName: forwardName,
     messageId: deriveForwardedMessageId(message),
+    entity: resolvedEntity,
   };
 };
 
@@ -528,6 +721,14 @@ const extractMessageText = (message: Api.Message): string | null => {
     "";
   const trimmed = raw.trim();
   return trimmed.length ? trimmed : null;
+};
+
+const extractReplyToMessageId = (message: Api.Message): string | null => {
+  const replyTo = (message as { replyTo?: { replyToMsgId?: unknown } }).replyTo;
+  if (!replyTo) {
+    return null;
+  }
+  return normalizeId(replyTo.replyToMsgId);
 };
 
 const extractSourceTimestamp = (message: Api.Message): string | null => {
@@ -583,16 +784,85 @@ const getExtensionFromMime = (mimeType: string | null | undefined): string | nul
   if (mimeType === "audio/mpeg") return ".mp3";
   if (mimeType === "audio/ogg") return ".ogg";
   if (mimeType === "audio/mp4") return ".m4a";
+  if (mimeType === "video/mp4") return ".mp4";
+  if (mimeType === "video/quicktime") return ".mov";
+  if (mimeType === "video/webm") return ".webm";
+  if (mimeType === "video/x-m4v" || mimeType === "video/m4v") return ".m4v";
+  return null;
+};
+
+const generateVideoThumbnail = async (
+  videoPath: string,
+  thumbnailPath: string,
+  width: number = 320
+): Promise<boolean> => {
+  try {
+    await execAsync(
+      `ffmpeg -i "${videoPath}" -vf "scale=${width}:-1" -frames:v 1 -q:v 2 "${thumbnailPath}" -y`
+    );
+    return true;
+  } catch (error) {
+    console.warn(`[messager] Failed to generate thumbnail for ${videoPath}:`, (error as Error).message);
+    return false;
+  }
+};
+
+const extractInputFileLocation = (
+  media: unknown
+): { location: Api.TypeInputFileLocation; dcId: number } | null => {
+  if (!media || typeof media !== "object") {
+    return null;
+  }
+  const record = media as {
+    className?: string;
+    document?: {
+      className?: string;
+      id?: unknown;
+      accessHash?: unknown;
+      fileReference?: Buffer;
+      dcId?: number;
+    };
+    photo?: {
+      className?: string;
+      id?: unknown;
+      accessHash?: unknown;
+      fileReference?: Buffer;
+      dcId?: number;
+      sizes?: unknown[];
+    };
+  };
+  if (record.className === "MessageMediaDocument" && record.document) {
+    const doc = record.document;
+    if (
+      doc.className === "Document" &&
+      doc.id !== undefined &&
+      doc.accessHash !== undefined &&
+      doc.fileReference &&
+      typeof doc.dcId === "number"
+    ) {
+      return {
+        location: new Api.InputDocumentFileLocation({
+          id: doc.id as Api.InputDocumentFileLocation["id"],
+          accessHash: doc.accessHash as Api.InputDocumentFileLocation["accessHash"],
+          fileReference: doc.fileReference,
+          thumbSize: "",
+        }),
+        dcId: doc.dcId,
+      };
+    }
+  }
   return null;
 };
 
 const downloadMediaAttachment = async (
   client: TelegramClient,
   message: Api.Message,
-  type: "image" | "audio",
+  type: "image" | "audio" | "video",
   fileName: string | null,
   mimeType: string | null,
-  durationSeconds: number | null
+  durationSeconds: number | null,
+  width: number | null,
+  height: number | null
 ): Promise<SignalIngestAttachmentInput | null> => {
   if (!config.mediaPublicUrl) {
     console.warn("[messager] Media found but MESSAGER_PUBLIC_URL is empty. Skipping attachment.");
@@ -602,12 +872,23 @@ const downloadMediaAttachment = async (
   if (!media) {
     return null;
   }
-  const buffer = await client.downloadMedia(media as Api.TypeMessageMedia, {});
+  const docLocation = extractInputFileLocation(media);
+  let buffer: Buffer | string | undefined;
+  if (docLocation) {
+    buffer = await client.downloadFile(docLocation.location, {
+      dcId: docLocation.dcId,
+    });
+  } else {
+    buffer = await client.downloadMedia(media as Api.TypeMessageMedia, {});
+  }
   if (!buffer || !Buffer.isBuffer(buffer)) {
     return null;
   }
   const ext = path.extname(fileName ?? "");
-  const fallbackExt = ext || getExtensionFromMime(mimeType) || (type === "image" ? ".jpg" : ".ogg");
+  const fallbackExt =
+    ext ||
+    getExtensionFromMime(mimeType) ||
+    (type === "image" ? ".jpg" : type === "video" ? ".mp4" : ".ogg");
   const safeBaseName = fileName ? path.basename(fileName, ext) : type;
   const date = new Date();
   const dir = path.join(
@@ -623,14 +904,19 @@ const downloadMediaAttachment = async (
   await fs.writeFile(filePath, buffer);
   const relativePath = path.relative(config.mediaRoot, filePath).replace(/\\/g, "/");
   const url = buildMediaUrl(relativePath);
+  if (type === "video") {
+    const thumbnailFileName = `${safeBaseName}-${id}.jpg`;
+    const thumbnailPath = path.join(dir, thumbnailFileName);
+    await generateVideoThumbnail(filePath, thumbnailPath, width ?? 320);
+  }
   return {
     type,
     url,
     mimeType: mimeType ?? null,
     fileName: safeFileName,
     size: buffer.length,
-    width: null,
-    height: null,
+    width: width ?? null,
+    height: height ?? null,
     durationSeconds: durationSeconds ?? null,
   };
 };
@@ -647,13 +933,32 @@ const extractDocumentInfo = (doc: { mimeType?: unknown; attributes?: unknown[] }
   const imageAttr = attrs.find((attr) => (attr as { className?: string }).className === "DocumentAttributeImageSize") as
     | { w?: unknown; h?: unknown }
     | undefined;
+  const videoAttr = attrs.find((attr) => (attr as { className?: string }).className === "DocumentAttributeVideo") as
+    | { w?: unknown; h?: unknown; duration?: unknown }
+    | undefined;
+  const durationSeconds = typeof audioAttr?.duration === "number"
+    ? audioAttr.duration
+    : typeof videoAttr?.duration === "number"
+      ? videoAttr.duration
+      : null;
+  const width = typeof imageAttr?.w === "number"
+    ? imageAttr.w
+    : typeof videoAttr?.w === "number"
+      ? videoAttr.w
+      : null;
+  const height = typeof imageAttr?.h === "number"
+    ? imageAttr.h
+    : typeof videoAttr?.h === "number"
+      ? videoAttr.h
+      : null;
   return {
     mimeType,
     fileName: typeof filenameAttr?.fileName === "string" ? filenameAttr.fileName : null,
-    durationSeconds: typeof audioAttr?.duration === "number" ? audioAttr.duration : null,
+    durationSeconds,
     isVoice: Boolean(audioAttr?.voice),
-    width: typeof imageAttr?.w === "number" ? imageAttr.w : null,
-    height: typeof imageAttr?.h === "number" ? imageAttr.h : null,
+    width,
+    height,
+    isVideo: Boolean(videoAttr),
   };
 };
 
@@ -661,7 +966,7 @@ const buildMessagePayload = async (
   client: TelegramClient,
   message: Api.Message
 ): Promise<{
-  readonly type: "text" | "image" | "audio" | "link";
+  readonly type: "text" | "image" | "audio" | "link" | "video";
   readonly content: string | null;
   readonly attachments: SignalIngestAttachmentInput[];
   readonly link?: SignalIngestLinkInput;
@@ -676,7 +981,7 @@ const buildMessagePayload = async (
     return { type: "text", content: text, attachments: [] };
   }
   if (media.className === "MessageMediaPhoto") {
-    const attachment = await downloadMediaAttachment(client, message, "image", "photo.jpg", "image/jpeg", null);
+    const attachment = await downloadMediaAttachment(client, message, "image", "photo.jpg", "image/jpeg", null, null, null);
     if (attachment) {
       return { type: "image", content: text, attachments: [attachment] };
     }
@@ -687,16 +992,23 @@ const buildMessagePayload = async (
     const info = extractDocumentInfo(doc);
     const isImage = info.mimeType?.startsWith("image/") ?? false;
     const isAudio = info.mimeType?.startsWith("audio/") ?? false;
+    const isVideo = (info.mimeType?.startsWith("video/") ?? false) || info.isVideo;
     if (isImage) {
-      const attachment = await downloadMediaAttachment(client, message, "image", info.fileName, info.mimeType, null);
+      const attachment = await downloadMediaAttachment(client, message, "image", info.fileName, info.mimeType, null, info.width, info.height);
       if (attachment) {
         return { type: "image", content: text, attachments: [attachment] };
       }
     }
     if (isAudio) {
-      const attachment = await downloadMediaAttachment(client, message, "audio", info.fileName, info.mimeType, info.durationSeconds);
+      const attachment = await downloadMediaAttachment(client, message, "audio", info.fileName, info.mimeType, info.durationSeconds, null, null);
       if (attachment) {
         return { type: "audio", content: text, attachments: [attachment] };
+      }
+    }
+    if (isVideo) {
+      const attachment = await downloadMediaAttachment(client, message, "video", info.fileName, info.mimeType, info.durationSeconds, info.width, info.height);
+      if (attachment) {
+        return { type: "video", content: text, attachments: [attachment] };
       }
     }
   }
@@ -762,12 +1074,117 @@ const postSignal = async (payload: SignalIngestInput): Promise<void> => {
 };
 
 const buildChannelPayload = async (
+  client: TelegramClient,
   origin: OriginDescriptor
 ): Promise<SignalIngestChannelInput> => ({
   source: config.signalsSource,
   sourceId: origin.key,
   name: origin.name,
+  avatarUrl: await resolveChannelAvatarUrl(client, origin),
 });
+
+const postSignalEdit = async (payload: SignalEditInput): Promise<void> => {
+  const url = new URL("/api/signals/edit", config.signalsApiUrl).toString();
+  const headers: Record<string, string> = {
+    "content-type": "application/json",
+  };
+  if (config.signalsIngestKey) {
+    headers["x-signals-key"] = config.signalsIngestKey;
+  }
+  const body = JSON.stringify(payload);
+  const maxAttempts = 3;
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), config.requestTimeoutMs);
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers,
+        body,
+        signal: controller.signal,
+      });
+      if (response.ok) {
+        return;
+      }
+      const text = await response.text();
+      if (response.status === 401 || response.status === 403) {
+        console.error(`[messager] Edit unauthorized (${response.status}): ${text}`);
+        return;
+      }
+      if (response.status === 404) {
+        return;
+      }
+      if (attempt < maxAttempts) {
+        console.warn(`[messager] Edit failed (${response.status}), retrying...`);
+        await sleep(1000 * attempt);
+        continue;
+      }
+      console.error(`[messager] Edit failed (${response.status}): ${text}`);
+      return;
+    } catch (error) {
+      clearTimeout(timeout);
+      if (attempt < maxAttempts) {
+        console.warn("[messager] Edit error, retrying...", (error as Error).message);
+        await sleep(1000 * attempt);
+        continue;
+      }
+      console.error("[messager] Edit error:", (error as Error).message);
+      return;
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+};
+
+const postSignalDelete = async (payload: SignalDeleteInput): Promise<void> => {
+  const url = new URL("/api/signals/delete", config.signalsApiUrl).toString();
+  const headers: Record<string, string> = {
+    "content-type": "application/json",
+  };
+  if (config.signalsIngestKey) {
+    headers["x-signals-key"] = config.signalsIngestKey;
+  }
+  const body = JSON.stringify(payload);
+  const maxAttempts = 3;
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), config.requestTimeoutMs);
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers,
+        body,
+        signal: controller.signal,
+      });
+      if (response.ok) {
+        return;
+      }
+      const text = await response.text();
+      if (response.status === 401 || response.status === 403) {
+        console.error(`[messager] Delete unauthorized (${response.status}): ${text}`);
+        return;
+      }
+      if (attempt < maxAttempts) {
+        console.warn(`[messager] Delete failed (${response.status}), retrying...`);
+        await sleep(1000 * attempt);
+        continue;
+      }
+      console.error(`[messager] Delete failed (${response.status}): ${text}`);
+      return;
+    } catch (error) {
+      clearTimeout(timeout);
+      if (attempt < maxAttempts) {
+        console.warn("[messager] Delete error, retrying...", (error as Error).message);
+        await sleep(1000 * attempt);
+        continue;
+      }
+      console.error("[messager] Delete error:", (error as Error).message);
+      return;
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+};
 
 const buildMessageSourceId = (origin: OriginDescriptor): string => `${origin.key}:${origin.messageId}`;
 
@@ -783,16 +1200,29 @@ const ingestTelegramMessage = async (
   if (!origin) {
     return;
   }
+  const messageId = normalizeId((message as { id?: unknown }).id) ?? origin.messageId;
+  const effectiveKey = peerKey ?? origin.key;
+  const effectiveOrigin: OriginDescriptor = {
+    ...origin,
+    key: effectiveKey,
+    name: peerNameCache.get(effectiveKey) ?? origin.name,
+    messageId,
+    entity: origin.key === effectiveKey ? origin.entity ?? null : null,
+  };
   const payload = await buildMessagePayload(client, message);
   const sourceTimestamp = extractSourceTimestamp(message);
+  const replyToMsgId = extractReplyToMessageId(message);
+  const replyToSourceId = replyToMsgId ? `${effectiveOrigin.key}:${replyToMsgId}` : null;
+  const sourceId = buildMessageSourceId(effectiveOrigin);
   const ingestPayload: SignalIngestInput = {
-    channel: await buildChannelPayload(origin),
+    channel: await buildChannelPayload(client, effectiveOrigin),
     message: {
       source: config.signalsSource,
-      sourceId: buildMessageSourceId(origin),
+      sourceId,
       type: payload.type,
       content: payload.content ?? null,
       sourceTimestamp,
+      replyToSourceId,
       attachments: payload.attachments,
       link: payload.link,
     },
@@ -831,6 +1261,49 @@ const fetchRecentMessages = async (
   return results.reverse();
 };
 
+const handleEditedMessage = async (
+  client: TelegramClient,
+  message: Api.Message,
+  peerKey: PeerKey | null
+): Promise<void> => {
+  if (!shouldProcessMessage(message)) {
+    return;
+  }
+  const origin = await resolveOriginDescriptor(client, message, peerKey);
+  if (!origin) {
+    return;
+  }
+  const payload = await buildMessagePayload(client, message);
+  const sourceId = buildMessageSourceId(origin);
+  const editPayload: SignalEditInput = {
+    source: config.signalsSource,
+    sourceId,
+    content: payload.content ?? null,
+    attachments: payload.attachments,
+    link: payload.link,
+  };
+  await postSignalEdit(editPayload);
+};
+
+const handleDeletedMessages = async (
+  deletedIds: number[],
+  peerKey: PeerKey | null
+): Promise<void> => {
+  if (!deletedIds.length) {
+    return;
+  }
+  if (!peerKey) {
+    console.warn("[messager] Cannot process deleted messages without peer context");
+    return;
+  }
+  const sourceIds = deletedIds.map((id) => `${peerKey}:${id}`);
+  const deletePayload: SignalDeleteInput = {
+    source: config.signalsSource,
+    sourceIds,
+  };
+  await postSignalDelete(deletePayload);
+};
+
 const syncRecentMessages = async (
   client: TelegramClient,
   chats: ResolvedChat[],
@@ -847,7 +1320,8 @@ const syncRecentMessages = async (
     try {
       const messages = await fetchRecentMessages(client, chat.entity, lookbackHours);
       for (const message of messages) {
-        await ingestTelegramMessage(client, message, chat.key);
+        const messagePeerKey = buildPeerKeyFromPeer((message as { peerId?: unknown }).peerId) ?? chat.key;
+        await ingestTelegramMessage(client, message, messagePeerKey);
       }
       const label = chat.name ?? chat.key;
       console.log(`[messager] Synced ${messages.length} messages from ${label}`);
@@ -869,26 +1343,62 @@ const run = async (): Promise<void> => {
       autoReconnect: true,
     }
   );
-  await client.connect();
-  if (!(await client.checkAuthorization())) {
-    if (!config.interactiveAuth) {
-      console.error("[messager] Telegram session not authorized. Set TELEGRAM_SESSION_STRING or MESSAGER_INTERACTIVE=true.");
-      process.exit(1);
+  const connectWithRetry = async (): Promise<void> => {
+    const maxAttempts = 10;
+    const baseDelayMs = 5000;
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      try {
+        await client.connect();
+        if (!(await client.checkAuthorization())) {
+          if (!config.interactiveAuth) {
+            console.error("[messager] Telegram session not authorized. Set TELEGRAM_SESSION_STRING or MESSAGER_INTERACTIVE=true.");
+            process.exit(1);
+          }
+          await authenticateUser(client);
+          if (!config.telegramSession) {
+            console.log("[messager] Interactive session generated. Set TELEGRAM_SESSION_STRING and restart the service.");
+            try {
+              await client.disconnect();
+            } catch {
+            }
+            process.exit(0);
+          }
+        }
+        return;
+      } catch (error) {
+        if (!shouldRetryAuthKeyDuplicate(error)) {
+          throw error;
+        }
+        const delay = baseDelayMs * (attempt + 1);
+        console.error(`[messager] AUTH_KEY_DUPLICATED. Retrying in ${Math.round(delay / 1000)}s...`);
+        try {
+          await client.disconnect();
+        } catch {
+        }
+        await sleep(delay);
+      }
     }
-    await authenticateUser(client);
-  }
+    throw new Error("AUTH_KEY_DUPLICATED persists after retries.");
+  };
+  await connectWithRetry();
   const listenChatKeys = new Set<PeerKey>();
   const resolvedChats: ResolvedChat[] = [];
   const shouldFilterChats = config.telegramListenChats.length > 0;
   if (shouldFilterChats) {
     for (const identifier of config.telegramListenChats) {
       let fallbackKey: PeerKey | null = null;
+      let alternateKey: PeerKey | null = null;
+      let numericId: string | null = null;
       if (/^-?\d+$/.test(identifier)) {
         if (identifier.startsWith("-100")) {
-          fallbackKey = `channel:${identifier.slice(4)}`;
+          numericId = identifier.slice(4);
+          fallbackKey = `channel:${numericId}`;
         } else {
-          const numeric = identifier.replace("-", "");
-          fallbackKey = `chat:${numeric}`;
+          numericId = identifier.replace("-100", "").replace("-", "");
+          if (numericId) {
+            fallbackKey = `chat:${numericId}`;
+            alternateKey = `channel:${numericId}`;
+          }
         }
       }
       try {
@@ -905,12 +1415,18 @@ const run = async (): Promise<void> => {
         }
         if (fallbackKey) {
           listenChatKeys.add(fallbackKey);
+          if (alternateKey) {
+            listenChatKeys.add(alternateKey);
+          }
           resolvedChats.push({ key: fallbackKey, entity: identifier as unknown as GetMessagesInput });
           continue;
         }
       } catch (error) {
         if (fallbackKey) {
           listenChatKeys.add(fallbackKey);
+          if (alternateKey) {
+            listenChatKeys.add(alternateKey);
+          }
           resolvedChats.push({ key: fallbackKey, entity: identifier as unknown as GetMessagesInput });
         } else {
           console.warn(`[messager] Failed to resolve chat ${identifier}:`, (error as Error).message);
@@ -934,6 +1450,26 @@ const run = async (): Promise<void> => {
     await ingestTelegramMessage(client, message, peerKey);
   }, new NewMessage({}));
 
+  client.addEventHandler(async (event: EditedMessageEvent) => {
+    const message = (event as { message?: Api.Message }).message;
+    if (!message) return;
+    const peerKey = buildPeerKeyFromPeer((message as { peerId?: unknown }).peerId);
+    if (shouldFilterChats && (!peerKey || !listenChatKeys.has(peerKey))) {
+      return;
+    }
+    await handleEditedMessage(client, message, peerKey);
+  }, new EditedMessage({}));
+
+  client.addEventHandler(async (event: DeletedMessageEvent) => {
+    const deletedIds = (event as { deletedIds?: number[] }).deletedIds ?? [];
+    const peer = (event as { peer?: unknown }).peer;
+    const peerKey = buildPeerKeyFromPeer(peer);
+    if (shouldFilterChats && peerKey && !listenChatKeys.has(peerKey)) {
+      return;
+    }
+    await handleDeletedMessages(deletedIds, peerKey);
+  }, new DeletedMessage({}));
+
   const shutdown = async (signal: string) => {
     console.log(`[messager] Received ${signal}, shutting down...`);
     try {
@@ -949,6 +1485,11 @@ const run = async (): Promise<void> => {
 
   process.on("SIGINT", () => shutdown("SIGINT"));
   process.on("SIGTERM", () => shutdown("SIGTERM"));
+};
+
+const shouldRetryAuthKeyDuplicate = (error: unknown): boolean => {
+  const message = error instanceof Error ? error.message : String(error ?? "");
+  return message.includes("AUTH_KEY_DUPLICATED");
 };
 
 run().catch((error) => {

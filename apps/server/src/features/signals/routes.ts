@@ -2,14 +2,14 @@ import type { FastifyInstance, FastifyRequest } from "fastify";
 import path from "node:path";
 import fs from "node:fs/promises";
 import { createReadStream } from "node:fs";
-import type { SocketStream } from "@fastify/websocket";
+import type { WebSocket } from "ws";
 import { asyncHandler } from "../../utils/async-handler";
 import { env } from "../../config/env";
 import { auth } from "../auth/auth";
 import type { Session } from "../auth/auth";
-import { ingestSignalMessage, listSignalChannels, listSignalMessages } from "./service";
-import type { SignalIngestInput } from "./service";
-import { broadcastSignalMessage, registerSignalSocketClient, unregisterSignalSocketClient, updateSignalSocketClient } from "./socket";
+import { ingestSignalMessage, listSignalChannels, listSignalMessages, editSignalMessage, deleteSignalMessages } from "./service";
+import type { SignalIngestInput, SignalEditInput, SignalDeleteInput } from "./service";
+import { broadcastSignalChannelUpsert, broadcastSignalMessage, broadcastSignalMessageEdit, broadcastSignalMessageDelete, registerSignalSocketClient, unregisterSignalSocketClient, updateSignalSocketClient } from "./socket";
 
 type SignalStreamQuery = {
   readonly channelId?: string;
@@ -91,23 +91,23 @@ function parseSignalStreamMessage(raw: unknown): SignalStreamMessage | null {
   return null;
 }
 
-async function handleSignalStream(connection: SocketStream, request: FastifyRequest): Promise<void> {
+async function handleSignalStream(socket: WebSocket, request: FastifyRequest): Promise<void> {
   const session: Session | null = await getSession(request.headers as Record<string, string | string[] | undefined>);
   if (!session?.user) {
-    connection.socket.close(1008, "Unauthorized");
+    socket.close(1008, "Unauthorized");
     return;
   }
   const query: SignalStreamQuery = request.query as SignalStreamQuery;
   const channelIds: string[] = parseChannelIds(query);
-  const clientId: string = registerSignalSocketClient({ connection, channelIds });
-  connection.socket.on("message", (raw: unknown) => {
+  const clientId: string = registerSignalSocketClient({ connection: socket, channelIds });
+  socket.on("message", (raw: unknown) => {
     const message: SignalStreamMessage | null = parseSignalStreamMessage(raw);
     if (!message) {
       return;
     }
     updateSignalSocketClient({ clientId, channelId: message.channelId, action: message.type });
   });
-  connection.socket.on("close", () => {
+  socket.on("close", () => {
     unregisterSignalSocketClient({ clientId });
   });
 }
@@ -115,6 +115,7 @@ async function handleSignalStream(connection: SocketStream, request: FastifyRequ
 export function registerSignalRoutes(app: FastifyInstance) {
   app.get(
     `${SIGNALS_MEDIA_ROUTE}/*`,
+    { schema: { hide: true } },
     asyncHandler(async (request, reply) => {
       const params = request.params as { "*": string };
       const rawPath = params["*"] ?? "";
@@ -237,6 +238,72 @@ export function registerSignalRoutes(app: FastifyInstance) {
       const payload: SignalIngestInput = request.body as SignalIngestInput;
       const result = await ingestSignalMessage(payload);
       broadcastSignalMessage({ channelId: result.channel.id, message: result.message });
+      broadcastSignalChannelUpsert({ channel: result.channel });
+      return result;
+    })
+  );
+  app.post(
+    "/api/signals/edit",
+    {
+      schema: {
+        tags: ["Signals"],
+        summary: "Edit signal message",
+        body: {
+          $ref: "SignalEditRequest#",
+        },
+        response: {
+          200: {
+            $ref: "SignalEditResponse#",
+          },
+        },
+      },
+    },
+    asyncHandler(async (request, reply) => {
+      const ingestKey: string = env.SIGNALS_INGEST_KEY;
+      if (ingestKey) {
+        const headerKey: string = getHeaderValue(request.headers["x-signals-key"]);
+        if (!headerKey || headerKey !== ingestKey) {
+          return reply.status(401).send({ error: "Unauthorized" });
+        }
+      }
+      const payload: SignalEditInput = request.body as SignalEditInput;
+      const result = await editSignalMessage(payload);
+      if (!result) {
+        return reply.status(404).send({ error: "Message not found" });
+      }
+      broadcastSignalMessageEdit({ channelId: result.message.channelId, message: result.message });
+      return result;
+    })
+  );
+  app.post(
+    "/api/signals/delete",
+    {
+      schema: {
+        tags: ["Signals"],
+        summary: "Delete signal messages",
+        body: {
+          $ref: "SignalDeleteRequest#",
+        },
+        response: {
+          200: {
+            $ref: "SignalDeleteResponse#",
+          },
+        },
+      },
+    },
+    asyncHandler(async (request, reply) => {
+      const ingestKey: string = env.SIGNALS_INGEST_KEY;
+      if (ingestKey) {
+        const headerKey: string = getHeaderValue(request.headers["x-signals-key"]);
+        if (!headerKey || headerKey !== ingestKey) {
+          return reply.status(401).send({ error: "Unauthorized" });
+        }
+      }
+      const payload: SignalDeleteInput = request.body as SignalDeleteInput;
+      const result = await deleteSignalMessages(payload);
+      if (result.deletedIds.length) {
+        broadcastSignalMessageDelete({ messageIds: result.deletedIds });
+      }
       return result;
     })
   );

@@ -1,16 +1,16 @@
 import crypto from "node:crypto";
-import type { SocketStream } from "@fastify/websocket";
+import type { WebSocket } from "ws";
 import { logger } from "../../config/logger";
-import type { SignalMessage } from "./service";
+import type { SignalChannel, SignalMessage } from "./service";
 
 type SignalSocketClient = {
   readonly id: string;
-  readonly connection: SocketStream;
+  readonly connection: WebSocket;
   readonly channels: Set<string>;
 };
 
 type RegisterSignalSocketClientInput = {
-  readonly connection: SocketStream;
+  readonly connection: WebSocket;
   readonly channelIds: string[];
 };
 
@@ -27,6 +27,19 @@ type UpdateSignalSocketClientInput = {
 type BroadcastSignalMessageInput = {
   readonly channelId: string;
   readonly message: SignalMessage;
+};
+
+type BroadcastSignalMessageEditInput = {
+  readonly channelId: string;
+  readonly message: SignalMessage;
+};
+
+type BroadcastSignalMessageDeleteInput = {
+  readonly messageIds: string[];
+};
+
+type BroadcastSignalChannelUpsertInput = {
+  readonly channel: SignalChannel;
 };
 
 const clients: Map<string, SignalSocketClient> = new Map();
@@ -107,9 +120,50 @@ export function broadcastSignalMessage(input: BroadcastSignalMessageInput): void
       continue;
     }
     try {
-      client.connection.socket.send(payload);
+      client.connection.send(payload);
     } catch (error) {
       logger.warn("Signal socket broadcast failed", { error, clientId, channelId: input.channelId });
+    }
+  }
+}
+
+export function broadcastSignalMessageEdit(input: BroadcastSignalMessageEditInput): void {
+  const subscribers: Set<string> | undefined = channelSubscriptions.get(input.channelId);
+  if (!subscribers || !subscribers.size) {
+    return;
+  }
+  const payload: string = JSON.stringify({ type: "message_edit", channelId: input.channelId, message: input.message });
+  for (const clientId of subscribers) {
+    const client: SignalSocketClient | undefined = clients.get(clientId);
+    if (!client) {
+      continue;
+    }
+    try {
+      client.connection.send(payload);
+    } catch (error) {
+      logger.warn("Signal socket edit broadcast failed", { error, clientId, channelId: input.channelId });
+    }
+  }
+}
+
+export function broadcastSignalMessageDelete(input: BroadcastSignalMessageDeleteInput): void {
+  const payload: string = JSON.stringify({ type: "message_delete", messageIds: input.messageIds });
+  for (const [, client] of clients) {
+    try {
+      client.connection.send(payload);
+    } catch (error) {
+      logger.warn("Signal socket delete broadcast failed", { error, clientId: client.id });
+    }
+  }
+}
+
+export function broadcastSignalChannelUpsert(input: BroadcastSignalChannelUpsertInput): void {
+  const payload: string = JSON.stringify({ type: "channel_upsert", channel: input.channel });
+  for (const [, client] of clients) {
+    try {
+      client.connection.send(payload);
+    } catch (error) {
+      logger.warn("Signal socket channel broadcast failed", { error, clientId: client.id });
     }
   }
 }

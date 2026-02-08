@@ -83,7 +83,7 @@ export function PlanSelector({ currentTier, isActive, showOnlyUpgrades = false }
           Loading plans...
         </div>
       ) : tiers.length ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="flex flex-wrap gap-3">
           {tiers.map((tier) => {
             const isCurrent = isActive && currentTier === tier.tier
 
@@ -97,7 +97,6 @@ export function PlanSelector({ currentTier, isActive, showOnlyUpgrades = false }
                 durationDays={tier.durationDays ?? null}
                 isCurrent={isCurrent}
                 onClick={() => !isCurrent && handleOpenCheckout(tier.tier)}
-                className="w-full"
               />
             )
           })}

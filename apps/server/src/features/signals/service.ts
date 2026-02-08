@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import { db } from "../../config/db";
-import { schema, and, eq, inArray, lt, asc, desc } from "@nexxatrade/db";
+import { schema, sql, and, eq, inArray, lt, asc, desc } from "@nexxatrade/db";
 import { NotFoundError } from "../../types/errors";
 
 const { signalChannel, signalMessage, signalMessageAttachment, signalMessageLink } = schema;
@@ -12,8 +12,8 @@ type SignalMessageRow = typeof signalMessage.$inferSelect;
 type SignalAttachmentRow = typeof signalMessageAttachment.$inferSelect;
 type SignalLinkRow = typeof signalMessageLink.$inferSelect;
 
-export type SignalMessageType = "text" | "image" | "audio" | "link";
-export type SignalAttachmentType = "image" | "audio";
+export type SignalMessageType = "text" | "image" | "audio" | "link" | "video";
+export type SignalAttachmentType = "image" | "audio" | "video";
 
 export type SignalAttachment = {
   readonly id: string;
@@ -44,6 +44,12 @@ export type SignalMessagePreview = {
   readonly createdAt: string;
 };
 
+export type SignalReplyPreview = {
+  readonly id: string;
+  readonly type: SignalMessageType;
+  readonly content: string | null;
+};
+
 export type SignalMessage = {
   readonly id: string;
   readonly channelId: string;
@@ -52,6 +58,8 @@ export type SignalMessage = {
   readonly source: string | null;
   readonly sourceId: string | null;
   readonly sourceTimestamp: string | null;
+  readonly replyToId: string | null;
+  readonly replyTo?: SignalReplyPreview;
   readonly createdAt: string;
   readonly attachments: SignalAttachment[];
   readonly link?: SignalLink;
@@ -115,6 +123,7 @@ export type SignalIngestMessageInput = {
   readonly type: SignalMessageType;
   readonly content?: string | null;
   readonly sourceTimestamp?: string | null;
+  readonly replyToSourceId?: string | null;
   readonly attachments?: SignalIngestAttachmentInput[];
   readonly link?: SignalIngestLinkInput;
 };
@@ -138,6 +147,28 @@ export type SignalIngestInput = {
 export type SignalIngestResult = {
   readonly channel: SignalChannel;
   readonly message: SignalMessage;
+};
+
+export type SignalEditInput = {
+  readonly source: string;
+  readonly sourceId: string;
+  readonly content?: string | null;
+  readonly attachments?: SignalIngestAttachmentInput[];
+  readonly link?: SignalIngestLinkInput;
+};
+
+export type SignalEditResult = {
+  readonly message: SignalMessage;
+};
+
+export type SignalDeleteInput = {
+  readonly source: string;
+  readonly sourceIds: string[];
+};
+
+export type SignalDeleteResult = {
+  readonly deletedCount: number;
+  readonly deletedIds: string[];
 };
 
 const toIso = (value: Date | null): string | null => (value ? value.toISOString() : null);
@@ -174,7 +205,8 @@ const mapMessagePreviewRow = (row: SignalMessageRow): SignalMessagePreview => ({
 const mapMessageRow = (
   row: SignalMessageRow,
   attachments: SignalAttachment[],
-  link?: SignalLink
+  link?: SignalLink,
+  replyTo?: SignalReplyPreview
 ): SignalMessage => ({
   id: row.id,
   channelId: row.channelId,
@@ -183,6 +215,8 @@ const mapMessageRow = (
   source: row.source ?? null,
   sourceId: row.sourceId ?? null,
   sourceTimestamp: toIso(row.sourceTimestamp),
+  replyToId: row.replyToId ?? null,
+  replyTo,
   createdAt: row.createdAt.toISOString(),
   attachments,
   link,
@@ -228,6 +262,21 @@ type GetSignalMessageByIdInput = {
   readonly dbClient?: DbClient;
 };
 
+async function resolveReplyPreview(client: DbClient, replyToId: string | null): Promise<SignalReplyPreview | undefined> {
+  if (!replyToId) {
+    return undefined;
+  }
+  const rows: SignalMessageRow[] = await client
+    .select()
+    .from(signalMessage)
+    .where(eq(signalMessage.id, replyToId))
+    .limit(1);
+  if (!rows.length) {
+    return undefined;
+  }
+  return { id: rows[0].id, type: rows[0].type as SignalMessageType, content: rows[0].content ?? null };
+}
+
 async function getSignalMessageById(input: GetSignalMessageByIdInput): Promise<SignalMessage | null> {
   const client: DbClient = input.dbClient ?? db;
   const messageRows: SignalMessageRow[] = await client
@@ -250,7 +299,8 @@ async function getSignalMessageById(input: GetSignalMessageByIdInput): Promise<S
     .orderBy(asc(signalMessageLink.createdAt));
   const attachments: SignalAttachment[] = attachmentRows.map(mapAttachmentRow);
   const link: SignalLink | undefined = linkRows.length ? mapLinkRow(linkRows[0]) : undefined;
-  return mapMessageRow(messageRows[0], attachments, link);
+  const replyTo: SignalReplyPreview | undefined = await resolveReplyPreview(client, messageRows[0].replyToId);
+  return mapMessageRow(messageRows[0], attachments, link, replyTo);
 }
 
 type UpdateSignalChannelInput = {
@@ -406,8 +456,22 @@ export async function listSignalMessages(input: ListSignalMessagesInput): Promis
   for (const row of linkRows) {
     linkByMessage.set(row.messageId, mapLinkRow(row));
   }
+  const replyToIds: string[] = slicedRows
+    .map((row) => row.replyToId)
+    .filter((id): id is string => Boolean(id));
+  const replyByMessage: Map<string, SignalReplyPreview> = new Map();
+  if (replyToIds.length) {
+    const uniqueReplyIds: string[] = [...new Set(replyToIds)];
+    const replyRows: SignalMessageRow[] = await db
+      .select()
+      .from(signalMessage)
+      .where(inArray(signalMessage.id, uniqueReplyIds));
+    for (const row of replyRows) {
+      replyByMessage.set(row.id, { id: row.id, type: row.type as SignalMessageType, content: row.content ?? null });
+    }
+  }
   const items: SignalMessage[] = slicedRows
-    .map((row) => mapMessageRow(row, attachmentsByMessage.get(row.id) ?? [], linkByMessage.get(row.id)))
+    .map((row) => mapMessageRow(row, attachmentsByMessage.get(row.id) ?? [], linkByMessage.get(row.id), row.replyToId ? replyByMessage.get(row.replyToId) : undefined))
     .reverse();
   const lastRow: SignalMessageRow | undefined = slicedRows[slicedRows.length - 1];
   const nextCursor: string | null = hasMore && lastRow ? lastRow.createdAt.toISOString() : null;
@@ -427,17 +491,45 @@ export async function ingestSignalMessage(input: SignalIngestInput): Promise<Sig
         .where(and(eq(signalMessage.source, source), eq(signalMessage.sourceId, sourceId)))
         .limit(1);
       if (existingRows.length) {
-        const existingMessage: SignalMessage | null = await getSignalMessageById({ messageId: existingRows[0].id, dbClient: tx });
+        const existingId = existingRows[0].id;
+        let existingMessage: SignalMessage | null = await getSignalMessageById({ messageId: existingId, dbClient: tx });
         if (!existingMessage) {
-          throw new NotFoundError("Signal message", existingRows[0].id);
+          throw new NotFoundError("Signal message", existingId);
+        }
+        const replyToSourceId: string | null = input.message.replyToSourceId ?? null;
+        if (replyToSourceId && source) {
+          const replyRows: SignalMessageRow[] = await tx
+            .select()
+            .from(signalMessage)
+            .where(and(eq(signalMessage.source, source), eq(signalMessage.sourceId, replyToSourceId)))
+            .limit(1);
+          if (replyRows.length) {
+            const replyToId = replyRows[0]?.id ?? null;
+            if (replyToId && (!existingMessage.replyToId || existingMessage.replyToId !== replyToId)) {
+              await tx.execute(sql`update signal_message set reply_to_id = ${replyToId} where id = ${existingId}`);
+              existingMessage = await getSignalMessageById({ messageId: existingId, dbClient: tx });
+            }
+          }
         }
         const preview: SignalMessagePreview = mapMessagePreviewRow(existingRows[0]);
-        return { channel: mapChannelRow(channelRow, preview), message: existingMessage };
+        return { channel: mapChannelRow(channelRow, preview), message: existingMessage ?? existingRows[0] as unknown as SignalMessage };
       }
     }
     const sourceTimestamp: Date | null = input.message.sourceTimestamp ? new Date(input.message.sourceTimestamp) : null;
     const safeSourceTimestamp: Date | null = sourceTimestamp && Number.isNaN(sourceTimestamp.getTime()) ? null : sourceTimestamp;
     const createdAt: Date = safeSourceTimestamp ?? new Date();
+    let replyToId: string | null = null;
+    const replyToSourceId: string | null = input.message.replyToSourceId ?? null;
+    if (replyToSourceId && source) {
+      const replyRows: SignalMessageRow[] = await tx
+        .select()
+        .from(signalMessage)
+        .where(and(eq(signalMessage.source, source), eq(signalMessage.sourceId, replyToSourceId)))
+        .limit(1);
+      if (replyRows.length) {
+        replyToId = replyRows[0].id;
+      }
+    }
     const messageId: string = crypto.randomUUID();
     await tx.insert(signalMessage).values({
       id: messageId,
@@ -447,23 +539,34 @@ export async function ingestSignalMessage(input: SignalIngestInput): Promise<Sig
       source,
       sourceId,
       sourceTimestamp: safeSourceTimestamp,
+      replyToId,
       createdAt,
     });
     const attachmentsInput: SignalIngestAttachmentInput[] = input.message.attachments ?? [];
     const attachments: SignalAttachment[] = [];
+    const normalizeInteger = (value: number | null | undefined): number | null => {
+      if (typeof value !== "number" || !Number.isFinite(value)) {
+        return null;
+      }
+      return Math.round(value);
+    };
     if (attachmentsInput.length) {
       const attachmentValues: Array<typeof signalMessageAttachment.$inferInsert> = attachmentsInput.map((attachment) => {
         const attachmentId: string = crypto.randomUUID();
+        const size = normalizeInteger(attachment.size);
+        const width = normalizeInteger(attachment.width);
+        const height = normalizeInteger(attachment.height);
+        const durationSeconds = normalizeInteger(attachment.durationSeconds);
         attachments.push({
           id: attachmentId,
           type: attachment.type,
           url: attachment.url,
           mimeType: attachment.mimeType ?? null,
           fileName: attachment.fileName ?? null,
-          size: attachment.size ?? null,
-          width: attachment.width ?? null,
-          height: attachment.height ?? null,
-          durationSeconds: attachment.durationSeconds ?? null,
+          size,
+          width,
+          height,
+          durationSeconds,
         });
         return {
           id: attachmentId,
@@ -472,10 +575,10 @@ export async function ingestSignalMessage(input: SignalIngestInput): Promise<Sig
           url: attachment.url,
           mimeType: attachment.mimeType ?? null,
           fileName: attachment.fileName ?? null,
-          size: attachment.size ?? null,
-          width: attachment.width ?? null,
-          height: attachment.height ?? null,
-          durationSeconds: attachment.durationSeconds ?? null,
+          size,
+          width,
+          height,
+          durationSeconds,
           createdAt: new Date(),
         };
       });
@@ -503,6 +606,7 @@ export async function ingestSignalMessage(input: SignalIngestInput): Promise<Sig
         createdAt: new Date(),
       });
     }
+    const replyTo: SignalReplyPreview | undefined = await resolveReplyPreview(tx, replyToId);
     const message: SignalMessage = {
       id: messageId,
       channelId: channelRow.id,
@@ -511,6 +615,8 @@ export async function ingestSignalMessage(input: SignalIngestInput): Promise<Sig
       source,
       sourceId,
       sourceTimestamp: toIso(safeSourceTimestamp),
+      replyToId,
+      replyTo,
       createdAt: createdAt.toISOString(),
       attachments,
       link,
@@ -523,5 +629,89 @@ export async function ingestSignalMessage(input: SignalIngestInput): Promise<Sig
       createdAt: createdAt.toISOString(),
     };
     return { channel: mapChannelRow(channelRow, preview), message };
+  });
+}
+
+export async function editSignalMessage(input: SignalEditInput): Promise<SignalEditResult | null> {
+  return db.transaction(async (tx: DbClient): Promise<SignalEditResult | null> => {
+    const existingRows: SignalMessageRow[] = await tx
+      .select()
+      .from(signalMessage)
+      .where(and(eq(signalMessage.source, input.source), eq(signalMessage.sourceId, input.sourceId)))
+      .limit(1);
+    if (!existingRows.length) {
+      return null;
+    }
+    const messageRow = existingRows[0];
+    const messageId = messageRow.id;
+    const hasContentChange = input.content !== undefined;
+    const hasAttachmentChange = input.attachments !== undefined;
+    const hasLinkChange = input.link !== undefined;
+    if (hasContentChange) {
+      await tx
+        .update(signalMessage)
+        .set({ content: input.content ?? null })
+        .where(eq(signalMessage.id, messageId));
+    }
+    if (hasAttachmentChange) {
+      await tx.delete(signalMessageAttachment).where(eq(signalMessageAttachment.messageId, messageId));
+      const attachmentsInput: SignalIngestAttachmentInput[] = input.attachments ?? [];
+      if (attachmentsInput.length) {
+        const attachmentValues: Array<typeof signalMessageAttachment.$inferInsert> = attachmentsInput.map((attachment) => ({
+          id: crypto.randomUUID(),
+          messageId,
+          type: attachment.type,
+          url: attachment.url,
+          mimeType: attachment.mimeType ?? null,
+          fileName: attachment.fileName ?? null,
+          size: attachment.size ?? null,
+          width: attachment.width ?? null,
+          height: attachment.height ?? null,
+          durationSeconds: attachment.durationSeconds ?? null,
+          createdAt: new Date(),
+        }));
+        await tx.insert(signalMessageAttachment).values(attachmentValues);
+      }
+    }
+    if (hasLinkChange) {
+      await tx.delete(signalMessageLink).where(eq(signalMessageLink.messageId, messageId));
+      if (input.link) {
+        await tx.insert(signalMessageLink).values({
+          id: crypto.randomUUID(),
+          messageId,
+          url: input.link.url,
+          title: input.link.title ?? null,
+          description: input.link.description ?? null,
+          imageUrl: input.link.imageUrl ?? null,
+          siteName: input.link.siteName ?? null,
+          createdAt: new Date(),
+        });
+      }
+    }
+    const message = await getSignalMessageById({ messageId, dbClient: tx });
+    if (!message) {
+      return null;
+    }
+    return { message };
+  });
+}
+
+export async function deleteSignalMessages(input: SignalDeleteInput): Promise<SignalDeleteResult> {
+  return db.transaction(async (tx: DbClient): Promise<SignalDeleteResult> => {
+    if (!input.sourceIds.length) {
+      return { deletedCount: 0, deletedIds: [] };
+    }
+    const existingRows: SignalMessageRow[] = await tx
+      .select()
+      .from(signalMessage)
+      .where(and(eq(signalMessage.source, input.source), inArray(signalMessage.sourceId, input.sourceIds)));
+    if (!existingRows.length) {
+      return { deletedCount: 0, deletedIds: [] };
+    }
+    const messageIds = existingRows.map((row) => row.id);
+    await tx.delete(signalMessageAttachment).where(inArray(signalMessageAttachment.messageId, messageIds));
+    await tx.delete(signalMessageLink).where(inArray(signalMessageLink.messageId, messageIds));
+    await tx.delete(signalMessage).where(inArray(signalMessage.id, messageIds));
+    return { deletedCount: messageIds.length, deletedIds: messageIds };
   });
 }

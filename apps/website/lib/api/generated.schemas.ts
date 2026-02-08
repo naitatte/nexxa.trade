@@ -238,6 +238,7 @@ export const Def20 = {
   image: 'image',
   audio: 'audio',
   link: 'link',
+  video: 'video',
 } as const;
 
 export type Def21 = typeof Def21[keyof typeof Def21];
@@ -247,6 +248,7 @@ export type Def21 = typeof Def21[keyof typeof Def21];
 export const Def21 = {
   image: 'image',
   audio: 'audio',
+  video: 'video',
 } as const;
 
 export interface Def22 {
@@ -291,6 +293,13 @@ export interface Def24 {
 
 export interface Def25 {
   id: string;
+  type: Def20;
+  /** @nullable */
+  content?: string | null;
+}
+
+export interface Def26 {
+  id: string;
   channelId: string;
   type: Def20;
   /** @nullable */
@@ -301,12 +310,15 @@ export interface Def25 {
   sourceId?: string | null;
   /** @nullable */
   sourceTimestamp?: string | null;
+  /** @nullable */
+  replyToId?: string | null;
+  replyTo?: Def25;
   createdAt: string;
   attachments: Def22[];
   link?: Def23;
 }
 
-export interface Def26 {
+export interface Def27 {
   id: string;
   name: string;
   /** @nullable */
@@ -324,17 +336,17 @@ export interface Def26 {
   lastMessage?: Def24;
 }
 
-export interface Def27 {
-  channels: Def26[];
+export interface Def28 {
+  channels: Def27[];
 }
 
-export interface Def28 {
-  items: Def25[];
+export interface Def29 {
+  items: Def26[];
   /** @nullable */
   nextCursor?: string | null;
 }
 
-export interface Def29 {
+export interface Def30 {
   type: Def21;
   url: string;
   /** @nullable */
@@ -351,7 +363,7 @@ export interface Def29 {
   durationSeconds?: number | null;
 }
 
-export interface Def30 {
+export interface Def31 {
   url: string;
   /** @nullable */
   title?: string | null;
@@ -363,7 +375,7 @@ export interface Def30 {
   siteName?: string | null;
 }
 
-export interface Def31 {
+export interface Def32 {
   /** @nullable */
   source?: string | null;
   /** @nullable */
@@ -373,11 +385,13 @@ export interface Def31 {
   content?: string | null;
   /** @nullable */
   sourceTimestamp?: string | null;
-  attachments?: Def29[];
-  link?: Def30;
+  /** @nullable */
+  replyToSourceId?: string | null;
+  attachments?: Def30[];
+  link?: Def31;
 }
 
-export interface Def32 {
+export interface Def33 {
   /** @nullable */
   source?: string | null;
   /** @nullable */
@@ -394,16 +408,39 @@ export interface Def32 {
   sortOrder?: number | null;
 }
 
-export interface Def33 {
+export interface Def34 {
   /** @nullable */
   channelId?: string | null;
-  channel?: Def32;
-  message: Def31;
+  channel?: Def33;
+  message: Def32;
 }
 
-export interface Def34 {
-  channel: Def26;
-  message: Def25;
+export interface Def35 {
+  channel: Def27;
+  message: Def26;
+}
+
+export interface Def36 {
+  source: string;
+  sourceId: string;
+  /** @nullable */
+  content?: string | null;
+  attachments?: Def30[];
+  link?: Def31;
+}
+
+export interface Def37 {
+  message: Def26;
+}
+
+export interface Def38 {
+  source: string;
+  sourceIds: string[];
+}
+
+export interface Def39 {
+  deletedCount: number;
+  deletedIds: string[];
 }
 
 export type UserRole = typeof UserRole[keyof typeof UserRole];

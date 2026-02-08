@@ -300,11 +300,12 @@ export const signalMessage = pgTable(
     channelId: text("channel_id")
       .notNull()
       .references(() => signalChannel.id, { onDelete: "cascade" }),
-    type: text("type", { enum: ["text", "image", "audio", "link"] }).notNull(),
+    type: text("type", { enum: ["text", "image", "audio", "link", "video"] }).notNull(),
     content: text("content"),
     source: text("source"),
     sourceId: text("source_id"),
     sourceTimestamp: timestamp("source_timestamp"),
+    replyToId: text("reply_to_id"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [
@@ -321,7 +322,7 @@ export const signalMessageAttachment = pgTable(
     messageId: text("message_id")
       .notNull()
       .references(() => signalMessage.id, { onDelete: "cascade" }),
-    type: text("type", { enum: ["image", "audio"] }).notNull(),
+    type: text("type", { enum: ["image", "audio", "video"] }).notNull(),
     url: text("url").notNull(),
     mimeType: text("mime_type"),
     fileName: text("file_name"),

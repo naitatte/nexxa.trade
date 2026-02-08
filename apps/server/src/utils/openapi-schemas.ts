@@ -3,8 +3,8 @@ import type { OpenAPIV3 } from "openapi-types";
 const userRoleEnum = ["admin", "guest", "subscriber", "networker"] as const;
 const membershipStatusEnum = ["active", "inactive", "deleted"] as const;
 const membershipPaymentStatusEnum = ["pending", "confirmed", "failed"] as const;
-const signalMessageTypeEnum = ["text", "image", "audio", "link"] as const;
-const signalAttachmentTypeEnum = ["image", "audio"] as const;
+const signalMessageTypeEnum = ["text", "image", "audio", "link", "video"] as const;
+const signalAttachmentTypeEnum = ["image", "audio", "video"] as const;
 
 const dateTimeSchema: OpenAPIV3.SchemaObject = {
   type: "string",
@@ -335,6 +335,15 @@ export const openApiSchemas: Record<string, OpenAPIV3.SchemaObject> = {
       createdAt: dateTimeSchema,
     },
   },
+  SignalReplyPreview: {
+    type: "object",
+    required: ["id", "type"],
+    properties: {
+      id: { type: "string" },
+      type: { $ref: "SignalMessageType#" },
+      content: { type: "string", nullable: true },
+    },
+  },
   SignalMessage: {
     type: "object",
     required: ["id", "channelId", "type", "attachments", "createdAt"],
@@ -346,6 +355,8 @@ export const openApiSchemas: Record<string, OpenAPIV3.SchemaObject> = {
       source: { type: "string", nullable: true },
       sourceId: { type: "string", nullable: true },
       sourceTimestamp: nullableDateTimeSchema,
+      replyToId: { type: "string", nullable: true },
+      replyTo: { $ref: "SignalReplyPreview#" },
       createdAt: dateTimeSchema,
       attachments: {
         type: "array",
@@ -437,6 +448,7 @@ export const openApiSchemas: Record<string, OpenAPIV3.SchemaObject> = {
       type: { $ref: "SignalMessageType#" },
       content: { type: "string", nullable: true },
       sourceTimestamp: nullableDateTimeSchema,
+      replyToSourceId: { type: "string", nullable: true },
       attachments: {
         type: "array",
         items: { $ref: "SignalIngestAttachment#" },
@@ -473,6 +485,49 @@ export const openApiSchemas: Record<string, OpenAPIV3.SchemaObject> = {
     properties: {
       channel: { $ref: "SignalChannel#" },
       message: { $ref: "SignalMessage#" },
+    },
+  },
+  SignalEditRequest: {
+    type: "object",
+    required: ["source", "sourceId"],
+    properties: {
+      source: { type: "string" },
+      sourceId: { type: "string" },
+      content: { type: "string", nullable: true },
+      attachments: {
+        type: "array",
+        items: { $ref: "SignalIngestAttachment#" },
+      },
+      link: { $ref: "SignalIngestLink#" },
+    },
+  },
+  SignalEditResponse: {
+    type: "object",
+    required: ["message"],
+    properties: {
+      message: { $ref: "SignalMessage#" },
+    },
+  },
+  SignalDeleteRequest: {
+    type: "object",
+    required: ["source", "sourceIds"],
+    properties: {
+      source: { type: "string" },
+      sourceIds: {
+        type: "array",
+        items: { type: "string" },
+      },
+    },
+  },
+  SignalDeleteResponse: {
+    type: "object",
+    required: ["deletedCount", "deletedIds"],
+    properties: {
+      deletedCount: { type: "number" },
+      deletedIds: {
+        type: "array",
+        items: { type: "string" },
+      },
     },
   },
 };

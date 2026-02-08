@@ -25,10 +25,14 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  Def27,
   Def28,
-  Def33,
+  Def29,
   Def34,
+  Def35,
+  Def36,
+  Def37,
+  Def38,
+  Def39,
   GetApiSignalsChannelsChannelIdMessagesParams
 } from '../generated.schemas';
 
@@ -48,7 +52,7 @@ export const getApiSignalsChannels = (
 ) => {
       
       
-      return customInstance<Def27>(
+      return customInstance<Def28>(
       {url: `/api/signals/channels`, method: 'GET', signal
     },
       options);
@@ -141,7 +145,7 @@ export const getApiSignalsChannelsChannelIdMessages = (
 ) => {
       
       
-      return customInstance<Def28>(
+      return customInstance<Def29>(
       {url: `/api/signals/channels/${channelId}/messages`, method: 'GET',
         params, signal
     },
@@ -235,15 +239,15 @@ export function useGetApiSignalsChannelsChannelIdMessages<TData = Awaited<Return
  * @summary Ingest signal message
  */
 export const postApiSignalsIngest = (
-    def33: Def33,
+    def34: Def34,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
       
       
-      return customInstance<Def34>(
+      return customInstance<Def35>(
       {url: `/api/signals/ingest`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
-      data: def33, signal
+      data: def34, signal
     },
       options);
     }
@@ -251,8 +255,8 @@ export const postApiSignalsIngest = (
 
 
 export const getPostApiSignalsIngestMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiSignalsIngest>>, TError,{data: Def33}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof postApiSignalsIngest>>, TError,{data: Def33}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiSignalsIngest>>, TError,{data: Def34}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiSignalsIngest>>, TError,{data: Def34}, TContext> => {
 
 const mutationKey = ['postApiSignalsIngest'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -264,7 +268,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiSignalsIngest>>, {data: Def33}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiSignalsIngest>>, {data: Def34}> = (props) => {
           const {data} = props ?? {};
 
           return  postApiSignalsIngest(data,requestOptions)
@@ -276,22 +280,150 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type PostApiSignalsIngestMutationResult = NonNullable<Awaited<ReturnType<typeof postApiSignalsIngest>>>
-    export type PostApiSignalsIngestMutationBody = Def33
+    export type PostApiSignalsIngestMutationBody = Def34
     export type PostApiSignalsIngestMutationError = unknown
 
     /**
  * @summary Ingest signal message
  */
 export const usePostApiSignalsIngest = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiSignalsIngest>>, TError,{data: Def33}, TContext>, request?: SecondParameter<typeof customInstance>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiSignalsIngest>>, TError,{data: Def34}, TContext>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof postApiSignalsIngest>>,
         TError,
-        {data: Def33},
+        {data: Def34},
         TContext
       > => {
 
       const mutationOptions = getPostApiSignalsIngestMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary Edit signal message
+ */
+export const postApiSignalsEdit = (
+    def36: Def36,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<Def37>(
+      {url: `/api/signals/edit`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: def36, signal
+    },
+      options);
+    }
+  
+
+
+export const getPostApiSignalsEditMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiSignalsEdit>>, TError,{data: Def36}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiSignalsEdit>>, TError,{data: Def36}, TContext> => {
+
+const mutationKey = ['postApiSignalsEdit'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiSignalsEdit>>, {data: Def36}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postApiSignalsEdit(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiSignalsEditMutationResult = NonNullable<Awaited<ReturnType<typeof postApiSignalsEdit>>>
+    export type PostApiSignalsEditMutationBody = Def36
+    export type PostApiSignalsEditMutationError = unknown
+
+    /**
+ * @summary Edit signal message
+ */
+export const usePostApiSignalsEdit = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiSignalsEdit>>, TError,{data: Def36}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiSignalsEdit>>,
+        TError,
+        {data: Def36},
+        TContext
+      > => {
+
+      const mutationOptions = getPostApiSignalsEditMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary Delete signal messages
+ */
+export const postApiSignalsDelete = (
+    def38: Def38,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<Def39>(
+      {url: `/api/signals/delete`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: def38, signal
+    },
+      options);
+    }
+  
+
+
+export const getPostApiSignalsDeleteMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiSignalsDelete>>, TError,{data: Def38}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiSignalsDelete>>, TError,{data: Def38}, TContext> => {
+
+const mutationKey = ['postApiSignalsDelete'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiSignalsDelete>>, {data: Def38}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postApiSignalsDelete(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiSignalsDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof postApiSignalsDelete>>>
+    export type PostApiSignalsDeleteMutationBody = Def38
+    export type PostApiSignalsDeleteMutationError = unknown
+
+    /**
+ * @summary Delete signal messages
+ */
+export const usePostApiSignalsDelete = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiSignalsDelete>>, TError,{data: Def38}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiSignalsDelete>>,
+        TError,
+        {data: Def38},
+        TContext
+      > => {
+
+      const mutationOptions = getPostApiSignalsDeleteMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

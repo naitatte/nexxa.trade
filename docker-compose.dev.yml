@@ -1,5 +1,17 @@
 services:
   server:
+    image: node:20-alpine
+    working_dir: /app
+    depends_on:
+      - postgres
+      - redis
+      - reserve
+    env_file:
+      - ./apps/server/.env
+    volumes:
+      - ./:/app
+      - /app/node_modules
+      - messager_media:/data/messager
     ports:
       - "4000:4000"
     environment:
@@ -15,6 +27,15 @@ services:
       && PORT=4000 pnpm --filter server exec tsx watch src/server.ts"
 
   website:
+    image: node:20-alpine
+    working_dir: /app
+    depends_on:
+      - server
+    env_file:
+      - ./apps/website/.env
+    volumes:
+      - ./:/app
+      - /app/node_modules
     ports:
       - "3001:3001"
     environment:
@@ -29,6 +50,17 @@ services:
       && pnpm --filter website --dir apps/website exec next dev --webpack -H 0.0.0.0 -p 3001"
 
   scheduler:
+    image: node:20-alpine
+    working_dir: /app
+    depends_on:
+      - postgres
+      - redis
+      - reserve
+    env_file:
+      - ./apps/server/.env.scheduler
+    volumes:
+      - ./:/app
+      - /app/node_modules
     environment:
       - DATABASE_URL=postgres://user:password@postgres:5432/nexxatrade
       - REDIS_URL=redis://redis:6379
@@ -39,6 +71,17 @@ services:
       && pnpm --filter server exec tsx watch src/worker.ts"
 
   reserve:
+    image: node:20-alpine
+    working_dir: /app
+    depends_on:
+      - postgres
+    env_file:
+      - ./packages/reserve/.env.reserve
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    ports:
+      - "4100:4100"
     environment:
       - RESERVE_PORT=4100
     command: >
@@ -47,11 +90,42 @@ services:
       && pnpm --filter @nexxatrade/reserve exec tsx watch src/server.ts"
 
   messager:
+    image: node:20-alpine
+    working_dir: /app
+    depends_on:
+      - server
+    env_file:
+      - ./packages/messager/.env.messager
+    volumes:
+      - ./:/app
+      - /app/node_modules
+      - messager_media:/data
     ports:
       - "4201:4201"
     environment:
       - SIGNALS_API_URL=http://server:4000
+    entrypoint: /app/packages/messager/entrypoint.sh
     command: >
       sh -c "corepack enable
       && pnpm install --frozen-lockfile
       && pnpm --filter @nexxatrade/messager exec tsx watch src/relay.ts"
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: nexxatrade
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:
+  messager_media:
