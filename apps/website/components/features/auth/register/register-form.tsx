@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { useRouter } from "next/navigation"
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -44,6 +44,19 @@ const registerSchema = z.object({
   confirmEmail: z.string(),
   password: z.string().min(8, "Password must be at least 8 characters"),
   confirmPassword: z.string(),
+  refCode: z
+    .string()
+    .optional()
+    .refine(
+      (val) => {
+        if (!val || val.trim() === "") return true
+        const trimmed = val.trim()
+        return trimmed.length >= 3 && trimmed.length <= 30 && usernamePattern.test(trimmed)
+      },
+      {
+        message: "Referral code must be at least 3 characters, 30 characters or less, and can only use letters, numbers, underscores, and dots",
+      }
+    ),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -56,14 +69,16 @@ type RegisterFormData = z.infer<typeof registerSchema>
 
 export function RegisterForm({
   className,
+  defaultRefCode,
   ...props
-}: React.ComponentProps<"div">) {
+}: React.ComponentProps<"div"> & { defaultRefCode?: string }) {
   const router = useRouter()
   const { setError: setErrorState } = useErrorState({ showToast: false })
   const { state: loadingState, setLoading, setIdle, setSuccess } = useLoadingState()
   const [usernameAvailability, setUsernameAvailability] = useState<"checking" | "available" | "unavailable" | null>(null)
   const [debounceTimeout, setDebounceTimeout] = useState<NodeJS.Timeout | null>(null)
   const [lastCheckedUsername, setLastCheckedUsername] = useState("")
+  const hasInitializedRefCode = useRef(false)
 
   const {
     register,
@@ -71,13 +86,29 @@ export function RegisterForm({
     formState: { errors },
     setError,
     clearErrors,
+    setValue,
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
+    defaultValues: {
+      refCode: defaultRefCode ?? "",
+    },
   })
 
-  const handleUsernameCheckSuccess = useCallback(() => {
-    setUsernameAvailability("available")
-    clearErrors("username")
+  useEffect(() => {
+    if (defaultRefCode && !hasInitializedRefCode.current) {
+      setValue("refCode", defaultRefCode)
+      hasInitializedRefCode.current = true
+    }
+  }, [defaultRefCode, setValue])
+
+  const handleUsernameCheckSuccess = useCallback((data: unknown) => {
+    const result = data as { available?: boolean }
+    if (result?.available === false) {
+      setUsernameAvailability("unavailable")
+    } else {
+      setUsernameAvailability("available")
+      clearErrors("username")
+    }
   }, [clearErrors])
 
   const handleUsernameCheckError = useCallback((error: unknown) => {
@@ -103,7 +134,7 @@ export function RegisterForm({
   })
 
   const handleUsernameChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const nextValue = event.target.value
+    const nextValue = event.target.value.trim()
     if (debounceTimeout) {
       clearTimeout(debounceTimeout)
     }
@@ -154,17 +185,13 @@ export function RegisterForm({
         const errorCode = extractErrorCode(error)
         
         const errorObj = error instanceof Error ? error : new Error(String(error))
-        setErrorState(errorObj, translation.message, errorCode || undefined, false)
+        setErrorState(errorObj, translation.message, errorCode || undefined, true)
       },
     },
   })
 
   const onSubmit = async (data: RegisterFormData) => {
     if (usernameAvailability !== "available") {
-      setError("username", {
-        type: "manual",
-        message: "Please ensure the username is available before submitting",
-      })
       return
     }
 
@@ -174,6 +201,7 @@ export function RegisterForm({
         password: data.password,
         name: data.name,
         username: data.username,
+        refCode: data.refCode && data.refCode.trim() !== "" ? data.refCode.trim() : undefined,
       },
     })
   }
@@ -334,6 +362,18 @@ export function RegisterForm({
                   <FieldError errors={errors.confirmPassword ? [{ message: errors.confirmPassword.message }] : undefined} />
                 </Field>
               </div>
+              <Field>
+                <FieldLabel htmlFor="refCode">Referral code</FieldLabel>
+                <Input
+                  id="refCode"
+                  type="text"
+                  placeholder="Enter sponsor's username"
+                  {...register("refCode")}
+                  aria-invalid={!!errors.refCode}
+                  disabled={!!defaultRefCode}
+                />
+                <FieldError errors={errors.refCode ? [{ message: errors.refCode.message }] : undefined} />
+              </Field>
               <Field>
                 <Button type="submit" disabled={signUpMutation.isPending || loadingState === "loading"}>
                   {(signUpMutation.isPending || loadingState === "loading") && <LoadingSpinner size="sm" />}

@@ -22,7 +22,7 @@ function formatAmount(priceUsdCents?: number | null, durationDays?: number | nul
   if (priceUsdCents === null || priceUsdCents === undefined) {
     return "N/A"
   }
-  const price = `$${(priceUsdCents / 100).toFixed(2)}`
+  const price = `${(priceUsdCents / 100).toFixed(2)} USDT`
   if (durationDays === null || durationDays === undefined || durationDays >= 3650) {
     return `${price} one-time`
   }
@@ -67,7 +67,7 @@ export function MembershipInfo({
         </div>
 
         <div className="space-y-1">
-          <p className="text-muted-foreground text-xs font-medium uppercase tracking-wider">Amount</p>
+          <p className="text-muted-foreground text-xs font-medium uppercase tracking-wider">Amount (USDT)</p>
           <p className="font-medium">{formatAmount(priceUsdCents, durationDays)}</p>
         </div>
       </div>

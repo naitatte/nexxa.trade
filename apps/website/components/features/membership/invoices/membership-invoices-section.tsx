@@ -35,7 +35,7 @@ const formatDate = (value: string | null | undefined) => {
   }).format(date)
 }
 
-const formatUsd = (cents: number) => `$${(cents / 100).toFixed(2)}`
+const formatUsd = (cents: number) => `${(cents / 100).toFixed(2)} USDT`
 
 const statusLabel = (status: string) => {
   if (status === "failed") return "Expired"

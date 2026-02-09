@@ -127,11 +127,6 @@ function buildNavGroups(
         },
       ],
     })
-    businessItems.push({
-      title: "Withdrawals",
-      url: "/withdrawals",
-      icon: iconMap.withdrawals,
-    })
     adminItems.push({
       title: "Signals manager",
       url: "/signals",
@@ -146,23 +141,11 @@ function buildNavGroups(
         isDisabled: menuConfig.network.isDisabled,
       })
     }
-    if (menuConfig.withdrawals) {
-      adminItems.push({
-        title: menuConfig.withdrawals.title,
-        url: menuConfig.withdrawals.url,
-        icon: iconMap.withdrawals,
-        isActive: menuConfig.withdrawals.isActive,
-        isDisabled: menuConfig.withdrawals.isDisabled,
-      })
-    }
   } else {
     addItem("signals", "signals", tradingItems)
     if (role === "networker" || role === "subscriber") {
       if (menuConfig.network) {
         addItem("network", "network", businessItems)
-      }
-      if (menuConfig.withdrawals) {
-        addItem("withdrawals", "withdrawals", businessItems)
       }
     }
   }
@@ -203,6 +186,21 @@ function buildMembershipItem(
     icon: iconMap.membership,
     isActive: membership.isActive,
     isDisabled: membership.isDisabled,
+  }
+}
+
+function buildWalletItem(
+  menuConfig: MenuConfig
+): DashboardItem | null {
+  const withdrawals = menuConfig.withdrawals
+  if (!withdrawals) return null
+
+  return {
+    title: withdrawals.title,
+    url: withdrawals.url,
+    icon: iconMap.withdrawals,
+    isActive: withdrawals.isActive,
+    isDisabled: withdrawals.isDisabled,
   }
 }
 
@@ -249,6 +247,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const navGroups = buildNavGroups(permissions.menuConfig, permissions.role)
   const dashboardItem = buildDashboardItem(permissions.menuConfig)
   const membershipItem = buildMembershipItem(permissions.menuConfig)
+  const walletItem = buildWalletItem(permissions.menuConfig)
 
   return (
     <Sidebar variant="inset" {...props}>
@@ -296,21 +295,36 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain groups={navGroups} />
       </SidebarContent>
       <SidebarFooter>
-        {membershipItem && (
+        {(membershipItem || walletItem) && (
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton 
-                    asChild 
-                    tooltip={membershipItem.title}
-                  >
-                    <Link href={membershipItem.url}>
-                      <membershipItem.icon />
-                      <span>{membershipItem.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                {membershipItem && (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton 
+                      asChild 
+                      tooltip={membershipItem.title}
+                    >
+                      <Link href={membershipItem.url}>
+                        <membershipItem.icon />
+                        <span>{membershipItem.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )}
+                {walletItem && (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton 
+                      asChild 
+                      tooltip={walletItem.title}
+                    >
+                      <Link href={walletItem.url}>
+                        <walletItem.icon />
+                        <span>{walletItem.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

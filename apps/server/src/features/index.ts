@@ -5,6 +5,7 @@ import { registerMembershipRoutes } from "./membership";
 import { registerPaymentRoutes } from "./payments";
 import { registerUploadRoutes } from "./uploads";
 import { registerSignalRoutes } from "./signals";
+import { registerReferralRoutes } from "./referrals/routes";
 
 export function registerFeatures(app: FastifyInstance) {
   registerHealthRoutes(app);
@@ -13,4 +14,5 @@ export function registerFeatures(app: FastifyInstance) {
   registerPaymentRoutes(app);
   registerUploadRoutes(app);
   registerSignalRoutes(app);
+  registerReferralRoutes(app);
 }

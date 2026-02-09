@@ -546,6 +546,10 @@ export const openApiTags: OpenAPIV3.TagObject[] = [
     description: "Membership tiers, activation, and lifecycle",
   },
   {
+    name: "Referrals",
+    description: "Referral stats and team endpoints",
+  },
+  {
     name: "System",
     description: "Health checks and internal metadata endpoints",
   },

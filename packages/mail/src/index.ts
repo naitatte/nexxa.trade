@@ -9,6 +9,7 @@ export { Mailer } from "./mailer";
 export { createSmtpTransporter, verifyConnection } from "./transport/smtp";
 export { getSmtpConfigFromEnv } from "./config/env";
 export { createBetterAuthEmailHandlers } from "./better-auth";
+export { getInactiveSponsorReferralTemplate } from "./templates/inactive-sponsor-referral";
 export type {
   SmtpConfig,
   SendMailOptions,

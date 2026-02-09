@@ -4,6 +4,7 @@ import {
   ChevronsUpDown,
   LogOut,
   Settings2,
+  Users,
 } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -13,6 +14,7 @@ import { useLoadingState } from "@/lib/loading-state/hooks"
 import { LoadingSpinner } from "@/lib/loading-state/components"
 import { useSession } from "@/lib/auth/hooks"
 import { useSettingsStore } from "@/lib/stores/settings/settings-store"
+import { useIsActive, useHasRole } from "@/hooks/use-user-permissions"
 
 import {
   Avatar,
@@ -40,6 +42,9 @@ export function NavUser() {
   const { state: loadingState, setLoading, setIdle } = useLoadingState()
   const { data: sessionData, isPending } = useSession()
   const settingsUser = useSettingsStore((state) => state.user)
+  const isActive = useIsActive()
+  const isAdmin = useHasRole("admin")
+  const canAccessReferrals = isActive || isAdmin
   
   const sessionUser = sessionData?.user
   const sessionUsername = sessionUser && "username" in sessionUser
@@ -139,6 +144,14 @@ export function NavUser() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            {canAccessReferrals && (
+              <DropdownMenuItem asChild>
+                <Link href="/referrals" className="cursor-pointer">
+                  <Users />
+                  Referrals
+                </Link>
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem asChild>
               <Link href="/settings" className="cursor-pointer">
                 <Settings2 />

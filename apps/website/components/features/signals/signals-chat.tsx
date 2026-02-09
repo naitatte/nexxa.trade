@@ -17,7 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 import { getApiBaseUrl } from "@/lib/api/base-url"
 import { getApiSignalsChannelsChannelIdMessages, getGetApiSignalsChannelsQueryKey, useGetApiSignalsChannels, useGetApiSignalsChannelsChannelIdMessages } from "@/lib/api/signals/signals"
-import type { Def24, Def25, Def26, Def29 } from "@/lib/api/generated.schemas"
+import type { Def24, Def25, Def26, Def27, Def29 } from "@/lib/api/generated.schemas"
 
 type SignalChannel = Def27
 type SignalMessage = Def26
@@ -294,7 +294,7 @@ type ChatListProps = {
 function ChatList({ channels, filteredChannels, selectedChannel, search, onSearchChange, onSelectChannel }: ChatListProps) {
   return (
     <>
-      <div className="p-4 border-b flex items-center justify-between">
+      <div className="h-16 px-4 border-b flex items-center justify-between">
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
@@ -631,7 +631,7 @@ export function SignalsChat() {
             </h3>
           </div>
         </div>
-        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-6 bg-muted/5">
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto no-scrollbar p-4 lg:p-6 space-y-6 bg-muted/5">
           {activeChannelId && !isLoadingMessages && !isErrorMessages && messages.length > 0 && (
             <div ref={sentinelRef} className="flex items-center justify-center py-2">
               {isLoadingOlder && (

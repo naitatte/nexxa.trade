@@ -45,26 +45,26 @@ export function DataTable<TData, TValue>({
     React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
 
-  const table =
-    externalTable ??
-    useReactTable({
-      data,
-      columns,
-      onSortingChange: setSorting,
-      onColumnFiltersChange: setColumnFilters,
-      getCoreRowModel: getCoreRowModel(),
-      getPaginationRowModel: getPaginationRowModel(),
-      getSortedRowModel: getSortedRowModel(),
-      getFilteredRowModel: getFilteredRowModel(),
-      onColumnVisibilityChange: setColumnVisibility,
-      onRowSelectionChange: setRowSelection,
-      state: {
-        sorting,
-        columnFilters,
-        columnVisibility,
-        rowSelection,
-      },
-    })
+  const internalTable = useReactTable({
+    data,
+    columns,
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    onColumnVisibilityChange: setColumnVisibility,
+    onRowSelectionChange: setRowSelection,
+    state: {
+      sorting,
+      columnFilters,
+      columnVisibility,
+      rowSelection,
+    },
+  })
+
+  const table = externalTable ?? internalTable
 
   return (
     <div className="rounded-lg border bg-card text-card-foreground shadow-sm">

@@ -96,6 +96,10 @@ const ERROR_TRANSLATIONS: Record<ErrorCode, ErrorTranslation> = {
     message: "Username already taken",
     description: "That username is already in use. Please choose another.",
   },
+  USERNAME_IS_ALREADY_TAKEN_PLEASE_TRY_ANOTHER: {
+    message: "Username already taken",
+    description: "That username is already in use. Please choose another.",
+  },
   USERNAME_TOO_SHORT: {
     message: "Username too short",
     description: "Username must be at least 3 characters long.",

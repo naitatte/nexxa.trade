@@ -161,8 +161,8 @@ export function CheckoutFlow({ tier, planName, priceUsdCents, durationDays, onRe
             <span className="font-medium">{formatDuration(durationDays)}</span>
           </div>
           <div className="border-t pt-3 flex items-center justify-between">
-            <span className="font-medium">Total</span>
-            <span className="text-lg font-bold">${formatUsdt(priceUsdCents)}</span>
+            <span className="font-medium">Total (USDT)</span>
+            <span className="text-lg font-bold">{formatUsdt(priceUsdCents)} USDT</span>
           </div>
         </div>
 

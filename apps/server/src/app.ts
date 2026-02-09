@@ -53,6 +53,7 @@ function ensureUsernameInSignUp(document: OpenAPIV3.Document) {
     ...properties,
     username: { type: "string" },
     displayUsername: { type: "string" },
+    refCode: { type: "string" },
   };
 
   const required = new Set(content.schema.required ?? []);

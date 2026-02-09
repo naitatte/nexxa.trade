@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils"
 
-export const formatUsd = (cents: number) => `$${(cents / 100).toFixed(2)}`
+export const formatUsd = (cents: number) => `${(cents / 100).toFixed(2)} USDT`
 
 function formatBillingLabel(durationDays?: number | null): string {
   if (durationDays === null || durationDays === undefined) {

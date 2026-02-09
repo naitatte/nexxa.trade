@@ -50,6 +50,7 @@ type MembershipEventInput = {
 type UplineRow = {
   sponsorId: string;
   level: number;
+  membershipStatus: MembershipStatus;
 };
 
 const DEFAULT_EVENT_REASON = "payment_confirmed";
@@ -129,7 +130,9 @@ async function createCommissions(input: CreateCommissionsInput): Promise<number>
   const upline = await getUpline(tx, userId, COMMISSION_RULES.maxUplineLevels + 1);
   const { sponsorAmountCents, levelAmountCents } = calculateCommissionSplit(amountUsdCents);
   const commissionEntries: Array<typeof commission.$inferInsert> = [];
-  const sponsor = upline.find((row) => row.level === COMMISSION_RULES.sponsorLevel);
+  const sponsor = upline.find(
+    (row) => row.level === COMMISSION_RULES.sponsorLevel && row.membershipStatus === "active"
+  );
   if (sponsor) {
     commissionEntries.push({
       id: crypto.randomUUID(),
@@ -146,6 +149,9 @@ async function createCommissions(input: CreateCommissionsInput): Promise<number>
       continue;
     }
     if (row.level > COMMISSION_RULES.maxUplineLevels + 1) {
+      continue;
+    }
+    if (row.membershipStatus !== "active") {
       continue;
     }
     commissionEntries.push({
@@ -193,10 +199,11 @@ async function getUpline(
       JOIN uplines u ON r.user_id = u."sponsorId"
       WHERE u.level < ${maxLevels}
     )
-    SELECT "sponsorId", level
-    FROM uplines
-    WHERE "sponsorId" IS NOT NULL
-    ORDER BY level;
+    SELECT u."sponsorId", u.level, usr.membership_status AS "membershipStatus"
+    FROM uplines u
+    JOIN "user" usr ON usr.id = u."sponsorId"
+    WHERE u."sponsorId" IS NOT NULL
+    ORDER BY u.level;
   `);
   return (result as unknown as UplineRow[]) ?? [];
 }

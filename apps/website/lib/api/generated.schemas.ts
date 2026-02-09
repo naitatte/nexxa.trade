@@ -705,6 +705,53 @@ limit?: number;
 before?: string;
 };
 
+export type GetApiReferralsStats200 = {
+  directPartners: number;
+  totalTeam: number;
+  activeMembers: number;
+  atRiskMembers: number;
+};
+
+export type GetApiReferralsTeamParams = {
+/**
+ * @minimum 1
+ */
+page?: number;
+/**
+ * @minimum 1
+ * @maximum 100
+ */
+pageSize?: number;
+status?: GetApiReferralsTeamStatus;
+};
+
+export type GetApiReferralsTeamStatus = typeof GetApiReferralsTeamStatus[keyof typeof GetApiReferralsTeamStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GetApiReferralsTeamStatus = {
+  all: 'all',
+  at_risk: 'at_risk',
+} as const;
+
+export type GetApiReferralsTeam200ItemsItem = {
+  id: string;
+  name: string;
+  /** @nullable */
+  username?: string | null;
+  email: string;
+  membershipStatus: string;
+  joinedAt: string;
+  level: number;
+};
+
+export type GetApiReferralsTeam200 = {
+  items: GetApiReferralsTeam200ItemsItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+};
+
 /**
  * @nullable
  */
@@ -884,6 +931,7 @@ export type SignUpWithEmailAndPasswordBody = {
   rememberMe?: boolean;
   username: string;
   displayUsername?: string;
+  refCode?: string;
 };
 
 export type SignUpWithEmailAndPassword200User = {

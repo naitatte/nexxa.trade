@@ -10,6 +10,11 @@ import { createMailerFromEnv, createBetterAuthEmailHandlers } from "@nexxatrade/
 import { env } from "../../config/env";
 import { db } from "../../config/db";
 import { schema, and, eq, gt } from "@nexxatrade/db";
+import {
+  resolveSponsorByRefCode,
+  sendInactiveSponsorReferralNotice,
+  upsertReferralLink,
+} from "../referrals/service";
 
 const OTP_RESEND_COOLDOWN_SECONDS = 60;
 
@@ -81,6 +86,86 @@ function applyResponseHeaders(reply: FastifyReply, headers: Headers) {
 }
 
 export function registerAuthRoutes(app: FastifyInstance) {
+  app.post(
+    "/api/auth/sign-up/email",
+    {
+      schema: { hide: true },
+    },
+    asyncHandler(async (request, reply) => {
+      const body = (request.body ?? {}) as Record<string, unknown>;
+      const rawRefCode = typeof body.refCode === "string" ? body.refCode : "";
+      const refCode = rawRefCode.trim();
+
+      const sponsor = refCode ? await resolveSponsorByRefCode(refCode) : null;
+
+      const authPayload = { ...body };
+      delete authPayload.refCode;
+
+      const protocol =
+        request.headers["x-forwarded-proto"] ||
+        ((request.server as { https?: boolean }).https ? "https" : "http");
+      const host = request.headers.host || "localhost";
+      const url = new URL(request.url, `${protocol}://${host}`);
+      const headers = buildFetchHeaders(request);
+      if (!headers.has("content-type")) {
+        headers.set("content-type", "application/json");
+      }
+
+      const init: RequestInit = { method: request.method, headers };
+      if (request.method !== "GET" && request.method !== "HEAD") {
+        init.body = JSON.stringify(authPayload);
+      }
+
+      const response = await auth.handler(new Request(url.toString(), init));
+      reply.status(response.status);
+      applyResponseHeaders(reply, response.headers);
+
+      const responseText = response.body ? await response.text() : "";
+      let responseJson: unknown = null;
+      if (responseText) {
+        try {
+          responseJson = JSON.parse(responseText);
+        } catch {
+          responseJson = null;
+        }
+      }
+
+      if (response.ok && responseJson && typeof responseJson === "object") {
+        const payload = responseJson as { user?: { id?: string; name?: string; email?: string } };
+        const userId = payload.user?.id;
+        if (userId) {
+          try {
+            await upsertReferralLink({
+              userId,
+              sponsorId: sponsor?.id ?? null,
+            });
+            if (sponsor && sponsor.membershipStatus === "inactive") {
+              try {
+                await sendInactiveSponsorReferralNotice({
+                  sponsor,
+                  referred: {
+                    id: userId,
+                    name: payload.user?.name ?? null,
+                    email: payload.user?.email ?? "",
+                    username: typeof authPayload.username === "string" ? authPayload.username : null,
+                  },
+                });
+              } catch (error) {
+                request.log.error({ err: error }, "Failed to send inactive sponsor referral email");
+              }
+            }
+          } catch (error) {
+            request.log.error({ err: error }, "Failed to link referral after sign up");
+          }
+        }
+      }
+
+      if (responseJson !== null) {
+        return reply.send(responseJson);
+      }
+      return reply.send(responseText || null);
+    })
+  );
   app.post(
     "/api/auth/change-email-otp",
     {
