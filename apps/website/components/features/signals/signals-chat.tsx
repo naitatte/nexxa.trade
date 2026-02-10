@@ -14,16 +14,18 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
 import { Skeleton } from "@/components/ui/skeleton"
+import { RoleGuard } from "@/components/features/auth/permissions/role-guard"
 import { cn } from "@/lib/utils"
 import { getApiBaseUrl } from "@/lib/api/base-url"
 import { getApiSignalsChannelsChannelIdMessages, getGetApiSignalsChannelsQueryKey, useGetApiSignalsChannels, useGetApiSignalsChannelsChannelIdMessages } from "@/lib/api/signals/signals"
-import type { Def24, Def25, Def26, Def27, Def29 } from "@/lib/api/generated.schemas"
+import type { Def27, Def29, Def30, Def31, Def32, Def34 } from "@/lib/api/generated.schemas"
 
-type SignalChannel = Def27
-type SignalMessage = Def26
-type SignalMessagePreview = Def24
-type SignalReplyPreview = Def25
+type SignalChannel = Def32
+type SignalMessage = Def31
+type SignalMessagePreview = Def29
+type SignalReplyPreview = Def30
 type SignalAttachment = SignalMessage["attachments"][number]
+type SignalMessageList = Def34
 type MediaKind = "image" | "video"
 type SignalStreamEvent =
   | {
@@ -395,7 +397,7 @@ export function SignalsChat() {
   }, [channels, selectedChannelId])
   useEffect((): void => {
     if (messagesQuery.data) {
-      const data: Def29 = messagesQuery.data
+      const data: SignalMessageList = messagesQuery.data
       setMessages(data.items ?? [])
       setNextCursor(data.nextCursor ?? null)
       isInitialLoadRef.current = true
@@ -425,7 +427,7 @@ export function SignalsChat() {
     const container: HTMLDivElement | null = scrollContainerRef.current
     const previousScrollHeight: number = container?.scrollHeight ?? 0
     try {
-      const data: Def29 = await getApiSignalsChannelsChannelIdMessages(activeChannelId, { limit: 50, before: nextCursor })
+      const data: SignalMessageList = await getApiSignalsChannelsChannelIdMessages(activeChannelId, { limit: 50, before: nextCursor })
       const olderItems: SignalMessage[] = data.items ?? []
       if (!olderItems.length) {
         setNextCursor(null)
@@ -571,7 +573,16 @@ export function SignalsChat() {
     }, 1500)
   }, [])
   return (
-    <div className="flex h-full w-full overflow-hidden rounded-xl border bg-background shadow-sm relative">
+    <RoleGuard
+      allowedRoles={["admin", "subscriber", "networker"]}
+      requireActive
+      fallback={(
+        <div className="flex h-full w-full items-center justify-center rounded-xl border bg-muted/10 p-6 text-sm text-muted-foreground">
+          Active membership required to access signals.
+        </div>
+      )}
+    >
+      <div className="flex h-full w-full overflow-hidden rounded-xl border bg-background shadow-sm relative">
       <div className="w-80 flex-shrink-0 border-r bg-muted/10 md:flex flex-col hidden">
         <ChatList
           channels={channels}
@@ -792,6 +803,7 @@ export function SignalsChat() {
         slides={lightboxSlides}
         plugins={[Video]}
       />
-    </div>
+      </div>
+    </RoleGuard>
   )
 }

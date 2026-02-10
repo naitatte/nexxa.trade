@@ -19,6 +19,8 @@ const {
   membershipPayment,
   commission,
   referral,
+  walletAccount,
+  walletLedger,
 } = schema;
 
 type ActivateMembershipInput = {
@@ -166,6 +168,32 @@ async function createCommissions(input: CreateCommissionsInput): Promise<number>
   }
   if (commissionEntries.length) {
     await tx.insert(commission).values(commissionEntries);
+    for (const entry of commissionEntries) {
+      await tx
+        .insert(walletAccount)
+        .values({ userId: entry.toUserId, currency: "USD" })
+        .onConflictDoNothing();
+
+      await tx
+        .update(walletAccount)
+        .set({
+          availableUsdCents: sql`${walletAccount.availableUsdCents} + ${entry.amountUsdCents}`,
+          lifetimeEarnedUsdCents: sql`${walletAccount.lifetimeEarnedUsdCents} + ${entry.amountUsdCents}`,
+          updatedAt: now,
+        })
+        .where(eq(walletAccount.userId, entry.toUserId));
+
+      await tx.insert(walletLedger).values({
+        id: crypto.randomUUID(),
+        userId: entry.toUserId,
+        type: "credit",
+        amountUsdCents: entry.amountUsdCents,
+        currency: "USD",
+        referenceType: "commission",
+        referenceId: entry.id,
+        createdAt: now,
+      });
+    }
   }
   return commissionEntries.length;
 }

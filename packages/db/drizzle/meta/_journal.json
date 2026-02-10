@@ -64,6 +64,20 @@
       "when": 1770508800000,
       "tag": "0008_signal_message_reply",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1770675842753,
+      "tag": "0009_wallet_withdrawals",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1770677444404,
+      "tag": "0010_wallet_destinations",
+      "breakpoints": true
     }
   ]
 }

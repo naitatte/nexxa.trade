@@ -99,7 +99,7 @@ export function getUserPermissions(
     };
     menuConfig.withdrawals = {
       title: "Wallet",
-      url: "/withdrawals",
+      url: "/wallet",
     };
   } else if (role === "networker" && status === "active") {
     menuConfig.network = {
@@ -118,7 +118,7 @@ export function getUserPermissions(
     };
     menuConfig.withdrawals = {
       title: "Wallet",
-      url: "/withdrawals",
+      url: "/wallet",
     };
   } else if (role === "subscriber" && status === "active") {
     menuConfig.signals = {
@@ -141,7 +141,7 @@ export function getUserPermissions(
     };
     menuConfig.withdrawals = {
       title: "Wallet",
-      url: "/withdrawals",
+      url: "/wallet",
     };
   }
 

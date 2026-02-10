@@ -18,7 +18,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp"
 import { useSession } from "@/lib/auth/hooks"
-import { usePostApiAuthVerifyChangeEmailOtp } from "@/lib/api/auth/auth"
+import { usePostApiAuthConfirmEmailChange } from "@/lib/api/auth/auth"
 import { useLoadingState } from "@/lib/loading-state/hooks"
 import { translateErrorFromResponse } from "@/lib/error-translations"
 
@@ -40,7 +40,7 @@ export function VerifyEmailChangeDialog({
   const { refetch: refetchSession } = useSession()
   const { isLoading, setLoading, setSuccess, setError, setIdle } = useLoadingState()
 
-  const verifyOtpMutation = usePostApiAuthVerifyChangeEmailOtp({
+  const verifyOtpMutation = usePostApiAuthConfirmEmailChange({
     mutation: {
       onSuccess: async () => {
         setSuccess("Email changed successfully!")

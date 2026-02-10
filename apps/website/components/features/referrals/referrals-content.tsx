@@ -11,15 +11,14 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
+import { ActiveGuard } from "@/components/features/auth/permissions/role-guard"
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useTabsStore } from "@/lib/stores/ui/tabs-store"
 import {
@@ -69,7 +68,7 @@ function StatCard({
   return (
     <Card className={clickable ? "cursor-pointer transition-colors hover:border-primary/50" : ""}>
       <Wrapper onClick={onClick} className="w-full text-left">
-        <CardContent className="flex items-center gap-4 px-6 py-5">
+        <CardContent className="flex items-start gap-4 px-6 py-5">
           <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
             <Icon className="size-5 text-muted-foreground" />
           </div>
@@ -121,85 +120,92 @@ export function ReferralsContent({ user, stats, team, atRiskTeam }: ReferralsCon
   }
 
   return (
-    <div className="space-y-8">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title="Direct partners"
-          value={stats.directPartners}
-          icon={Users}
-        />
-        <StatCard
-          title="Total team"
-          value={stats.totalTeam}
-          icon={UsersRound}
-        />
-        <StatCard
-          title="Active members"
-          value={stats.activeMembers}
-          icon={UserCheck}
-        />
-        <StatCard
-          title="At risk"
-          value={stats.atRiskMembers}
-          icon={AlertTriangle}
-          onClick={handleAtRiskClick}
-          clickable
-        />
-      </div>
+    <ActiveGuard
+      fallback={(
+        <div className="flex min-h-[240px] items-center justify-center rounded-xl border bg-muted/10 p-6 text-sm text-muted-foreground">
+          Active membership required to access referrals.
+        </div>
+      )}
+    >
+      <div className="space-y-8">
+        <div className="grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard
+            title="Direct partners"
+            value={stats.directPartners}
+            icon={Users}
+          />
+          <StatCard
+            title="Total team"
+            value={stats.totalTeam}
+            icon={UsersRound}
+          />
+          <StatCard
+            title="Active members"
+            value={stats.activeMembers}
+            icon={UserCheck}
+          />
+          <StatCard
+            title="At risk"
+            value={stats.atRiskMembers}
+            icon={AlertTriangle}
+            onClick={handleAtRiskClick}
+            clickable
+          />
+        </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Referral information</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-6 lg:grid-cols-3">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Referral code</label>
-              <div className="flex gap-2">
-                <Input
-                  value={referralCode}
-                  readOnly
-                  className="font-mono"
-                />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={handleCopyCode}
-                  disabled={copiedCode}
-                >
-                  {copiedCode ? (
-                    <Check className="h-4 w-4" />
-                  ) : (
-                    <Copy className="h-4 w-4" />
-                  )}
-                </Button>
+        <Card>
+          <CardHeader>
+            <CardTitle>Referral information</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-6 lg:grid-cols-3">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Referral code</label>
+                <div className="flex gap-2">
+                  <Input
+                    value={referralCode}
+                    readOnly
+                    className="font-mono"
+                  />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleCopyCode}
+                    disabled={copiedCode}
+                  >
+                    {copiedCode ? (
+                      <Check className="h-4 w-4" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+              <div className="space-y-2 lg:col-span-2">
+                <label className="text-sm font-medium">Referral link</label>
+                <div className="flex gap-2">
+                  <Input
+                    value={referralLink}
+                    readOnly
+                    className="font-mono text-sm"
+                  />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleCopyLink}
+                    disabled={copiedLink}
+                  >
+                    {copiedLink ? (
+                      <Check className="h-4 w-4" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
               </div>
             </div>
-            <div className="space-y-2 lg:col-span-2">
-              <label className="text-sm font-medium">Referral link</label>
-              <div className="flex gap-2">
-                <Input
-                  value={referralLink}
-                  readOnly
-                  className="font-mono text-sm"
-                />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={handleCopyLink}
-                  disabled={copiedLink}
-                >
-                  {copiedLink ? (
-                    <Check className="h-4 w-4" />
-                  ) : (
-                    <Copy className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
       <Tabs
         value={activeTab}
@@ -227,5 +233,6 @@ export function ReferralsContent({ user, stats, team, atRiskTeam }: ReferralsCon
         </TabsContent>
       </Tabs>
     </div>
+    </ActiveGuard>
   )
 }

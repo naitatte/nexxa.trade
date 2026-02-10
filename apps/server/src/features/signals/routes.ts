@@ -7,6 +7,7 @@ import { asyncHandler } from "../../utils/async-handler";
 import { env } from "../../config/env";
 import { auth } from "../auth/auth";
 import type { Session } from "../auth/auth";
+import { requireActiveMembershipOrAdmin } from "../auth/guards";
 import { ingestSignalMessage, listSignalChannels, listSignalMessages, editSignalMessage, deleteSignalMessages } from "./service";
 import type { SignalIngestInput, SignalEditInput, SignalDeleteInput } from "./service";
 import { broadcastSignalChannelUpsert, broadcastSignalMessage, broadcastSignalMessageEdit, broadcastSignalMessageDelete, registerSignalSocketClient, unregisterSignalSocketClient, updateSignalSocketClient } from "./socket";
@@ -97,6 +98,12 @@ async function handleSignalStream(socket: WebSocket, request: FastifyRequest): P
     socket.close(1008, "Unauthorized");
     return;
   }
+  try {
+    await requireActiveMembershipOrAdmin(session);
+  } catch {
+    socket.close(1008, "Forbidden");
+    return;
+  }
   const query: SignalStreamQuery = request.query as SignalStreamQuery;
   const channelIds: string[] = parseChannelIds(query);
   const clientId: string = registerSignalSocketClient({ connection: socket, channelIds });
@@ -171,6 +178,7 @@ export function registerSignalRoutes(app: FastifyInstance) {
       if (!session?.user) {
         return reply.status(401).send({ error: "Unauthorized" });
       }
+      await requireActiveMembershipOrAdmin(session);
       return listSignalChannels({ includeInactive: false });
     })
   );
@@ -206,6 +214,7 @@ export function registerSignalRoutes(app: FastifyInstance) {
       if (!session?.user) {
         return reply.status(401).send({ error: "Unauthorized" });
       }
+      await requireActiveMembershipOrAdmin(session);
       const params: SignalMessagesParams = request.params as SignalMessagesParams;
       const query: SignalMessagesQuery = request.query as SignalMessagesQuery;
       return listSignalMessages({ channelId: params.channelId, limit: query.limit, before: query.before });

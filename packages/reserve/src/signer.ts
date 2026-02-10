@@ -24,6 +24,17 @@ export type SweepResult = {
   readonly fundedAt?: string;
 };
 
+export type PayoutRequest = {
+  readonly payoutId: string;
+  readonly toAddress: string;
+  readonly amountUsdtUnits: bigint;
+};
+
+export type PayoutResult = {
+  readonly payoutTxHash: string;
+  readonly paidAt: string;
+};
+
 export class SweepError extends Error {
   readonly code: string;
   readonly paymentId: string;
@@ -32,6 +43,17 @@ export class SweepError extends Error {
     this.name = "SweepError";
     this.code = code;
     this.paymentId = paymentId;
+  }
+}
+
+export class PayoutError extends Error {
+  readonly code: string;
+  readonly payoutId: string;
+  constructor(code: string, message: string, payoutId: string) {
+    super(message);
+    this.name = "PayoutError";
+    this.code = code;
+    this.payoutId = payoutId;
   }
 }
 
@@ -50,6 +72,18 @@ function validateSweepRequest(input: SweepRequest): void {
   }
   if (typeof input.minUsdtUnits !== "bigint" || input.minUsdtUnits < MIN_SWEEP_AMOUNT) {
     throw new SweepError("INVALID_MIN_USDT_UNITS", `minUsdtUnits must be at least ${MIN_SWEEP_AMOUNT}`, input.paymentId);
+  }
+}
+
+function validatePayoutRequest(input: PayoutRequest): void {
+  if (!input.payoutId || typeof input.payoutId !== "string") {
+    throw new PayoutError("INVALID_PAYOUT_ID", "payoutId must be a non-empty string", input.payoutId ?? "unknown");
+  }
+  if (!input.toAddress || !isAddress(input.toAddress)) {
+    throw new PayoutError("INVALID_TO_ADDRESS", "toAddress must be a valid address", input.payoutId);
+  }
+  if (typeof input.amountUsdtUnits !== "bigint" || input.amountUsdtUnits <= 0n) {
+    throw new PayoutError("INVALID_AMOUNT", "amountUsdtUnits must be greater than 0", input.payoutId);
   }
 }
 
@@ -157,6 +191,69 @@ export async function sweepUsdt(input: SweepRequest): Promise<SweepResult> {
     fundingTxHash: gasResult.fundingTxHash,
     fundedAt: gasResult.fundedAt,
     sweptAt,
+  };
+}
+
+export async function payoutUsdt(input: PayoutRequest): Promise<PayoutResult> {
+  validatePayoutRequest(input);
+  const config: ReturnType<typeof getReserveConfig> = getReserveConfig();
+  let provider: JsonRpcProvider;
+  try {
+    provider = new JsonRpcProvider(config.rpcUrl);
+    await withTimeout(provider.getBlockNumber(), RPC_TIMEOUT_MS, "RPC connection check");
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : "Unknown error";
+    throw new PayoutError("RPC_CONNECTION_FAILED", `Failed to connect to RPC: ${errorMessage}`, input.payoutId);
+  }
+  let baseNode: HDNodeWallet | HDNodeVoidWallet;
+  let treasuryNode: HDNodeWallet | HDNodeVoidWallet;
+  try {
+    baseNode = HDNodeWallet.fromExtendedKey(config.xprv);
+    treasuryNode = baseNode.deriveChild(config.treasuryDerivationIndex);
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : "Unknown error";
+    throw new PayoutError("KEY_DERIVATION_FAILED", `Failed to derive key: ${errorMessage}`, input.payoutId);
+  }
+  const expectedAddress: string = getAddress(config.treasuryAddress);
+  const derivedAddress: string = getAddress(treasuryNode.address);
+  if (derivedAddress !== expectedAddress) {
+    throw new PayoutError("ADDRESS_MISMATCH", `Derived address ${derivedAddress} does not match treasury`, input.payoutId);
+  }
+  if (!("privateKey" in treasuryNode)) {
+    throw new PayoutError("INVALID_KEY_TYPE", "xprv required for payout operation", input.payoutId);
+  }
+  const signer: Wallet = new Wallet(treasuryNode.privateKey, provider);
+  const tokenContract: Contract = new Contract(getAddress(config.usdtContract), erc20Abi, signer);
+  let tokenBalance: bigint;
+  try {
+    tokenBalance = await withTimeout(tokenContract.balanceOf(expectedAddress) as Promise<bigint>, RPC_TIMEOUT_MS, "Balance check");
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : "Unknown error";
+    throw new PayoutError("BALANCE_CHECK_FAILED", `Failed to check token balance: ${errorMessage}`, input.payoutId);
+  }
+  if (tokenBalance < input.amountUsdtUnits) {
+    throw new PayoutError("INSUFFICIENT_BALANCE", `Treasury balance ${tokenBalance} is less than payout ${input.amountUsdtUnits}`, input.payoutId);
+  }
+  let payoutTx: ContractTransactionResponse;
+  try {
+    payoutTx = await withTimeout(
+      tokenContract.transfer(getAddress(input.toAddress), input.amountUsdtUnits) as Promise<ContractTransactionResponse>,
+      RPC_TIMEOUT_MS,
+      "Payout transaction"
+    );
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : "Unknown error";
+    throw new PayoutError("PAYOUT_TX_FAILED", `Failed to send payout transaction: ${errorMessage}`, input.payoutId);
+  }
+  try {
+    await withTimeout(payoutTx.wait(config.sweepConfirmations) as Promise<unknown>, RPC_TIMEOUT_MS * 3, "Payout confirmation");
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : "Unknown error";
+    throw new PayoutError("PAYOUT_CONFIRMATION_FAILED", `Payout transaction sent (${payoutTx.hash}) but confirmation failed: ${errorMessage}`, input.payoutId);
+  }
+  return {
+    payoutTxHash: payoutTx.hash,
+    paidAt: new Date().toISOString(),
   };
 }
 

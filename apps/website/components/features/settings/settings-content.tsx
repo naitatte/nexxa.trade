@@ -5,7 +5,7 @@ import { Bell, Palette, Shield, User, KeyRound } from "lucide-react"
 import { toast } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useChangePassword, usePostApiAuthChangeEmailOtp, useSendVerificationEmail, useUpdateUser } from "@/lib/api/auth/auth"
+import { useChangePassword, usePostApiAuthRequestEmailChange, useSendVerificationEmail, useUpdateUser } from "@/lib/api/auth/auth"
 import { useSession } from "@/lib/auth/hooks"
 import { NotificationSettings } from "./notifications/notification-settings"
 import { AppearanceSettings } from "./appearance/appearance-settings"
@@ -122,7 +122,7 @@ export function SettingsContent({ user: initialUser }: SettingsContentProps) {
     queryClient.invalidateQueries({ queryKey: ["/api/auth/get-session"] })
   }
 
-  const changeEmailOtpMutation = usePostApiAuthChangeEmailOtp()
+  const changeEmailOtpMutation = usePostApiAuthRequestEmailChange()
 
   const handleChangeEmail = async (newEmail: string): Promise<string | void> => {
     await changeEmailOtpMutation.mutateAsync({

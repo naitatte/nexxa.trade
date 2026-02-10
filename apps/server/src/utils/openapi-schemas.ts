@@ -3,6 +3,15 @@ import type { OpenAPIV3 } from "openapi-types";
 const userRoleEnum = ["admin", "guest", "subscriber", "networker"] as const;
 const membershipStatusEnum = ["active", "inactive", "deleted"] as const;
 const membershipPaymentStatusEnum = ["pending", "confirmed", "failed"] as const;
+const withdrawalStatusEnum = [
+  "pending_admin",
+  "approved",
+  "processing",
+  "paid",
+  "rejected",
+  "canceled",
+  "failed",
+] as const;
 const signalMessageTypeEnum = ["text", "image", "audio", "link", "video"] as const;
 const signalAttachmentTypeEnum = ["image", "audio", "video"] as const;
 
@@ -153,6 +162,106 @@ export const openApiSchemas: Record<string, OpenAPIV3.SchemaObject> = {
       level: { type: "number" },
       amountUsdCents: { type: "number" },
       createdAt: dateTimeSchema,
+    },
+  },
+  WalletSummary: {
+    type: "object",
+    required: [
+      "currency",
+      "availableUsdCents",
+      "reservedUsdCents",
+      "lifetimeEarnedUsdCents",
+      "pendingUsdCents",
+    ],
+    properties: {
+      currency: { type: "string" },
+      availableUsdCents: { type: "number" },
+      reservedUsdCents: { type: "number" },
+      lifetimeEarnedUsdCents: { type: "number" },
+      pendingUsdCents: { type: "number" },
+    },
+  },
+  WalletDestination: {
+    type: "object",
+    required: ["id", "label", "address", "chain", "isDefault", "createdAt", "updatedAt"],
+    properties: {
+      id: { type: "string" },
+      label: { type: "string" },
+      address: { type: "string" },
+      chain: { type: "string", nullable: true },
+      isDefault: { type: "boolean" },
+      createdAt: dateTimeSchema,
+      updatedAt: dateTimeSchema,
+    },
+  },
+  WalletTransaction: {
+    type: "object",
+    required: [
+      "id",
+      "type",
+      "amountUsdCents",
+      "status",
+      "chain",
+      "txHash",
+      "address",
+      "createdAt",
+      "completedAt",
+    ],
+    properties: {
+      id: { type: "string" },
+      type: { type: "string", enum: ["deposit", "withdrawal"] },
+      amountUsdCents: { type: "number" },
+      status: { type: "string" },
+      chain: { type: "string", nullable: true },
+      txHash: { type: "string", nullable: true },
+      address: { type: "string", nullable: true },
+      createdAt: dateTimeSchema,
+      completedAt: nullableDateTimeSchema,
+    },
+  },
+  WithdrawalStatus: {
+    type: "string",
+    enum: [...withdrawalStatusEnum],
+  },
+  WithdrawalRequest: {
+    type: "object",
+    required: [
+      "id",
+      "userId",
+      "amountUsdCents",
+      "currency",
+      "status",
+      "destination",
+      "chain",
+      "txHash",
+      "adminId",
+      "reason",
+      "createdAt",
+      "approvedAt",
+      "processedAt",
+      "paidAt",
+      "rejectedAt",
+      "canceledAt",
+      "failedAt",
+    ],
+    properties: {
+      id: { type: "string" },
+      userId: { type: "string" },
+      amountUsdCents: { type: "number" },
+      currency: { type: "string" },
+      status: { $ref: "WithdrawalStatus#" },
+      destination: { type: "string" },
+      chain: { type: "string", nullable: true },
+      txHash: { type: "string", nullable: true },
+      adminId: { type: "string", nullable: true },
+      reason: { type: "string", nullable: true },
+      createdAt: dateTimeSchema,
+      approvedAt: nullableDateTimeSchema,
+      processedAt: nullableDateTimeSchema,
+      paidAt: nullableDateTimeSchema,
+      rejectedAt: nullableDateTimeSchema,
+      canceledAt: nullableDateTimeSchema,
+      failedAt: nullableDateTimeSchema,
     },
   },
   Referral: {
@@ -544,6 +653,14 @@ export const openApiTags: OpenAPIV3.TagObject[] = [
   {
     name: "Membership",
     description: "Membership tiers, activation, and lifecycle",
+  },
+  {
+    name: "Wallet",
+    description: "Wallet balances and ledger activity",
+  },
+  {
+    name: "Withdrawals",
+    description: "Withdrawal requests and approval workflow",
   },
   {
     name: "Referrals",

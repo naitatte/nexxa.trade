@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { asyncHandler } from "../../utils/async-handler";
 import { auth } from "../auth/auth";
 import type { Session } from "../auth/auth";
+import { requireActiveMembershipOrAdmin } from "../auth/guards";
 import { getReferralStats, getReferralTeam } from "./service";
 
 async function getSession(headers: Record<string, string | string[] | undefined>): Promise<Session | null> {
@@ -34,6 +35,7 @@ export function registerReferralRoutes(app: FastifyInstance): void {
       if (!session?.user) {
         return reply.status(401).send({ error: "Unauthorized" });
       }
+      await requireActiveMembershipOrAdmin(session);
       return getReferralStats(session.user.id);
     })
   );
@@ -86,6 +88,7 @@ export function registerReferralRoutes(app: FastifyInstance): void {
       if (!session?.user) {
         return reply.status(401).send({ error: "Unauthorized" });
       }
+      await requireActiveMembershipOrAdmin(session);
       const query = request.query as { page?: number | string; pageSize?: number | string; status?: string };
       const page = query.page !== undefined ? Number(query.page) : undefined;
       const pageSize = query.pageSize !== undefined ? Number(query.pageSize) : undefined;

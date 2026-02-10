@@ -337,10 +337,12 @@ export function translateErrorFromResponse(
       try {
         const parsed = JSON.parse(apiErrorMatch[1]);
         if (parsed.code) {
-          return translateError(parsed.code, parsed.message || fallback);
+          return translateError(parsed.code, parsed.message || parsed.error || fallback);
         }
         if (parsed.message) {
           message = parsed.message;
+        } else if (parsed.error) {
+          message = parsed.error;
         }
       } catch {
         // If parsing fails, use the original error string
@@ -356,10 +358,12 @@ export function translateErrorFromResponse(
       try {
         const parsed = JSON.parse(apiErrorMatch[1]);
         if (parsed.code) {
-          return translateError(parsed.code, parsed.message || fallback);
+          return translateError(parsed.code, parsed.message || parsed.error || fallback);
         }
         if (parsed.message) {
           message = parsed.message;
+        } else if (parsed.error) {
+          message = parsed.error;
         }
       } catch {
         message = error.message;

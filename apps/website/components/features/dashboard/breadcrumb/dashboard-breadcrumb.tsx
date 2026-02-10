@@ -20,7 +20,7 @@ const routeLabels: Record<string, string> = {
   network: "Network",
   chart: "Chart",
   data: "Data",
-  withdrawals: "Withdrawals",
+  wallet: "Wallet",
   membership: "Membership",
   subscription: "Subscription",
   settings: "Settings",

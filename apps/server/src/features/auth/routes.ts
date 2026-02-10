@@ -1,5 +1,5 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { auth } from "./auth";
+import { auth, type Session } from "./auth";
 import { asyncHandler } from "../../utils/async-handler";
 import { InternalServerError } from "../../types/errors";
 import {
@@ -15,6 +15,7 @@ import {
   sendInactiveSponsorReferralNotice,
   upsertReferralLink,
 } from "../referrals/service";
+import { confirmIdentity, IdentityConfirmationError } from "./confirm-identity";
 
 const OTP_RESEND_COOLDOWN_SECONDS = 60;
 
@@ -167,7 +168,7 @@ export function registerAuthRoutes(app: FastifyInstance) {
     })
   );
   app.post(
-    "/api/auth/change-email-otp",
+    "/api/auth/request-email-change",
     {
       schema: {
         tags: ["Auth"],
@@ -298,7 +299,7 @@ export function registerAuthRoutes(app: FastifyInstance) {
   );
 
   app.post(
-    "/api/auth/verify-change-email-otp",
+    "/api/auth/confirm-email-change",
     {
       schema: {
         tags: ["Auth"],
@@ -369,6 +370,55 @@ export function registerAuthRoutes(app: FastifyInstance) {
         throw new InternalServerError("OpenAPI schema unavailable");
       }
       reply.type("application/json").send(schema);
+    })
+  );
+
+  app.post(
+    "/api/auth/confirm-identity",
+    {
+      schema: {
+        tags: ["Auth"],
+        summary: "Confirm identity with password and optionally 2FA for sensitive actions",
+        body: {
+          type: "object",
+          required: ["password"],
+          properties: {
+            password: { type: "string", minLength: 1 },
+            code: { type: "string", minLength: 6, maxLength: 6 },
+          },
+        },
+        response: {
+          200: {
+            type: "object",
+            properties: {
+              success: { type: "boolean" },
+            },
+          },
+        },
+      },
+    },
+    asyncHandler(async (request, reply) => {
+      const session = await auth.api.getSession({
+        headers: request.headers as Record<string, string>,
+      });
+      if (!session?.user) {
+        return reply.status(401).send({ error: "Unauthorized" });
+      }
+      const { password, code } = request.body as { password: string; code?: string };
+      try {
+        await confirmIdentity({
+          session: session as Session,
+          password,
+          code,
+          headers: request.headers as Record<string, string>,
+        });
+        reply.send({ success: true });
+      } catch (error) {
+        if (error instanceof IdentityConfirmationError) {
+          return reply.status(error.statusCode).send({ error: error.message });
+        }
+        throw error;
+      }
     })
   );
 

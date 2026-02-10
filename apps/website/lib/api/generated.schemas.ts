@@ -60,7 +60,7 @@ export interface Def4 {
   createdAt: string;
   updatedAt: string;
   membership?: Def5;
-  referral?: Def9;
+  referral?: Def14;
 }
 
 export interface Def5 {
@@ -118,6 +118,94 @@ export interface Def8 {
 }
 
 export interface Def9 {
+  currency: string;
+  availableUsdCents: number;
+  reservedUsdCents: number;
+  lifetimeEarnedUsdCents: number;
+  pendingUsdCents: number;
+}
+
+export interface Def10 {
+  id: string;
+  label: string;
+  address: string;
+  /** @nullable */
+  chain: string | null;
+  isDefault: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type Def11Type = typeof Def11Type[keyof typeof Def11Type];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const Def11Type = {
+  deposit: 'deposit',
+  withdrawal: 'withdrawal',
+} as const;
+
+export interface Def11 {
+  id: string;
+  type: Def11Type;
+  amountUsdCents: number;
+  status: string;
+  /** @nullable */
+  chain: string | null;
+  /** @nullable */
+  txHash: string | null;
+  /** @nullable */
+  address: string | null;
+  createdAt: string;
+  /** @nullable */
+  completedAt: string | null;
+}
+
+export type Def12 = typeof Def12[keyof typeof Def12];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const Def12 = {
+  pending_admin: 'pending_admin',
+  approved: 'approved',
+  processing: 'processing',
+  paid: 'paid',
+  rejected: 'rejected',
+  canceled: 'canceled',
+  failed: 'failed',
+} as const;
+
+export interface Def13 {
+  id: string;
+  userId: string;
+  amountUsdCents: number;
+  currency: string;
+  status: Def12;
+  destination: string;
+  /** @nullable */
+  chain: string | null;
+  /** @nullable */
+  txHash: string | null;
+  /** @nullable */
+  adminId: string | null;
+  /** @nullable */
+  reason: string | null;
+  createdAt: string;
+  /** @nullable */
+  approvedAt: string | null;
+  /** @nullable */
+  processedAt: string | null;
+  /** @nullable */
+  paidAt: string | null;
+  /** @nullable */
+  rejectedAt: string | null;
+  /** @nullable */
+  canceledAt: string | null;
+  /** @nullable */
+  failedAt: string | null;
+}
+
+export interface Def14 {
   userId: string;
   /** @nullable */
   sponsorId?: string | null;
@@ -125,7 +213,7 @@ export interface Def9 {
   updatedAt: string;
 }
 
-export interface Def10 {
+export interface Def15 {
   id: string;
   expiresAt: string;
   token: string;
@@ -138,7 +226,7 @@ export interface Def10 {
   userId: string;
 }
 
-export interface Def11 {
+export interface Def16 {
   id: string;
   accountId: string;
   providerId: string;
@@ -161,7 +249,7 @@ export interface Def11 {
   updatedAt: string;
 }
 
-export interface Def12 {
+export interface Def17 {
   id: string;
   identifier: string;
   value: string;
@@ -170,7 +258,7 @@ export interface Def12 {
   updatedAt: string;
 }
 
-export interface Def13 {
+export interface Def18 {
   tier: Def1;
   name: string;
   /** @nullable */
@@ -182,11 +270,11 @@ export interface Def13 {
   sortOrder: number;
 }
 
-export interface Def14 {
-  tiers: Def13[];
+export interface Def19 {
+  tiers: Def18[];
 }
 
-export interface Def15 {
+export interface Def20 {
   userId: string;
   status: Def2;
   tier?: Def1;
@@ -201,7 +289,7 @@ export interface Def15 {
   deletionDays?: number;
 }
 
-export interface Def16 {
+export interface Def21 {
   userId: string;
   tier: Def1;
   amountUsdCents: number;
@@ -213,7 +301,7 @@ export interface Def16 {
   reason?: string;
 }
 
-export interface Def17 {
+export interface Def22 {
   paymentId: string;
   status: Def2;
   commissionsCreated: number;
@@ -221,19 +309,19 @@ export interface Def17 {
   expiresAt?: string | null;
 }
 
-export interface Def18 {
+export interface Def23 {
   expiredCount: number;
 }
 
-export interface Def19 {
+export interface Def24 {
   compressedCount: number;
 }
 
-export type Def20 = typeof Def20[keyof typeof Def20];
+export type Def25 = typeof Def25[keyof typeof Def25];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const Def20 = {
+export const Def25 = {
   text: 'text',
   image: 'image',
   audio: 'audio',
@@ -241,19 +329,19 @@ export const Def20 = {
   video: 'video',
 } as const;
 
-export type Def21 = typeof Def21[keyof typeof Def21];
+export type Def26 = typeof Def26[keyof typeof Def26];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const Def21 = {
+export const Def26 = {
   image: 'image',
   audio: 'audio',
   video: 'video',
 } as const;
 
-export interface Def22 {
+export interface Def27 {
   id: string;
-  type: Def21;
+  type: Def26;
   url: string;
   /** @nullable */
   mimeType?: string | null;
@@ -269,7 +357,7 @@ export interface Def22 {
   durationSeconds?: number | null;
 }
 
-export interface Def23 {
+export interface Def28 {
   id: string;
   url: string;
   /** @nullable */
@@ -282,26 +370,26 @@ export interface Def23 {
   siteName?: string | null;
 }
 
-export interface Def24 {
+export interface Def29 {
   id: string;
   channelId: string;
-  type: Def20;
+  type: Def25;
   /** @nullable */
   content?: string | null;
   createdAt: string;
 }
 
-export interface Def25 {
+export interface Def30 {
   id: string;
-  type: Def20;
+  type: Def25;
   /** @nullable */
   content?: string | null;
 }
 
-export interface Def26 {
+export interface Def31 {
   id: string;
   channelId: string;
-  type: Def20;
+  type: Def25;
   /** @nullable */
   content?: string | null;
   /** @nullable */
@@ -312,13 +400,13 @@ export interface Def26 {
   sourceTimestamp?: string | null;
   /** @nullable */
   replyToId?: string | null;
-  replyTo?: Def25;
+  replyTo?: Def30;
   createdAt: string;
-  attachments: Def22[];
-  link?: Def23;
+  attachments: Def27[];
+  link?: Def28;
 }
 
-export interface Def27 {
+export interface Def32 {
   id: string;
   name: string;
   /** @nullable */
@@ -333,21 +421,21 @@ export interface Def27 {
   sortOrder: number;
   createdAt: string;
   updatedAt: string;
-  lastMessage?: Def24;
+  lastMessage?: Def29;
 }
 
-export interface Def28 {
-  channels: Def27[];
+export interface Def33 {
+  channels: Def32[];
 }
 
-export interface Def29 {
-  items: Def26[];
+export interface Def34 {
+  items: Def31[];
   /** @nullable */
   nextCursor?: string | null;
 }
 
-export interface Def30 {
-  type: Def21;
+export interface Def35 {
+  type: Def26;
   url: string;
   /** @nullable */
   mimeType?: string | null;
@@ -363,7 +451,7 @@ export interface Def30 {
   durationSeconds?: number | null;
 }
 
-export interface Def31 {
+export interface Def36 {
   url: string;
   /** @nullable */
   title?: string | null;
@@ -375,23 +463,23 @@ export interface Def31 {
   siteName?: string | null;
 }
 
-export interface Def32 {
+export interface Def37 {
   /** @nullable */
   source?: string | null;
   /** @nullable */
   sourceId?: string | null;
-  type: Def20;
+  type: Def25;
   /** @nullable */
   content?: string | null;
   /** @nullable */
   sourceTimestamp?: string | null;
   /** @nullable */
   replyToSourceId?: string | null;
-  attachments?: Def30[];
-  link?: Def31;
+  attachments?: Def35[];
+  link?: Def36;
 }
 
-export interface Def33 {
+export interface Def38 {
   /** @nullable */
   source?: string | null;
   /** @nullable */
@@ -408,37 +496,37 @@ export interface Def33 {
   sortOrder?: number | null;
 }
 
-export interface Def34 {
+export interface Def39 {
   /** @nullable */
   channelId?: string | null;
-  channel?: Def33;
-  message: Def32;
+  channel?: Def38;
+  message: Def37;
 }
 
-export interface Def35 {
-  channel: Def27;
-  message: Def26;
+export interface Def40 {
+  channel: Def32;
+  message: Def31;
 }
 
-export interface Def36 {
+export interface Def41 {
   source: string;
   sourceId: string;
   /** @nullable */
   content?: string | null;
-  attachments?: Def30[];
-  link?: Def31;
+  attachments?: Def35[];
+  link?: Def36;
 }
 
-export interface Def37 {
-  message: Def26;
+export interface Def42 {
+  message: Def31;
 }
 
-export interface Def38 {
+export interface Def43 {
   source: string;
   sourceIds: string[];
 }
 
-export interface Def39 {
+export interface Def44 {
   deletedCount: number;
   deletedIds: string[];
 }
@@ -538,11 +626,11 @@ export type GetHealthReady200 = {
   errors?: GetHealthReady200Errors;
 };
 
-export type PostApiAuthChangeEmailOtpBody = {
+export type PostApiAuthRequestEmailChangeBody = {
   newEmail: string;
 };
 
-export type PostApiAuthChangeEmailOtp200 = {
+export type PostApiAuthRequestEmailChange200 = {
   message?: string;
 };
 
@@ -579,16 +667,30 @@ export type PostApiAuthTwoFactorDisable500 = {
   message?: string;
 };
 
-export type PostApiAuthVerifyChangeEmailOtpBody = {
+export type PostApiAuthConfirmEmailChangeBody = {
   newEmail: string;
   otpCode: string;
 };
 
-export type PostApiAuthVerifyChangeEmailOtp200 = {
+export type PostApiAuthConfirmEmailChange200 = {
   message?: string;
 };
 
 export type GetApiAuthApiDocsOpenapiJson200 = { [key: string]: unknown };
+
+export type PostApiAuthConfirmIdentityBody = {
+  /** @minLength 1 */
+  password: string;
+  /**
+   * @minLength 6
+   * @maxLength 6
+   */
+  code?: string;
+};
+
+export type PostApiAuthConfirmIdentity200 = {
+  success?: boolean;
+};
 
 export type ListUserSessions400 = {
   message: string;
@@ -750,6 +852,77 @@ export type GetApiReferralsTeam200 = {
   total: number;
   page: number;
   pageSize: number;
+};
+
+export type GetApiWalletDestinations200 = {
+  items: Def10[];
+};
+
+export type PostApiWalletDestinationsBody = {
+  /**
+   * @minLength 1
+   * @maxLength 80
+   */
+  label: string;
+  /**
+   * @minLength 6
+   * @maxLength 200
+   */
+  address: string;
+  /** @nullable */
+  chain?: string | null;
+  isDefault?: boolean;
+  /** @minLength 1 */
+  password: string;
+  /**
+   * @minLength 6
+   * @maxLength 6
+   */
+  code?: string;
+};
+
+export type DeleteApiWalletDestinationsId200 = {
+  deletedId: string;
+};
+
+export type GetApiWalletTransactions200 = {
+  items: Def11[];
+};
+
+export type GetApiWithdrawals200 = {
+  items: Def13[];
+};
+
+export type PostApiWithdrawalsBody = {
+  amountUsdCents: number;
+  /**
+   * @minLength 6
+   * @maxLength 200
+   */
+  destination: string;
+  /** @nullable */
+  chain?: string | null;
+};
+
+export type GetApiAdminWithdrawalsParams = {
+status?: string;
+};
+
+export type GetApiAdminWithdrawals200 = {
+  items: Def13[];
+};
+
+export type PostApiAdminWithdrawalsIdRejectBody = {
+  reason?: string;
+};
+
+export type PostApiAdminWithdrawalsIdPaidBody = {
+  txHash?: string;
+  chain?: string;
+};
+
+export type PostApiAdminWithdrawalsIdFailedBody = {
+  reason?: string;
 };
 
 /**

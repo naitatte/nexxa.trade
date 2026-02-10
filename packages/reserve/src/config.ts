@@ -14,6 +14,7 @@ type ReserveConfigInput = {
   readonly apiKey: string;
   readonly xprvPath: string;
   readonly gasWalletDerivationIndex: number;
+  readonly treasuryDerivationIndex: number;
   readonly gasTopupWei: bigint;
   readonly minGasWei: bigint;
   readonly fundConfirmations: number;
@@ -35,6 +36,7 @@ class ReserveConfig {
   readonly xprvPath: string;
   readonly xprv: string;
   readonly gasWalletDerivationIndex: number;
+  readonly treasuryDerivationIndex: number;
   readonly gasTopupWei: bigint;
   readonly minGasWei: bigint;
   readonly fundConfirmations: number;
@@ -50,6 +52,7 @@ class ReserveConfig {
     this.xprvPath = input.xprvPath;
     this.xprv = input.xprv;
     this.gasWalletDerivationIndex = input.gasWalletDerivationIndex;
+    this.treasuryDerivationIndex = input.treasuryDerivationIndex;
     this.gasTopupWei = input.gasTopupWei;
     this.minGasWei = input.minGasWei;
     this.fundConfirmations = input.fundConfirmations;
@@ -73,6 +76,9 @@ class ReserveConfig {
     if (typeof this.gasWalletDerivationIndex !== "number" || this.gasWalletDerivationIndex < 0) {
       throw new Error("reserve gas wallet derivation index must be a non-negative number");
     }
+    if (typeof this.treasuryDerivationIndex !== "number" || this.treasuryDerivationIndex < 0) {
+      throw new Error("reserve treasury derivation index must be a non-negative number");
+    }
   }
   static load(): ReserveConfig {
     const defaultXprvPath: string = path.resolve(process.cwd(), "keys/xprv.txt");
@@ -89,6 +95,7 @@ class ReserveConfig {
       apiKey: requireEnv("RESERVE_API_KEY"),
       xprvPath,
       gasWalletDerivationIndex: getEnvNumber("RESERVE_GAS_WALLET_DERIVATION_INDEX", 0),
+      treasuryDerivationIndex: getEnvNumber("RESERVE_TREASURY_DERIVATION_INDEX", 0),
       gasTopupWei: getEnvBigInt("RESERVE_GAS_TOPUP_WEI", 500000000000000n),
       minGasWei: getEnvBigInt("RESERVE_GAS_MIN_WEI", 200000000000000n),
       fundConfirmations: getEnvNumber("RESERVE_FUND_CONFIRMATIONS", 1),

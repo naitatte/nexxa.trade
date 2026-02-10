@@ -28,14 +28,15 @@ export const customInstance = async <T>(
   }
 
   const { signal } = config;
+  const hasBody = config.data !== undefined && config.data !== null;
 
   const response = await fetch(urlWithParams.toString(), {
     method: config.method || "GET",
     headers: {
-      "Content-Type": "application/json",
+      ...(hasBody && { "Content-Type": "application/json" }),
       ...config.headers,
     },
-    body: config.data ? JSON.stringify(config.data) : undefined,
+    body: hasBody ? JSON.stringify(config.data) : undefined,
     credentials: "include",
     signal: signal || options?.signal,
     ...options,

@@ -25,13 +25,13 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  Def13,
-  Def14,
-  Def15,
-  Def16,
-  Def17,
   Def18,
   Def19,
+  Def20,
+  Def21,
+  Def22,
+  Def23,
+  Def24,
   PatchApiMembershipPlansTierBody,
   PostApiMembershipPlansBody
 } from '../generated.schemas';
@@ -52,7 +52,7 @@ export const getApiMembershipTiers = (
 ) => {
       
       
-      return customInstance<Def14>(
+      return customInstance<Def19>(
       {url: `/api/membership/tiers`, method: 'GET', signal
     },
       options);
@@ -144,7 +144,7 @@ export const postApiMembershipPlans = (
 ) => {
       
       
-      return customInstance<Def13>(
+      return customInstance<Def18>(
       {url: `/api/membership/plans`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: postApiMembershipPlansBody, signal
@@ -208,7 +208,7 @@ export const patchApiMembershipPlansTier = (
  options?: SecondParameter<typeof customInstance>,) => {
       
       
-      return customInstance<Def13>(
+      return customInstance<Def18>(
       {url: `/api/membership/plans/${tier}`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: patchApiMembershipPlansTierBody
@@ -272,7 +272,7 @@ export const getApiMembershipUsersUserId = (
 ) => {
       
       
-      return customInstance<Def15>(
+      return customInstance<Def20>(
       {url: `/api/membership/users/${userId}`, method: 'GET', signal
     },
       options);
@@ -359,15 +359,15 @@ export function useGetApiMembershipUsersUserId<TData = Awaited<ReturnType<typeof
  * @summary Activate a membership after payment confirmation
  */
 export const postApiMembershipActivate = (
-    def16: Def16,
+    def21: Def21,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
       
       
-      return customInstance<Def17>(
+      return customInstance<Def22>(
       {url: `/api/membership/activate`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
-      data: def16, signal
+      data: def21, signal
     },
       options);
     }
@@ -375,8 +375,8 @@ export const postApiMembershipActivate = (
 
 
 export const getPostApiMembershipActivateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiMembershipActivate>>, TError,{data: Def16}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof postApiMembershipActivate>>, TError,{data: Def16}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiMembershipActivate>>, TError,{data: Def21}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiMembershipActivate>>, TError,{data: Def21}, TContext> => {
 
 const mutationKey = ['postApiMembershipActivate'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -388,7 +388,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiMembershipActivate>>, {data: Def16}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiMembershipActivate>>, {data: Def21}> = (props) => {
           const {data} = props ?? {};
 
           return  postApiMembershipActivate(data,requestOptions)
@@ -400,18 +400,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type PostApiMembershipActivateMutationResult = NonNullable<Awaited<ReturnType<typeof postApiMembershipActivate>>>
-    export type PostApiMembershipActivateMutationBody = Def16
+    export type PostApiMembershipActivateMutationBody = Def21
     export type PostApiMembershipActivateMutationError = unknown
 
     /**
  * @summary Activate a membership after payment confirmation
  */
 export const usePostApiMembershipActivate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiMembershipActivate>>, TError,{data: Def16}, TContext>, request?: SecondParameter<typeof customInstance>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiMembershipActivate>>, TError,{data: Def21}, TContext>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof postApiMembershipActivate>>,
         TError,
-        {data: Def16},
+        {data: Def21},
         TContext
       > => {
 
@@ -428,7 +428,7 @@ export const postApiMembershipExpire = (
 ) => {
       
       
-      return customInstance<Def18>(
+      return customInstance<Def23>(
       {url: `/api/membership/expire`, method: 'POST', signal
     },
       options);
@@ -490,7 +490,7 @@ export const postApiMembershipCompress = (
 ) => {
       
       
-      return customInstance<Def19>(
+      return customInstance<Def24>(
       {url: `/api/membership/compress`, method: 'POST', signal
     },
       options);

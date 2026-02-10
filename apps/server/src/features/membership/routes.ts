@@ -12,6 +12,7 @@ import { MEMBERSHIP_DELETION_DAYS } from "./config";
 import type { MembershipTier } from "@nexxatrade/core";
 import type { Session } from "../auth/auth";
 import { NotFoundError } from "../../types/errors";
+import { requirePermission } from "../auth/permissions";
 import {
   createMembershipPlan,
   listMembershipPlans,
@@ -23,32 +24,6 @@ const { user, membership } = schema;
 
 async function getSession(headers: Record<string, string | string[] | undefined>) {
   return auth.api.getSession({ headers: headers as Record<string, string> });
-}
-
-type PermissionInput = Record<string, string[]>;
-
-async function hasPermissions(userId: string, permissions: PermissionInput): Promise<boolean> {
-  const result: unknown = await auth.api.userHasPermission({
-    body: {
-      userId,
-      permissions,
-    },
-  });
-
-  if (typeof result === "boolean") {
-    return result;
-  }
-
-  if (result && typeof result === "object") {
-    if ("success" in result) {
-      return (result as { success?: boolean }).success === true;
-    }
-    if ("data" in result) {
-      return (result as { data?: boolean }).data === true;
-    }
-  }
-
-  return false;
 }
 
 export function registerMembershipRoutes(app: FastifyInstance) {
@@ -101,12 +76,7 @@ export function registerMembershipRoutes(app: FastifyInstance) {
       if (!session?.user) {
         return reply.status(401).send({ error: "Unauthorized" });
       }
-      const allowed = await hasPermissions(session.user.id, {
-        membership: ["manage"],
-      });
-      if (!allowed) {
-        return reply.status(403).send({ error: "Forbidden" });
-      }
+      await requirePermission(session.user.id, "membership", "manage");
 
       const body = request.body as {
         tier: string;
@@ -168,12 +138,7 @@ export function registerMembershipRoutes(app: FastifyInstance) {
       if (!session?.user) {
         return reply.status(401).send({ error: "Unauthorized" });
       }
-      const allowed = await hasPermissions(session.user.id, {
-        membership: ["manage"],
-      });
-      if (!allowed) {
-        return reply.status(403).send({ error: "Forbidden" });
-      }
+      await requirePermission(session.user.id, "membership", "manage");
 
       const params = request.params as { tier: string };
       const body = request.body as {
@@ -218,12 +183,7 @@ export function registerMembershipRoutes(app: FastifyInstance) {
 
       const { userId } = request.params as { userId: string };
       if (session.user.id !== userId) {
-        const allowed = await hasPermissions(session.user.id, {
-          membership: ["manage"],
-        });
-        if (!allowed) {
-          return reply.status(403).send({ error: "Forbidden" });
-        }
+        await requirePermission(session.user.id, "membership", "manage");
       }
 
       const userRecord = await db
@@ -294,12 +254,7 @@ export function registerMembershipRoutes(app: FastifyInstance) {
       if (!session?.user) {
         return reply.status(401).send({ error: "Unauthorized" });
       }
-      const allowed = await hasPermissions(session.user.id, {
-        membership: ["manage"],
-      });
-      if (!allowed) {
-        return reply.status(403).send({ error: "Forbidden" });
-      }
+      await requirePermission(session.user.id, "membership", "manage");
 
       const body = request.body as {
         userId: string;
@@ -356,12 +311,7 @@ export function registerMembershipRoutes(app: FastifyInstance) {
       if (!session?.user) {
         return reply.status(401).send({ error: "Unauthorized" });
       }
-      const allowed = await hasPermissions(session.user.id, {
-        membership: ["manage"],
-      });
-      if (!allowed) {
-        return reply.status(403).send({ error: "Forbidden" });
-      }
+      await requirePermission(session.user.id, "membership", "manage");
       return expireMemberships();
     })
   );
@@ -384,12 +334,7 @@ export function registerMembershipRoutes(app: FastifyInstance) {
       if (!session?.user) {
         return reply.status(401).send({ error: "Unauthorized" });
       }
-      const allowed = await hasPermissions(session.user.id, {
-        membership: ["manage"],
-      });
-      if (!allowed) {
-        return reply.status(403).send({ error: "Forbidden" });
-      }
+      await requirePermission(session.user.id, "membership", "manage");
       return compressInactiveUsers();
     })
   );

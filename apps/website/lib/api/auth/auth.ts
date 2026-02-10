@@ -114,8 +114,10 @@ import type {
   ListUserSessions404,
   ListUserSessions429,
   ListUserSessions500,
-  PostApiAuthChangeEmailOtp200,
-  PostApiAuthChangeEmailOtpBody,
+  PostApiAuthConfirmEmailChange200,
+  PostApiAuthConfirmEmailChangeBody,
+  PostApiAuthConfirmIdentity200,
+  PostApiAuthConfirmIdentityBody,
   PostApiAuthGetAccessToken200,
   PostApiAuthGetAccessToken401,
   PostApiAuthGetAccessToken403,
@@ -137,6 +139,8 @@ import type {
   PostApiAuthRefreshToken429,
   PostApiAuthRefreshToken500,
   PostApiAuthRefreshTokenBody,
+  PostApiAuthRequestEmailChange200,
+  PostApiAuthRequestEmailChangeBody,
   PostApiAuthRevokeOtherSessions200,
   PostApiAuthRevokeOtherSessions400,
   PostApiAuthRevokeOtherSessions401,
@@ -241,8 +245,6 @@ import type {
   PostApiAuthUnlinkAccount429,
   PostApiAuthUnlinkAccount500,
   PostApiAuthUnlinkAccountBody,
-  PostApiAuthVerifyChangeEmailOtp200,
-  PostApiAuthVerifyChangeEmailOtpBody,
   RequestPasswordReset200,
   RequestPasswordReset400,
   RequestPasswordReset401,
@@ -329,27 +331,27 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 /**
  * @summary Send OTP code for email change
  */
-export const postApiAuthChangeEmailOtp = (
-    postApiAuthChangeEmailOtpBody: PostApiAuthChangeEmailOtpBody,
+export const postApiAuthRequestEmailChange = (
+    postApiAuthRequestEmailChangeBody: PostApiAuthRequestEmailChangeBody,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
       
       
-      return customInstance<PostApiAuthChangeEmailOtp200>(
-      {url: `/api/auth/change-email-otp`, method: 'POST',
+      return customInstance<PostApiAuthRequestEmailChange200>(
+      {url: `/api/auth/request-email-change`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
-      data: postApiAuthChangeEmailOtpBody, signal
+      data: postApiAuthRequestEmailChangeBody, signal
     },
       options);
     }
   
 
 
-export const getPostApiAuthChangeEmailOtpMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAuthChangeEmailOtp>>, TError,{data: PostApiAuthChangeEmailOtpBody}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof postApiAuthChangeEmailOtp>>, TError,{data: PostApiAuthChangeEmailOtpBody}, TContext> => {
+export const getPostApiAuthRequestEmailChangeMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAuthRequestEmailChange>>, TError,{data: PostApiAuthRequestEmailChangeBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiAuthRequestEmailChange>>, TError,{data: PostApiAuthRequestEmailChangeBody}, TContext> => {
 
-const mutationKey = ['postApiAuthChangeEmailOtp'];
+const mutationKey = ['postApiAuthRequestEmailChange'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -359,10 +361,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiAuthChangeEmailOtp>>, {data: PostApiAuthChangeEmailOtpBody}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiAuthRequestEmailChange>>, {data: PostApiAuthRequestEmailChangeBody}> = (props) => {
           const {data} = props ?? {};
 
-          return  postApiAuthChangeEmailOtp(data,requestOptions)
+          return  postApiAuthRequestEmailChange(data,requestOptions)
         }
 
         
@@ -370,23 +372,23 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type PostApiAuthChangeEmailOtpMutationResult = NonNullable<Awaited<ReturnType<typeof postApiAuthChangeEmailOtp>>>
-    export type PostApiAuthChangeEmailOtpMutationBody = PostApiAuthChangeEmailOtpBody
-    export type PostApiAuthChangeEmailOtpMutationError = unknown
+    export type PostApiAuthRequestEmailChangeMutationResult = NonNullable<Awaited<ReturnType<typeof postApiAuthRequestEmailChange>>>
+    export type PostApiAuthRequestEmailChangeMutationBody = PostApiAuthRequestEmailChangeBody
+    export type PostApiAuthRequestEmailChangeMutationError = unknown
 
     /**
  * @summary Send OTP code for email change
  */
-export const usePostApiAuthChangeEmailOtp = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAuthChangeEmailOtp>>, TError,{data: PostApiAuthChangeEmailOtpBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+export const usePostApiAuthRequestEmailChange = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAuthRequestEmailChange>>, TError,{data: PostApiAuthRequestEmailChangeBody}, TContext>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof postApiAuthChangeEmailOtp>>,
+        Awaited<ReturnType<typeof postApiAuthRequestEmailChange>>,
         TError,
-        {data: PostApiAuthChangeEmailOtpBody},
+        {data: PostApiAuthRequestEmailChangeBody},
         TContext
       > => {
 
-      const mutationOptions = getPostApiAuthChangeEmailOtpMutationOptions(options);
+      const mutationOptions = getPostApiAuthRequestEmailChangeMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
@@ -454,27 +456,27 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     /**
  * @summary Verify OTP code and change email
  */
-export const postApiAuthVerifyChangeEmailOtp = (
-    postApiAuthVerifyChangeEmailOtpBody: PostApiAuthVerifyChangeEmailOtpBody,
+export const postApiAuthConfirmEmailChange = (
+    postApiAuthConfirmEmailChangeBody: PostApiAuthConfirmEmailChangeBody,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
       
       
-      return customInstance<PostApiAuthVerifyChangeEmailOtp200>(
-      {url: `/api/auth/verify-change-email-otp`, method: 'POST',
+      return customInstance<PostApiAuthConfirmEmailChange200>(
+      {url: `/api/auth/confirm-email-change`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
-      data: postApiAuthVerifyChangeEmailOtpBody, signal
+      data: postApiAuthConfirmEmailChangeBody, signal
     },
       options);
     }
   
 
 
-export const getPostApiAuthVerifyChangeEmailOtpMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAuthVerifyChangeEmailOtp>>, TError,{data: PostApiAuthVerifyChangeEmailOtpBody}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof postApiAuthVerifyChangeEmailOtp>>, TError,{data: PostApiAuthVerifyChangeEmailOtpBody}, TContext> => {
+export const getPostApiAuthConfirmEmailChangeMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAuthConfirmEmailChange>>, TError,{data: PostApiAuthConfirmEmailChangeBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiAuthConfirmEmailChange>>, TError,{data: PostApiAuthConfirmEmailChangeBody}, TContext> => {
 
-const mutationKey = ['postApiAuthVerifyChangeEmailOtp'];
+const mutationKey = ['postApiAuthConfirmEmailChange'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -484,10 +486,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiAuthVerifyChangeEmailOtp>>, {data: PostApiAuthVerifyChangeEmailOtpBody}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiAuthConfirmEmailChange>>, {data: PostApiAuthConfirmEmailChangeBody}> = (props) => {
           const {data} = props ?? {};
 
-          return  postApiAuthVerifyChangeEmailOtp(data,requestOptions)
+          return  postApiAuthConfirmEmailChange(data,requestOptions)
         }
 
         
@@ -495,23 +497,87 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type PostApiAuthVerifyChangeEmailOtpMutationResult = NonNullable<Awaited<ReturnType<typeof postApiAuthVerifyChangeEmailOtp>>>
-    export type PostApiAuthVerifyChangeEmailOtpMutationBody = PostApiAuthVerifyChangeEmailOtpBody
-    export type PostApiAuthVerifyChangeEmailOtpMutationError = unknown
+    export type PostApiAuthConfirmEmailChangeMutationResult = NonNullable<Awaited<ReturnType<typeof postApiAuthConfirmEmailChange>>>
+    export type PostApiAuthConfirmEmailChangeMutationBody = PostApiAuthConfirmEmailChangeBody
+    export type PostApiAuthConfirmEmailChangeMutationError = unknown
 
     /**
  * @summary Verify OTP code and change email
  */
-export const usePostApiAuthVerifyChangeEmailOtp = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAuthVerifyChangeEmailOtp>>, TError,{data: PostApiAuthVerifyChangeEmailOtpBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+export const usePostApiAuthConfirmEmailChange = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAuthConfirmEmailChange>>, TError,{data: PostApiAuthConfirmEmailChangeBody}, TContext>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof postApiAuthVerifyChangeEmailOtp>>,
+        Awaited<ReturnType<typeof postApiAuthConfirmEmailChange>>,
         TError,
-        {data: PostApiAuthVerifyChangeEmailOtpBody},
+        {data: PostApiAuthConfirmEmailChangeBody},
         TContext
       > => {
 
-      const mutationOptions = getPostApiAuthVerifyChangeEmailOtpMutationOptions(options);
+      const mutationOptions = getPostApiAuthConfirmEmailChangeMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary Confirm identity with password and optionally 2FA for sensitive actions
+ */
+export const postApiAuthConfirmIdentity = (
+    postApiAuthConfirmIdentityBody: PostApiAuthConfirmIdentityBody,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<PostApiAuthConfirmIdentity200>(
+      {url: `/api/auth/confirm-identity`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: postApiAuthConfirmIdentityBody, signal
+    },
+      options);
+    }
+  
+
+
+export const getPostApiAuthConfirmIdentityMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAuthConfirmIdentity>>, TError,{data: PostApiAuthConfirmIdentityBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiAuthConfirmIdentity>>, TError,{data: PostApiAuthConfirmIdentityBody}, TContext> => {
+
+const mutationKey = ['postApiAuthConfirmIdentity'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiAuthConfirmIdentity>>, {data: PostApiAuthConfirmIdentityBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postApiAuthConfirmIdentity(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiAuthConfirmIdentityMutationResult = NonNullable<Awaited<ReturnType<typeof postApiAuthConfirmIdentity>>>
+    export type PostApiAuthConfirmIdentityMutationBody = PostApiAuthConfirmIdentityBody
+    export type PostApiAuthConfirmIdentityMutationError = unknown
+
+    /**
+ * @summary Confirm identity with password and optionally 2FA for sensitive actions
+ */
+export const usePostApiAuthConfirmIdentity = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAuthConfirmIdentity>>, TError,{data: PostApiAuthConfirmIdentityBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiAuthConfirmIdentity>>,
+        TError,
+        {data: PostApiAuthConfirmIdentityBody},
+        TContext
+      > => {
+
+      const mutationOptions = getPostApiAuthConfirmIdentityMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

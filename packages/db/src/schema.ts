@@ -176,6 +176,129 @@ export const commission = pgTable(
   ],
 );
 
+export const walletAccount = pgTable(
+  "wallet_account",
+  {
+    userId: text("user_id")
+      .primaryKey()
+      .references(() => user.id, { onDelete: "cascade" }),
+    currency: text("currency").default("USD").notNull(),
+    availableUsdCents: integer("available_usd_cents").default(0).notNull(),
+    reservedUsdCents: integer("reserved_usd_cents").default(0).notNull(),
+    lifetimeEarnedUsdCents: integer("lifetime_earned_usd_cents").default(0).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("wallet_account_currency_idx").on(table.currency),
+  ],
+);
+
+export const walletLedger = pgTable(
+  "wallet_ledger",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    type: text("type", {
+      enum: ["credit", "debit", "reserve", "reserve_release"],
+    }).notNull(),
+    amountUsdCents: integer("amount_usd_cents").notNull(),
+    currency: text("currency").default("USD").notNull(),
+    referenceType: text("reference_type"),
+    referenceId: text("reference_id"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("wallet_ledger_user_id_idx").on(table.userId),
+    index("wallet_ledger_created_at_idx").on(table.createdAt),
+  ],
+);
+
+export const walletDestination = pgTable(
+  "wallet_destination",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    label: text("label").notNull(),
+    address: text("address").notNull(),
+    chain: text("chain"),
+    isDefault: boolean("is_default").default(false).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("wallet_destination_user_id_idx").on(table.userId),
+    index("wallet_destination_default_idx").on(table.userId, table.isDefault),
+  ],
+);
+
+export const withdrawalRequest = pgTable(
+  "withdrawal_request",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    amountUsdCents: integer("amount_usd_cents").notNull(),
+    currency: text("currency").default("USD").notNull(),
+    status: text("status", {
+      enum: ["pending_admin", "approved", "processing", "paid", "rejected", "canceled", "failed"],
+    })
+      .default("pending_admin")
+      .notNull(),
+    destination: text("destination").notNull(),
+    chain: text("chain"),
+    txHash: text("tx_hash"),
+    adminId: text("admin_id"),
+    reason: text("reason"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    approvedAt: timestamp("approved_at"),
+    processedAt: timestamp("processed_at"),
+    paidAt: timestamp("paid_at"),
+    rejectedAt: timestamp("rejected_at"),
+    canceledAt: timestamp("canceled_at"),
+    failedAt: timestamp("failed_at"),
+  },
+  (table) => [
+    index("withdrawal_request_user_id_idx").on(table.userId),
+    index("withdrawal_request_status_idx").on(table.status),
+    index("withdrawal_request_created_at_idx").on(table.createdAt),
+  ],
+);
+
+export const withdrawalEvent = pgTable(
+  "withdrawal_event",
+  {
+    id: text("id").primaryKey(),
+    withdrawalId: text("withdrawal_id")
+      .notNull()
+      .references(() => withdrawalRequest.id, { onDelete: "cascade" }),
+    fromStatus: text("from_status", {
+      enum: ["pending_admin", "approved", "processing", "paid", "rejected", "canceled", "failed"],
+    }),
+    toStatus: text("to_status", {
+      enum: ["pending_admin", "approved", "processing", "paid", "rejected", "canceled", "failed"],
+    }).notNull(),
+    actorId: text("actor_id"),
+    reason: text("reason"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("withdrawal_event_withdrawal_id_idx").on(table.withdrawalId),
+    index("withdrawal_event_created_at_idx").on(table.createdAt),
+  ],
+);
+
 export const referral = pgTable(
   "referral",
   {
