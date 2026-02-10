@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState, useRef, type RefObject } from "react"
+import { useCallback, useEffect, useMemo, useState, useRef, type RefObject } from "react"
 import type { ChangeEvent } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { Search, Menu, Play, Reply } from "lucide-react"
@@ -13,12 +13,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
-import { Skeleton } from "@/components/ui/skeleton"
 import { RoleGuard } from "@/components/features/auth/permissions/role-guard"
 import { cn } from "@/lib/utils"
 import { getApiBaseUrl } from "@/lib/api/base-url"
 import { getApiSignalsChannelsChannelIdMessages, getGetApiSignalsChannelsQueryKey, useGetApiSignalsChannels, useGetApiSignalsChannelsChannelIdMessages } from "@/lib/api/signals/signals"
-import type { Def27, Def29, Def30, Def31, Def32, Def34 } from "@/lib/api/generated.schemas"
+import type { Def29, Def30, Def31, Def32, Def34 } from "@/lib/api/generated.schemas"
 
 type SignalChannel = Def32
 type SignalMessage = Def31
@@ -227,12 +226,15 @@ function VideoPreview({ attachment, onClick }: VideoPreviewProps) {
       ) : (
         <div className="rounded-lg max-w-[320px] border shadow-sm aspect-video relative overflow-hidden">
           {!thumbnailError ? (
-            <img
-              src={thumbnailUrl}
-              alt="Video preview"
-              className="w-full h-full object-cover"
-              onError={() => setThumbnailError(true)}
-            />
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={thumbnailUrl}
+                alt="Video preview"
+                className="w-full h-full object-cover"
+                onError={() => setThumbnailError(true)}
+              />
+            </>
           ) : (
             <div className="w-full h-full bg-muted flex items-center justify-center">
               <Play className="h-12 w-12 text-muted-foreground" />
@@ -364,11 +366,27 @@ export function SignalsChat() {
   const sentinelRef: RefObject<HTMLDivElement | null> = useRef<HTMLDivElement>(null)
   const isInitialLoadRef = useRef<boolean>(true)
   const channelsQuery = useGetApiSignalsChannels()
-  const channels: SignalChannel[] = channelsQuery.data?.channels ?? []
+  const channels: SignalChannel[] = useMemo(
+    () => channelsQuery.data?.channels ?? [],
+    [channelsQuery.data?.channels]
+  )
   const isLoadingChannels: boolean = (channelsQuery as unknown as { isPending?: boolean; isLoading?: boolean }).isPending ?? (channelsQuery as unknown as { isPending?: boolean; isLoading?: boolean }).isLoading ?? false
   const isErrorChannels: boolean = channelsQuery.isError ?? false
-  const filteredChannels: SignalChannel[] = channels.filter((channel: SignalChannel) => channel.name.toLowerCase().includes(search.trim().toLowerCase()))
-  const selectedChannel: SignalChannel | null = channels.find((channel: SignalChannel) => channel.id === selectedChannelId) ?? (channels[0] ?? null)
+  const filteredChannels: SignalChannel[] = useMemo(() => {
+    const query = search.trim().toLowerCase()
+    if (!query) {
+      return channels
+    }
+    return channels.filter((channel: SignalChannel) =>
+      channel.name.toLowerCase().includes(query)
+    )
+  }, [channels, search])
+  const selectedChannel: SignalChannel | null = useMemo(
+    () =>
+      channels.find((channel: SignalChannel) => channel.id === selectedChannelId) ??
+      (channels[0] ?? null),
+    [channels, selectedChannelId]
+  )
   const activeChannelId: string | null = selectedChannel?.id ?? null
   const messagesQuery = useGetApiSignalsChannelsChannelIdMessages(activeChannelId ?? "", { limit: 50 }, { query: { enabled: !!activeChannelId } })
   const isLoadingMessages: boolean = (messagesQuery as unknown as { isPending?: boolean; isLoading?: boolean }).isPending ?? (messagesQuery as unknown as { isPending?: boolean; isLoading?: boolean }).isLoading ?? false
@@ -711,11 +729,14 @@ export function SignalsChat() {
                               className="group block"
                               onClick={() => openLightbox(lightboxMediaSlides, index)}
                             >
-                              <img
-                                src={attachment.url}
-                                alt={attachment.fileName ?? "Signal image"}
-                                className="rounded-lg max-w-[260px] border shadow-sm transition group-hover:brightness-90"
-                              />
+                              <>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={attachment.url}
+                                  alt={attachment.fileName ?? "Signal image"}
+                                  className="rounded-lg max-w-[260px] border shadow-sm transition group-hover:brightness-90"
+                                />
+                              </>
                             </button>
                           )
                         }
@@ -761,11 +782,14 @@ export function SignalsChat() {
                             className="block rounded-lg border bg-background p-3 hover:bg-muted/40 transition"
                           >
                             {message.link.imageUrl && (
-                              <img
-                                src={message.link.imageUrl}
-                                alt={message.link.title ?? "Link preview"}
-                                className="rounded-md mb-2 max-w-[260px]"
-                              />
+                              <>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={message.link.imageUrl}
+                                  alt={message.link.title ?? "Link preview"}
+                                  className="rounded-md mb-2 max-w-[260px]"
+                                />
+                              </>
                             )}
                             <div className="text-sm font-medium">
                               {message.link.title ?? message.link.url}

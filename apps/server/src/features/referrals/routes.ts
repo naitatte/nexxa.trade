@@ -72,6 +72,7 @@ export function registerReferralRoutes(app: FastifyInstance): void {
                     membershipStatus: { type: "string" },
                     joinedAt: { type: "string" },
                     level: { type: "number" },
+                    totalEarnedUsdCents: { type: "number" },
                   },
                 },
               },

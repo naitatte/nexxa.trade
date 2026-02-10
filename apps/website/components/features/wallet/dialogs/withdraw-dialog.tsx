@@ -118,7 +118,10 @@ export function WithdrawDialog({ open, onOpenChange }: WithdrawDialogProps) {
   const createWithdrawal = useCreateWithdrawal()
 
   const availableUsdCents = summary?.availableUsdCents ?? 0
-  const destinations = destinationsData?.items ?? []
+  const destinations = useMemo(
+    () => destinationsData?.items ?? [],
+    [destinationsData?.items]
+  )
   const defaultDestination = destinations.find((item) => item.isDefault) ?? destinations[0]
   const hasManualDestination = destination.trim().length > 0
   const effectiveSelectedDestinationId = selectedDestinationId !== "manual"

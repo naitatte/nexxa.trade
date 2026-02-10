@@ -187,6 +187,7 @@ export type ReferralTeamMember = {
   membershipStatus: MembershipStatus;
   joinedAt: string;
   level: number;
+  totalEarnedUsdCents: number;
 };
 
 type ReferralTeamResult = {
@@ -244,12 +245,15 @@ export async function getReferralTeam(input: {
       usr.email,
       usr.membership_status AS "membershipStatus",
       usr.created_at AS "joinedAt",
-      d.level
+      d.level,
+      COALESCE(SUM(c.amount_usd_cents), 0)::int AS "totalEarnedUsdCents"
     FROM downline d
     JOIN "user" usr ON usr.id = d.user_id
     LEFT JOIN membership m ON m.user_id = d.user_id
+    LEFT JOIN commission c ON c.from_user_id = usr.id AND c.to_user_id = ${userId}
     WHERE usr.membership_status != 'deleted'
     ${statusClause}
+    GROUP BY usr.id, usr.name, usr.username, usr.email, usr.membership_status, usr.created_at, d.level
     ORDER BY d.level ASC, usr.created_at DESC
     LIMIT ${pageSize} OFFSET ${offset}
   `);
@@ -261,6 +265,7 @@ export async function getReferralTeam(input: {
     membershipStatus: MembershipStatus;
     joinedAt: Date;
     level: number;
+    totalEarnedUsdCents: number;
   }>).map((row) => ({
     id: row.id,
     name: row.name,
@@ -269,6 +274,7 @@ export async function getReferralTeam(input: {
     membershipStatus: row.membershipStatus,
     joinedAt: row.joinedAt instanceof Date ? row.joinedAt.toISOString() : String(row.joinedAt),
     level: row.level,
+    totalEarnedUsdCents: row.totalEarnedUsdCents ?? 0,
   }));
   return { items, total, page, pageSize };
 }

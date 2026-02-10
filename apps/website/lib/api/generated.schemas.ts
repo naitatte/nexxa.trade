@@ -845,6 +845,7 @@ export type GetApiReferralsTeam200ItemsItem = {
   membershipStatus: string;
   joinedAt: string;
   level: number;
+  totalEarnedUsdCents?: number;
 };
 
 export type GetApiReferralsTeam200 = {
@@ -902,6 +903,13 @@ export type PostApiWithdrawalsBody = {
   destination: string;
   /** @nullable */
   chain?: string | null;
+  /** @minLength 1 */
+  password: string;
+  /**
+   * @minLength 6
+   * @maxLength 6
+   */
+  code?: string;
 };
 
 export type GetApiAdminWithdrawalsParams = {

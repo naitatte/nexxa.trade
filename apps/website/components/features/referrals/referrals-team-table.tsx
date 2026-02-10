@@ -60,6 +60,7 @@ const levelLabel = (level: number): string => {
 }
 
 export function ReferralsTeamTable({ members, total }: ReferralsTeamTableProps) {
+  const totalLabel = total === 1 ? "1 member" : `${total} members`
   const columns = React.useMemo<ColumnDef<ReferralTeamMember>[]>(
     () => [
       {
@@ -110,6 +111,7 @@ export function ReferralsTeamTable({ members, total }: ReferralsTeamTableProps) 
     []
   )
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: members,
     columns,
@@ -119,6 +121,7 @@ export function ReferralsTeamTable({ members, total }: ReferralsTeamTableProps) 
 
   return (
     <section className="space-y-4">
+      <p className="text-xs text-muted-foreground">Total {totalLabel}</p>
       <DataTable columns={columns} data={members} table={table} />
       <DataTablePagination table={table} />
     </section>

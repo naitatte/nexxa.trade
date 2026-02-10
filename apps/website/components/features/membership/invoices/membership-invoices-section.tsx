@@ -96,6 +96,7 @@ export function MembershipInvoicesSection({
   invoices,
   total,
 }: MembershipInvoicesSectionProps) {
+  const totalLabel = total === 1 ? "1 invoice" : `${total} invoices`
   const columns = React.useMemo<ColumnDef<MembershipInvoice>[]>(
     () => [
       {
@@ -179,6 +180,7 @@ export function MembershipInvoicesSection({
     []
   )
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: invoices,
     columns,
@@ -188,6 +190,7 @@ export function MembershipInvoicesSection({
 
   return (
     <section className="space-y-4">
+      <p className="text-xs text-muted-foreground">Total {totalLabel}</p>
       <DataTable columns={columns} data={invoices} table={table} />
       <DataTablePagination table={table} />
     </section>

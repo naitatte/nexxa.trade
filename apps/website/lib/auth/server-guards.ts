@@ -3,8 +3,6 @@ import { auth } from "@/lib/auth/server"
 import { getRequestHeaders } from "@/lib/auth/request-headers"
 import { getApiBaseUrl } from "@/lib/api/base-url"
 
-type MembershipStatus = "active" | "inactive" | "deleted"
-
 async function getMembershipData(userId: string, cookieHeader: string | null): Promise<{ status: string } | null> {
   try {
     const API_BASE_URL = getApiBaseUrl()

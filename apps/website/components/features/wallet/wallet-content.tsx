@@ -1,10 +1,12 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useTabsStore } from "@/lib/stores/ui/tabs-store"
 import { Wallet, ArrowUpRight, ArrowDownRight } from "lucide-react"
 import { WalletTransactionsSection } from "./transactions/wallet-transactions-section"
+import { WalletDepositsTable } from "./deposits/wallet-deposits-table"
 import { WalletSavedWalletsSection } from "./saved-wallets/wallet-saved-wallets-section"
 import { LoadingInline } from "@/lib/loading-state/components"
 import { ErrorAlert } from "@/lib/error-state/components"
@@ -100,6 +102,11 @@ export function WalletContent() {
             </CardContent>
           </Card>
         </div>
+        <Separator />
+        <WalletDepositsTable
+          deposits={transactions.filter((t) => t.type === "deposit")}
+          isLoading={txLoading}
+        />
       </TabsContent>
 
       <TabsContent value="saved">

@@ -225,9 +225,15 @@ export function WalletSavedWalletsSection() {
         ),
       },
     ],
-    [handleSetDefaultClick, deleteDestination, handleDeleteClick]
+    [
+      handleSetDefaultClick,
+      handleDeleteClick,
+      deleteDestination.isPending,
+      setDefault.isPending,
+    ]
   )
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: destinations,
     columns,
